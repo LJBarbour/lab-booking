@@ -1,72 +1,128 @@
-<!-- ONLY showing the changed JS parts for clarity -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Booking</title>
+
+<style>
+body { font-family: Arial; margin:0; display:flex; }
+aside { width:250px; padding:10px; background:#f4f4f4; }
+main { flex:1; padding:20px; }
+button { margin:3px; padding:6px; cursor:pointer; }
+.loading { padding:20px; }
+</style>
+</head>
+
+<body>
+
+<aside>
+  <h3>User</h3>
+  <select id="user-select"></select>
+
+  <h3>Instruments</h3>
+  <div id="instr-list"></div>
+</aside>
+
+<main>
+  <h2 id="instr-title"></h2>
+  <div id="instr-description"></div>
+  <div id="cal-body"></div>
+</main>
 
 <script>
 const SUPABASE_URL = 'https://mqpvnisphntdwhqoiqlt.supabase.co';
-const SUPABASE_KEY = 'YOUR_KEY_HERE';
-const API = `${SUPABASE_URL}/rest/v1/bookings`;
-const HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+const SUPABASE_KEY = 'YOUR_SUPABASE_KEY_HERE';
+
+const HEADERS = {
+  apikey: SUPABASE_KEY,
+  Authorization: `Bearer ${SUPABASE_KEY}`
+};
 
 let INSTRUMENTS = [];
 let RESEARCHERS = [];
-
-let bookings = [];
-let instrId = null; // ✅ FIXED
-let weekOffset = 0;
-let adminMode = false;
-let currentUser = localStorage.getItem('labBookingUser') || '';
-let selectedDur = 1;
-let pendingSlot = null;
+let instrId = null;
+let currentUser = '';
 
 async function loadConfig() {
   const usersRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, { headers: HEADERS });
   const instrRes = await fetch(`${SUPABASE_URL}/rest/v1/instruments`, { headers: HEADERS });
 
-  const usersData = await usersRes.json();
-  const instrData = await instrRes.json();
+  const users = await usersRes.json();
+  const instr = await instrRes.json();
 
-  console.log("USERS:", usersData);
-  console.log("INSTRUMENTS:", instrData);
+  console.log("USERS:", users);
+  console.log("INSTR:", instr);
 
-  RESEARCHERS = usersData.map(u => u.name);
-  INSTRUMENTS = instrData;
+  RESEARCHERS = users.map(u => u.name);
+  INSTRUMENTS = instr;
 }
 
-function instr(){
-  return INSTRUMENTS.find(x => x.id === instrId) || INSTRUMENTS[0]; // ✅ SAFE
+function instr() {
+  return INSTRUMENTS.find(i => i.id === instrId) || INSTRUMENTS[0];
 }
 
-function selInstr(id){
-  if (!INSTRUMENTS.length) return; // ✅ FIX
+function renderUsers() {
+  const sel = document.getElementById("user-select");
+  sel.innerHTML = '<option value="">Select user</option>' +
+    RESEARCHERS.map(u => `<option value="${u}">${u}</option>`).join('');
+
+  sel.onchange = e => currentUser = e.target.value;
+}
+
+function renderInstruments() {
+  const el = document.getElementById("instr-list");
+
+  el.innerHTML = INSTRUMENTS.map(i =>
+    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
+  ).join('');
+}
+
+function renderMain() {
+  const i = instr();
+  if (!i) return;
+
+  document.getElementById("instr-title").textContent = i.name;
+  document.getElementById("instr-description").textContent = i.description || '';
+}
+
+function renderAll() {
+  renderUsers();
+  renderInstruments();
+  renderMain();
+}
+
+function selectInstr(id) {
+  if (!INSTRUMENTS.length) return;
   instrId = id;
-  renderAll();
+  renderMain();
 }
 
-async function init(){
-  const body = document.getElementById('cal-body');
+async function init() {
+  const body = document.getElementById("cal-body");
+  body.innerHTML = '<div class="loading">Loading...</div>';
 
-  body.style.display='flex';
-  body.style.alignItems='center';
-  body.style.justifyContent='center';
-  body.innerHTML='<div class="loading">Loading...</div>';
+  try {
+    await loadConfig();
 
-  await loadConfig();
+    if (!INSTRUMENTS.length) {
+      body.innerHTML = "No instruments found";
+      return;
+    }
 
-  // ✅ CRITICAL FIX
-  if (INSTRUMENTS.length === 0){
-    body.innerHTML = '<div class="loading">No instruments found</div>';
-    return;
+    instrId = INSTRUMENTS[0].id;
+
+    renderAll();
+    body.innerHTML = "";
+
+  } catch (e) {
+    console.error(e);
+    body.innerHTML = "Error loading data";
   }
-
-  instrId = INSTRUMENTS[0].id;
-
-  await loadBookings();
-
-  body.style.display='';
-  body.style.alignItems='';
-  body.style.justifyContent='';
-
-  renderAll();
 }
 
-init();
+window.addEventListener("DOMContentLoaded", init);
 </script>
+
+</body>
+</html>
