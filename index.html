@@ -114,22 +114,25 @@ let currentInstr = null;
 let currentUser = null;
 
 async function load(){
-  users = await fetch(`${BASE}/users?select=*`, {
-    headers:{ apikey:KEY }
-  }).then(r=>r.json());
+  try {
+    users = await fetch(`${BASE}/users?select=*&apikey=${KEY}`).then(r=>r.json());
+    instruments = await fetch(`${BASE}/instruments?select=*&apikey=${KEY}`).then(r=>r.json());
+    bookings = await fetch(`${BASE}/bookings?select=*&apikey=${KEY}`).then(r=>r.json());
 
-  instruments = await fetch(`${BASE}/instruments?select=*`, {
-    headers:{ apikey:KEY }
-  }).then(r=>r.json());
+    if(!users.length || !instruments.length){
+      document.body.innerHTML = "No data found in Supabase tables";
+      return;
+    }
 
-  bookings = await fetch(`${BASE}/bookings?select=*`, {
-    headers:{ apikey:KEY }
-  }).then(r=>r.json());
+    currentUser = users[0].name;
+    currentInstr = instruments[0];
 
-  currentUser = users[0]?.name;
-  currentInstr = instruments[0];
+    render();
 
-  render();
+  } catch(e){
+    document.body.innerHTML = "Error loading data";
+    console.error(e);
+  }
 }
 
 function render(){
@@ -141,6 +144,7 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
+
   el.innerHTML = users.map(u =>
     `<option ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
@@ -219,12 +223,10 @@ async function createBooking(hour){
     name: currentUser
   };
 
-  const res = await fetch(`${BASE}/bookings`, {
+  const res = await fetch(`${BASE}/bookings?apikey=${KEY}`, {
     method:"POST",
     headers:{
-      "Content-Type":"application/json",
-      "apikey": KEY,
-      "Authorization": `Bearer ${KEY}`
+      "Content-Type":"application/json"
     },
     body: JSON.stringify(newBooking)
   });
