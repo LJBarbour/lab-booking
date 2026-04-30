@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lab Booking</title>
 
 <style>
@@ -16,7 +15,7 @@ body {
 }
 
 aside {
-  background:#ffffff;
+  background:#fff;
   border-right:1px solid #ddd;
   padding:20px;
 }
@@ -26,7 +25,6 @@ main {
 }
 
 h3 {
-  margin-bottom:10px;
   font-size:12px;
   text-transform:uppercase;
   color:#777;
@@ -63,6 +61,7 @@ button.active {
   height:40px;
   font-size:12px;
   padding:4px;
+  cursor:pointer;
 }
 
 .header {
@@ -95,26 +94,26 @@ button.active {
 <main>
   <h2 id="title"></h2>
   <div id="desc"></div>
-
   <div id="calendar" class="calendar"></div>
 </main>
 
 <script>
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const BASE = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 
 let users = [];
 let instruments = [];
 let bookings = [];
 let currentInstr = null;
+let currentUser = null;
 
 async function load(){
-  const u = await fetch(`https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1/users?select=*&apikey=${KEY}`);
-  const i = await fetch(`https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1/instruments?select=*&apikey=${KEY}`);
-  const b = await fetch(`https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1/bookings?select=*&apikey=${KEY}`);
+  users = await fetch(`${BASE}/users?select=*&apikey=${KEY}`).then(r=>r.json());
+  instruments = await fetch(`${BASE}/instruments?select=*&apikey=${KEY}`).then(r=>r.json());
+  bookings = await fetch(`${BASE}/bookings?select=*&apikey=${KEY}`).then(r=>r.json());
 
-  users = await u.json();
-  instruments = await i.json();
-  bookings = await b.json();
+  currentUser = users[0]?.name;
+  currentInstr = instruments[0];
 
   render();
 }
@@ -128,19 +127,22 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
-  el.innerHTML = users.map(u => `<option>${u.name}</option>`).join("");
+  el.innerHTML = users.map(u =>
+    `<option ${u.name===currentUser?"selected":""}>${u.name}</option>`
+  ).join("");
+
+  el.onchange = e => {
+    currentUser = e.target.value;
+  };
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
 
   el.innerHTML = instruments.map(i =>
-    `<button class="${currentInstr && currentInstr.id===i.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button class="${currentInstr?.id===i.id?'active':''}"
+      onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
-
-  if (!currentInstr && instruments.length){
-    currentInstr = instruments[0];
-  }
 }
 
 function selectInstr(id){
@@ -149,7 +151,6 @@ function selectInstr(id){
 }
 
 function renderMain(){
-  if (!currentInstr) return;
   document.getElementById("title").textContent = currentInstr.name;
   document.getElementById("desc").textContent = currentInstr.description;
 }
@@ -178,19 +179,43 @@ function renderCalendar(){
       const c = document.createElement("div");
       c.className = "cell";
 
-      const b = bookings.find(x =>
-        x.instrument === currentInstr.id &&
-        x.hour === hour
+      const existing = bookings.find(b =>
+        b.instrument === currentInstr.id &&
+        b.hour === hour
       );
 
-      if (b){
-        c.textContent = b.name;
+      if(existing){
+        c.textContent = existing.name;
         c.classList.add("booking");
+      } else {
+        c.onclick = () => createBooking(hour);
       }
 
       cal.appendChild(c);
     }
   }
+}
+
+async function createBooking(hour){
+  if(!currentUser) return alert("Select a user first");
+
+  const newBooking = {
+    id: Date.now().toString(),
+    instrument: currentInstr.id,
+    hour: hour,
+    name: currentUser
+  };
+
+  await fetch(`${BASE}/bookings?apikey=${KEY}`, {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify(newBooking)
+  });
+
+  bookings.push(newBooking);
+  renderCalendar();
 }
 
 load();
