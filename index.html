@@ -102,8 +102,7 @@ button.active {
 </main>
 
 <script>
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
-
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 const BASE = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 
 let users = [];
@@ -114,25 +113,14 @@ let currentInstr = null;
 let currentUser = null;
 
 async function load(){
-  try {
-    users = await fetch(`${BASE}/users?select=*&apikey=${KEY}`).then(r=>r.json());
-    instruments = await fetch(`${BASE}/instruments?select=*&apikey=${KEY}`).then(r=>r.json());
-    bookings = await fetch(`${BASE}/bookings?select=*&apikey=${KEY}`).then(r=>r.json());
+  users = await fetch(`${BASE}/users?select=*&apikey=${KEY}`).then(r=>r.json());
+  instruments = await fetch(`${BASE}/instruments?select=*&apikey=${KEY}`).then(r=>r.json());
+  bookings = await fetch(`${BASE}/bookings?select=*&apikey=${KEY}`).then(r=>r.json());
 
-    if(!users.length || !instruments.length){
-      document.body.innerHTML = "No data found in Supabase tables";
-      return;
-    }
+  currentUser = users[0]?.name;
+  currentInstr = instruments[0];
 
-    currentUser = users[0].name;
-    currentInstr = instruments[0];
-
-    render();
-
-  } catch(e){
-    document.body.innerHTML = "Error loading data";
-    console.error(e);
-  }
+  render();
 }
 
 function render(){
@@ -144,7 +132,6 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
-
   el.innerHTML = users.map(u =>
     `<option ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
@@ -223,16 +210,19 @@ async function createBooking(hour){
     name: currentUser
   };
 
-  const res = await fetch(`${BASE}/bookings?apikey=${KEY}`, {
+  const res = await fetch(`${BASE}/bookings`, {
     method:"POST",
     headers:{
-      "Content-Type":"application/json"
+      "Content-Type":"application/json",
+      "apikey": KEY,
+      "Authorization": `Bearer ${KEY}`
     },
     body: JSON.stringify(newBooking)
   });
 
   if(!res.ok){
     alert("Booking failed");
+    console.log(await res.text());
     return;
   }
 
