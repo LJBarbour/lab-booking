@@ -61,6 +61,10 @@ button.active {
   height:40px;
   font-size:12px;
   padding:4px;
+}
+
+.cell.clickable:hover {
+  background:#e8f0ea;
   cursor:pointer;
 }
 
@@ -98,19 +102,29 @@ button.active {
 </main>
 
 <script>
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+
 const BASE = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 
 let users = [];
 let instruments = [];
 let bookings = [];
+
 let currentInstr = null;
 let currentUser = null;
 
 async function load(){
-  users = await fetch(`${BASE}/users?select=*&apikey=${KEY}`).then(r=>r.json());
-  instruments = await fetch(`${BASE}/instruments?select=*&apikey=${KEY}`).then(r=>r.json());
-  bookings = await fetch(`${BASE}/bookings?select=*&apikey=${KEY}`).then(r=>r.json());
+  users = await fetch(`${BASE}/users?select=*`, {
+    headers:{ apikey:KEY }
+  }).then(r=>r.json());
+
+  instruments = await fetch(`${BASE}/instruments?select=*`, {
+    headers:{ apikey:KEY }
+  }).then(r=>r.json());
+
+  bookings = await fetch(`${BASE}/bookings?select=*`, {
+    headers:{ apikey:KEY }
+  }).then(r=>r.json());
 
   currentUser = users[0]?.name;
   currentInstr = instruments[0];
@@ -131,9 +145,7 @@ function renderUsers(){
     `<option ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
 
-  el.onchange = e => {
-    currentUser = e.target.value;
-  };
+  el.onchange = e => currentUser = e.target.value;
 }
 
 function renderInstr(){
@@ -188,6 +200,7 @@ function renderCalendar(){
         c.textContent = existing.name;
         c.classList.add("booking");
       } else {
+        c.classList.add("clickable");
         c.onclick = () => createBooking(hour);
       }
 
@@ -206,13 +219,20 @@ async function createBooking(hour){
     name: currentUser
   };
 
-  await fetch(`${BASE}/bookings?apikey=${KEY}`, {
+  const res = await fetch(`${BASE}/bookings`, {
     method:"POST",
     headers:{
-      "Content-Type":"application/json"
+      "Content-Type":"application/json",
+      "apikey": KEY,
+      "Authorization": `Bearer ${KEY}`
     },
     body: JSON.stringify(newBooking)
   });
+
+  if(!res.ok){
+    alert("Booking failed");
+    return;
+  }
 
   bookings.push(newBooking);
   renderCalendar();
