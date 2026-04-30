@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)file:///C:/Users/Len/Downloads/lab-booking_5.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Instrument Booking</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: #e2e0d8;
+    --text: #1a1917;
+    --muted: #7a7870;
+    --accent: #2d5a3d;
+    --accent-light: #e8f0ea;
+    --danger: #8b2020;
+    --danger-light: #fceaea;
+    --warning: #7a5c1e;
+    --warning-light: #fdf3e0;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-header { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-header h1 { font-size: 14px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .sidebar-header p { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  .sidebar-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-section h3 { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+  .user-select select { width: 100%; font-family: var(--sans); font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); cursor: pointer; }
+  .user-select select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .instr-list { display: flex; flex-direction: column; gap: 4px; }
+  .instr-btn { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; border: none; background: none; cursor: pointer; font-family: var(--sans); font-size: 13px; color: var(--text); text-align: left; width: 100%; transition: background 0.1s; }
+  .instr-btn:hover { background: var(--bg); }
+  .instr-btn.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+  .instr-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .instr-name { flex: 1; }
+  .instr-max { font-size: 10px; font-family: var(--mono); color: var(--muted); }
+  .instr-btn.active .instr-max { color: var(--accent); opacity: 0.7; }
+
+  .rules-box { background: var(--bg); border-radius: 6px; padding: 10px 12px; }
+  .rule-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 12px; }
+  .rule-row .rl { color: var(--muted); }
+  .rule-row .rv { font-family: var(--mono); font-weight: 500; font-size: 11px; color: var(--text); }
+
+  .admin-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); }
+  .admin-toggle input { cursor: pointer; accent-color: var(--accent); width: 14px; height: 14px; }
+  .admin-badge { display: inline-block; font-size: 10px; font-family: var(--mono); padding: 2px 8px; background: var(--danger-light); color: var(--danger); border-radius: 20px; font-weight: 500; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .stat-box { background: var(--bg); border-radius: 6px; padding: 10px; }
+  .stat-box .s-val { font-size: 20px; font-weight: 500; font-family: var(--mono); color: var(--text); line-height: 1; margin-bottom: 3px; }
+  .stat-box .s-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-box.highlight .s-val { color: var(--accent); }
+
+  .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  /* MAIN */
+  .main { display: flex; flex-direction: column; }
+  .main-header { padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 10; }
+  .main-header h2 { font-size: 16px; font-weight: 500; }
+  .main-header .instr-description { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .week-nav { display: flex; align-items: center; gap: 8px; }
+  .week-nav button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font-family: var(--sans); font-size: 13px; cursor: pointer; color: var(--text); }
+  .week-nav button:hover { background: var(--bg); }
+  .week-nav .wl { font-size: 13px; font-family: var(--mono); color: var(--muted); min-width: 160px; text-align: center; }
+
+  .calendar-wrap { flex: 1; overflow-x: auto; padding: 20px 24px; }
+  .calendar { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); min-width: 600px; }
+  .cal-head { display: grid; grid-template-columns: 56px repeat(5, 1fr); background: var(--bg); border-bottom: 1px solid var(--border); }
+  .cal-head-cell { padding: 10px 4px; text-align: center; font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+  .cal-head-cell.today { color: var(--accent); font-weight: 500; }
+  .cal-head-cell strong { display: block; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 1px; text-transform: none; letter-spacing: 0; }
+  .cal-head-cell.today strong { color: var(--accent); }
+  .cal-body { display: grid; grid-template-columns: 56px repeat(5, 1fr); }
+  .time-cell { font-size: 10px; font-family: var(--mono); color: var(--muted); text-align: right; padding: 0 8px; padding-top: 5px; border-right: 1px solid var(--border); height: 44px; display: flex; align-items: flex-start; }
+  .slot { height: 44px; border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); cursor: pointer; position: relative; transition: background 0.1s; }
+  .slot:last-child { border-bottom: none; }
+  .slot:hover { background: var(--accent-light); }
+  .slot.booked { cursor: default; }
+  .slot.booked:hover { background: transparent; }
+  .slot.past { opacity: 0.3; cursor: not-allowed; }
+  .slot.past:hover { background: transparent; }
+  .slot.blocked { background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.025) 4px, rgba(0,0,0,0.025) 8px); cursor: not-allowed; }
+  .slot.blocked:hover { background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.025) 4px, rgba(0,0,0,0.025) 8px); }
+  .slot.mine-slot { box-shadow: inset 2px 0 0 var(--accent); }
+  .bblock { position: absolute; inset: 2px; border-radius: 4px; padding: 3px 7px; font-size: 11px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+  .bblock .bn { font-weight: 500; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bblock .bnote { font-size: 9px; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bblock .bx { position: absolute; top: 3px; right: 5px; font-size: 10px; cursor: pointer; opacity: 0; background: none; border: none; color: inherit; padding: 0; line-height: 1; }
+  .bblock:hover .bx { opacity: 0.8; }
+
+  /* MODAL */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 200; }
+  .modal { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 24px; width: 380px; max-width: 94vw; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
+  .modal h3 { font-size: 16px; font-weight: 500; margin-bottom: 2px; }
+  .modal .slot-info { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-bottom: 16px; }
+  .modal label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+  .modal input, .modal textarea { width: 100%; font-family: var(--sans); font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
+  .modal textarea { height: 64px; resize: none; }
+  .modal input:focus, .modal textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .dur-row { display: flex; gap: 6px; margin-top: 4px; }
+  .dur-btn { flex: 1; padding: 7px 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); font-family: var(--mono); font-size: 12px; cursor: pointer; text-align: center; color: var(--muted); transition: all 0.1s; }
+  .dur-btn:hover:not(.dur-disabled) { border-color: var(--accent); color: var(--accent); }
+  .dur-btn.dur-active { background: var(--accent); color: white; border-color: var(--accent); font-weight: 500; }
+  .dur-btn.dur-disabled { opacity: 0.3; cursor: not-allowed; }
+  .warning-box { background: var(--warning-light); color: var(--warning); border-radius: 6px; padding: 8px 12px; font-size: 12px; margin-top: 10px; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .btn-cancel { padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); font-family: var(--sans); font-size: 13px; cursor: pointer; color: var(--text); }
+  .btn-confirm { padding: 8px 20px; border: none; border-radius: 6px; background: var(--accent); font-family: var(--sans); font-size: 13px; cursor: pointer; color: white; font-weight: 500; }
+  .btn-confirm:hover { opacity: 0.9; }
+  .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ADMIN PANEL */
+  .admin-panel { margin: 0 24px 24px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .admin-panel-head { background: var(--danger-light); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .admin-panel-head h4 { font-size: 13px; font-weight: 500; color: var(--danger); }
+  .booking-list { max-height: 220px; overflow-y: auto; }
+  .booking-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--border); font-size: 12px; }
+  .booking-row:hover { background: var(--bg); }
+  .br-name { font-weight: 500; color: var(--text); }
+  .br-meta { color: var(--muted); font-family: var(--mono); font-size: 11px; margin-top: 1px; }
+  .br-del { font-size: 11px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px; background: none; cursor: pointer; color: var(--danger); font-family: var(--sans); }
+  .br-del:hover { background: var(--danger-light); border-color: var(--danger); }
+  .no-bookings { padding: 16px; text-align: center; font-size: 12px; color: var(--muted); }
+
+  .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--muted); font-size: 13px; font-family: var(--mono); gap: 10px; }
+
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; }
+    .calendar-wrap { padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>Lab Booking</h1>
+      <p id="today-date">Thursday, 30 April 2026</p>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Researcher</h3>
+      <div class="user-select">
+        <select id="user-select" onchange="setUser(this.value)"><option value="">— Select your name —</option><option value="Alice Chen">Alice Chen</option><option value="Bob Müller">Bob Müller</option><option value="Carlos R.">Carlos R.</option><option value="Diana S.">Diana S.</option><option value="Eve Nakamura">Eve Nakamura</option><option value="Frank O." selected="">Frank O.</option><option value="Grace T.">Grace T.</option><option value="Hiro Yamada">Hiro Yamada</option><option value="Irene B.">Irene B.</option><option value="James K.">James K.</option><option value="Karen L.">Karen L.</option><option value="Leo M.">Leo M.</option><option value="Mia N.">Mia N.</option><option value="Noor P.">Noor P.</option><option value="Oscar Q.">Oscar Q.</option><option value="Priya R.">Priya R.</option><option value="Quinn S.">Quinn S.</option><option value="Rosa T.">Rosa T.</option><option value="Sam U.">Sam U.</option><option value="Tara V.">Tara V.</option></select>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Instruments</h3>
+      <div class="instr-list" id="instr-list">
+    <button class="instr-btn active" onclick="selInstr(&#39;sem&#39;)">
+      <span class="instr-dot" style="background:#c8dff5;border:1px solid rgba(0,0,0,0.15)"></span>
+      <span class="instr-name">SEM</span>
+      <span class="instr-max">max 4h</span>
+    </button>
+    <button class="instr-btn" onclick="selInstr(&#39;nmr&#39;)">
+      <span class="instr-dot" style="background:#b8e8d4;border:1px solid rgba(0,0,0,0.15)"></span>
+      <span class="instr-name">NMR</span>
+      <span class="instr-max">max 8h</span>
+    </button>
+    <button class="instr-btn" onclick="selInstr(&#39;xrd&#39;)">
+      <span class="instr-dot" style="background:#fad9a0;border:1px solid rgba(0,0,0,0.15)"></span>
+      <span class="instr-name">XRD</span>
+      <span class="instr-max">max 6h</span>
+    </button>
+    <button class="instr-btn" onclick="selInstr(&#39;hplc&#39;)">
+      <span class="instr-dot" style="background:#f5c8d8;border:1px solid rgba(0,0,0,0.15)"></span>
+      <span class="instr-name">HPLC</span>
+      <span class="instr-max">max 4h</span>
+    </button>
+    <button class="instr-btn" onclick="selInstr(&#39;cf&#39;)">
+      <span class="instr-dot" style="background:#d4ccf5;border:1px solid rgba(0,0,0,0.15)"></span>
+      <span class="instr-name">Centrifuge</span>
+      <span class="instr-max">max 2h</span>
+    </button></div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Booking rules</h3>
+      <div class="rules-box" id="rules-box">
+    <div class="rule-row"><span class="rl">Max per booking</span><span class="rv">4h</span></div>
+    <div class="rule-row"><span class="rl">Book ahead</span><span class="rv">14d</span></div>
+    <div class="rule-row"><span class="rl">Weekly limit</span><span class="rv">12h</span></div></div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>This week</h3>
+      <div class="stats-grid" id="stats-grid">
+    <div class="stat-box"><div class="s-val">1</div><div class="s-lbl">Booked this week</div></div>
+    <div class="stat-box highlight"><div class="s-val">0</div><div class="s-lbl">My hours</div></div>
+    <div class="stat-box"><div class="s-val">12</div><div class="s-lbl">My weekly limit</div></div>
+    <div class="stat-box"><div class="s-val">2</div><div class="s-lbl">Total all time</div></div></div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Admin</h3>
+      <label class="admin-toggle">
+        <input type="checkbox" id="admin-tog" onchange="toggleAdmin()">
+        Admin mode
+      </label>
+      <span class="admin-badge" id="admin-badge" style="display:none;margin-top:6px">ADMIN ACTIVE</span>
+    </div>
+
+    <div class="sidebar-footer" id="sidebar-footer">
+      Connected to Supabase
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="main-header">
+      <div>
+        <h2 id="instr-title">SEM</h2>
+        <div class="instr-description" id="instr-description">Scanning electron microscope</div>
+      </div>
+      <div class="week-nav">
+        <button onclick="changeWeek(-1)">←</button>
+        <span class="wl" id="week-label">27 Apr – 1 May 2026</span>
+        <button onclick="changeWeek(1)">→</button>
+        <button onclick="goToday()">Today</button>
+      </div>
+    </div>
+
+    <div class="calendar-wrap">
+      <div class="calendar">
+        <div class="cal-head" id="cal-head"><div></div><div class="cal-head-cell"><strong>Mon</strong>27 Apr</div><div class="cal-head-cell"><strong>Tue</strong>28 Apr</div><div class="cal-head-cell"><strong>Wed</strong>29 Apr</div><div class="cal-head-cell today"><strong>Thu</strong>30 Apr</div><div class="cal-head-cell"><strong>Fri</strong>1 May</div></div>
+        <div id="cal-body" style="display: grid; grid-template-columns: 56px repeat(5, 1fr);"><div class="time-cell">8:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">9:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">10:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">11:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot booked"><div class="bblock" style="background: rgb(200, 223, 245); color: rgb(26, 74, 122);"><span class="bn">Hiro</span></div></div><div class="time-cell">12:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">13:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">14:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">15:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">16:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">17:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">18:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div><div class="time-cell">19:00</div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot past"></div><div class="slot"></div></div>
+      </div>
+    </div>
+
+    <div id="admin-panel"></div>
+  </main>
+</div>
+
+<div id="modal-container"></div>
+
+<script>
+const SUPABASE_URL = 'https://mqpvnisphntdwhqoiqlt.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg';
+const API = `${SUPABASE_URL}/rest/v1/bookings`;
+const HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+
+
+async function loadConfig() {
+  const usersRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, { headers: HEADERS });
+  const instrRes = await fetch(`${SUPABASE_URL}/rest/v1/instruments`, { headers: HEADERS });
+
+  RESEARCHERS = (await usersRes.json()).map(u => u.name);
+  INSTRUMENTS = await instrRes.json();
+}
+
+let INSTRUMENTS = [];
+let RESEARCHERS = [];
+
+
+const HOURS = Array.from({length:12},(_,i)=>i+8);
+const DAYS = ['Mon','Tue','Wed','Thu','Fri'];
+
+let bookings = [];
+let instrId = INSTRUMENTS[0].id;
+let weekOffset = 0;
+let adminMode = false;
+let currentUser = localStorage.getItem('labBookingUser') || '';
+let selectedDur = 1;
+let pendingSlot = null;
+
+function p2(n){ return String(n).padStart(2,'0'); }
+function dateStr(d){ return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function weekStart(off) {
+  const n=new Date(), dy=n.getDay(), m=new Date(n);
+  m.setDate(n.getDate()-(dy===0?6:dy-1)+off*7); m.setHours(0,0,0,0); return m;
+}
+function fmtWeek(ws) {
+  const we=new Date(ws); we.setDate(ws.getDate()+4);
+  return `${ws.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${we.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;
+}
+function isToday(d){ return d.toDateString()===new Date().toDateString(); }
+function isPast(d,h){ const n=new Date(); return d<new Date(n.getFullYear(),n.getMonth(),n.getDate())||(isToday(d)&&h<=n.getHours()); }
+function isBlocked(d){ const ins=instr(), lim=new Date(); lim.setDate(lim.getDate()+ins.advanceDays); lim.setHours(23,59,59); return d>lim; }
+
+function instr(){ return INSTRUMENTS.find(x=>x.id===instrId); }
+function getB(iid, ds, h){ return bookings.find(b=>b.instrument===iid&&String(b.date)===String(ds)&&Number(b.hour)===Number(h))||null; }
+
+function getUserWeekHours(user, iid, ws) {
+  const we=new Date(ws); we.setDate(ws.getDate()+5);
+  return bookings.filter(b=>b.instrument===iid&&b.name===user&&new Date(b.date)>=ws&&new Date(b.date)<we).length;
+}
+
+function getAvailableSlots(day, startH) {
+  const ins=instr(); let count=0;
+  for(let i=0;i<ins.maxSlot;i++){
+    if(startH+i>19) break;
+    if(getB(instrId, dateStr(day), startH+i)) break;
+    if(isPast(day, startH+i)) break;
+    if(isBlocked(day)) break;
+    count++;
+  }
+  return count;
+}
+
+async function loadBookings() {
+  try {
+    const r = await fetch(`${API}?select=*`, { headers: HEADERS });
+    if(r.ok) {
+      const data = await r.json();
+      bookings = data.map(b=>({...b, date: String(b.date).substring(0,10), hour: Number(b.hour)}));
+    } else bookings = [];
+  } catch(e) { bookings = []; }
+}
+
+async function addBooking(data) {
+  await fetch(API, { method:'POST', headers: HEADERS, body: JSON.stringify(data) });
+}
+
+async function removeBooking(id) {
+  await fetch(`${API}?id=eq.${id}`, { method:'DELETE', headers: HEADERS });
+}
+
+function renderSidebar() {
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const sel = document.getElementById('user-select');
+  sel.innerHTML = '<option value="">— Select your name —</option>' + RESEARCHERS.map(r=>`<option value="${r}"${r===currentUser?' selected':''}>${r}</option>`).join('');
+
+  document.getElementById('instr-list').innerHTML = INSTRUMENTS.map(i=>`
+    <button class="instr-btn${i.id===instrId?' active':''}" onclick="selInstr('${i.id}')">
+      <span class="instr-dot" style="background:${i.color};border:1px solid rgba(0,0,0,0.15)"></span>
+      <span class="instr-name">${i.name}</span>
+      <span class="instr-max">max ${i.maxSlot}h</span>
+    </button>`).join('');
+
+  const ins = instr();
+  document.getElementById('rules-box').innerHTML = `
+    <div class="rule-row"><span class="rl">Max per booking</span><span class="rv">${ins.maxSlot}h</span></div>
+    <div class="rule-row"><span class="rl">Book ahead</span><span class="rv">${ins.advanceDays}d</span></div>
+    <div class="rule-row"><span class="rl">Weekly limit</span><span class="rv">${ins.weeklyHours}h</span></div>`;
+
+  const ws = weekStart(0);
+  const weekTotal = bookings.filter(b=>{ const d=new Date(b.date); const we=new Date(ws); we.setDate(ws.getDate()+5); return b.instrument===instrId&&d>=ws&&d<we; }).length;
+  const myWeek = currentUser ? getUserWeekHours(currentUser,instrId,ws) : '–';
+  const allTotal = bookings.filter(b=>b.instrument===instrId).length;
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-box"><div class="s-val">${weekTotal}</div><div class="s-lbl">Booked this week</div></div>
+    <div class="stat-box highlight"><div class="s-val">${myWeek}</div><div class="s-lbl">My hours</div></div>
+    <div class="stat-box"><div class="s-val">${ins.weeklyHours}</div><div class="s-lbl">My weekly limit</div></div>
+    <div class="stat-box"><div class="s-val">${allTotal}</div><div class="s-lbl">Total all time</div></div>`;
+}
+
+function renderCalendar() {
+  const ins = instr();
+  document.getElementById('instr-title').textContent = ins.name;
+  document.getElementById('instr-description').textContent = ins.description;
+  const ws = weekStart(weekOffset);
+  document.getElementById('week-label').textContent = fmtWeek(ws);
+  const days = Array.from({length:5},(_,i)=>{ const d=new Date(ws); d.setDate(ws.getDate()+i); return d; });
+
+  document.getElementById('cal-head').innerHTML = '<div></div>' + days.map((d,i)=>`<div class="cal-head-cell${isToday(d)?' today':''}"><strong>${DAYS[i]}</strong>${d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div>`).join('');
+
+  const body = document.getElementById('cal-body');
+  body.innerHTML='';
+  body.style.display='grid';
+  body.style.gridTemplateColumns='56px repeat(5, 1fr)';
+  for(const h of HOURS){
+    const tc = document.createElement('div'); tc.className='time-cell'; tc.textContent=`${h}:00`; body.appendChild(tc);
+    for(const day of days){
+      const ds=dateStr(day), b=getB(instrId,ds,h);
+      const past=isPast(day,h), blocked=!past&&isBlocked(day);
+      const cell=document.createElement('div');
+      let cls='slot';
+      if(b) cls+=' booked';
+      else if(past) cls+=' past';
+      else if(blocked) cls+=' blocked';
+      if(b&&b.name===currentUser) cls+=' mine-slot';
+      cell.className=cls;
+      if(blocked) cell.title=`Can only book ${ins.advanceDays} days ahead`;
+      if(b){
+        const blk=document.createElement('div'); blk.className='bblock';
+        blk.style.background=ins.color; blk.style.color=ins.tc;
+        const canDel=adminMode||(b.name===currentUser);
+        blk.innerHTML=`<span class="bn">${esc(b.name.split(' ')[0])}</span>${b.note?`<span class="bnote">${esc(b.note)}</span>`:''}${canDel?`<button class="bx" onclick="delB(event,'${b.id}')">✕</button>`:''}`;
+        cell.appendChild(blk);
+      } else if(!past&&!blocked){
+        cell.addEventListener('click',()=>openModal(day,h,ds));
+      }
+      body.appendChild(cell);
+    }
+  }
+}
+
+function renderAdminPanel() {
+  const el=document.getElementById('admin-panel');
+  if(!adminMode){el.innerHTML='';return;}
+  const entries=bookings.filter(b=>b.instrument===instrId).sort((a,b)=>a.date>b.date?1:a.date<b.date?-1:a.hour-b.hour);
+  el.innerHTML=`<div class="admin-panel">
+    <div class="admin-panel-head"><h4>All bookings — ${instr().name} (${entries.length})</h4></div>
+    <div class="booking-list">${entries.length===0?'<div class="no-bookings">No bookings for this instrument.</div>':
+    entries.map(b=>`<div class="booking-row"><div><div class="br-name">${esc(b.name)}</div><div class="br-meta">${b.date} ${b.hour}:00${b.note?' · '+esc(b.note):''}</div></div><button class="br-del" onclick="delB(event,'${b.id}')">Cancel</button></div>`).join('')}
+    </div></div>`;
+}
+
+function renderAll(){ renderSidebar(); renderCalendar(); renderAdminPanel(); }
+
+function openModal(day, h, ds) {
+  if(!currentUser){ alert('Please select your name first.'); return; }
+  const ins=instr();
+  const ws=weekStart(weekOffset);
+  const userWeekH=getUserWeekHours(currentUser,instrId,ws);
+  const remaining=ins.weeklyHours-userWeekH;
+  const avail=Math.min(getAvailableSlots(day,h), remaining>0?remaining:0);
+  pendingSlot={day,h,ds}; selectedDur=Math.min(1,avail);
+
+  const warn = remaining<=0
+    ? `<div class="warning-box">Weekly limit of ${ins.weeklyHours}h reached for ${ins.name} this week.</div>`
+    : remaining<ins.maxSlot
+    ? `<div class="warning-box">${remaining}h of your ${ins.weeklyHours}h weekly limit remaining.</div>`:'';
+
+  const durBtns = Array.from({length:ins.maxSlot},(_,i)=>i+1).map(n=>{
+    const ok=n<=avail;
+    return `<button class="dur-btn${n===1&&ok?' dur-active':''}${!ok?' dur-disabled':''}" onclick="setDur(${n},${ok})" id="db${n}">${n}h</button>`;
+  }).join('');
+
+  document.getElementById('modal-container').innerHTML=`
+  <div class="modal-bg" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Book ${ins.name}</h3>
+      <div class="slot-info">${day.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})} · ${h}:00 – ${h+selectedDur}:00</div>
+      ${warn}
+      <label>Duration</label>
+      <div class="dur-row">${durBtns}</div>
+      <label>Note (optional)</label>
+      <textarea id="m-note" placeholder="Sample type, experiment name, run details..."></textarea>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono)">Booking as: ${esc(currentUser)}</div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal(null)">Cancel</button>
+        <button class="btn-confirm" onclick="confirmBooking()" ${avail===0?'disabled':''}>Confirm booking</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function setDur(n,ok){
+  if(!ok) return;
+  selectedDur=n;
+  document.querySelectorAll('.dur-btn').forEach((b,i)=>{ b.classList.toggle('dur-active',i+1===n); });
+  const si=document.querySelector('.slot-info');
+  if(si&&pendingSlot) si.textContent=`${pendingSlot.day.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})} · ${pendingSlot.h}:00 – ${pendingSlot.h+n}:00`;
+}
+
+function closeModal(e){ if(e===null||e.target.classList.contains('modal-bg')){ document.getElementById('modal-container').innerHTML=''; pendingSlot=null; }}
+
+async function confirmBooking(){
+  const ins=instr(), note=document.getElementById('m-note').value.trim();
+  const ws=weekStart(weekOffset);
+  const userWeekH=getUserWeekHours(currentUser,instrId,ws);
+  if(userWeekH+selectedDur>ins.weeklyHours){ alert(`This would exceed your ${ins.weeklyHours}h weekly limit for ${ins.name}.`); return; }
+  const btn=document.querySelector('.btn-confirm'); if(btn) btn.disabled=true;
+  const rows=[];
+  for(let i=0;i<selectedDur;i++){
+    const uniqueId=`${instrId}_${pendingSlot.ds}_${pendingSlot.h+i}_${currentUser.replace(/\s+/g,'')}_${Date.now()}${i}`;
+    rows.push({ id:uniqueId, instrument:instrId, date:pendingSlot.ds, hour:pendingSlot.h+i, name:currentUser, note });
+  }
+  for(const row of rows){
+    const existing=getB(instrId, row.date, row.hour);
+    if(!existing){ await addBooking(row); bookings.push(row); }
+  }
+  document.getElementById('modal-container').innerHTML=''; pendingSlot=null;
+  renderAll();
+}
+
+async function delB(e, id){
+  e.stopPropagation();
+  if(confirm('Cancel this booking?')){
+    await removeBooking(id);
+    bookings=bookings.filter(b=>b.id!==id);
+    renderAll();
+  }
+}
+
+function selInstr(id){ instrId=id; renderAll(); }
+function changeWeek(d){ weekOffset+=d; renderCalendar(); }
+function goToday(){ weekOffset=0; renderCalendar(); }
+
+function toggleAdmin(){
+  const pw = prompt('Enter admin password:');
+
+  if(pw !== 'L!Bb!l86495097'){
+    alert('Incorrect password');
+    return;
+  }
+
+  document.querySelector('.layout').style.display = 'none';
+  document.getElementById('admin-dashboard').style.display = 'block';
+
+  renderAdminDashboard();
+}
+
+function exitAdmin(){
+  document.querySelector('.layout').style.display = '';
+  document.getElementById('admin-dashboard').style.display = 'none';
+}
+
+function renderAdminDashboard(){
+  renderUsers();
+  renderInstruments();
+}
+
+function renderUsers(){
+  const el = document.getElementById('admin-users');
+
+  el.innerHTML = RESEARCHERS.map(u => `
+    <div class="admin-row">
+      <span>${u}</span>
+      <button onclick="deleteUser('${u}')">Delete</button>
+    </div>
+  `).join('');
+}
+
+async function createUser(){
+  const name = document.getElementById('new-user').value.trim();
+  if(!name) return;
+
+  await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+    method:'POST',
+    headers:HEADERS,
+    body:JSON.stringify({ name })
+  });
+
+  document.getElementById('new-user').value = '';
+
+  await loadConfig();
+  renderAdminDashboard();
+  renderAll();
+}
+
+async function deleteUser(name){
+  await fetch(`${SUPABASE_URL}/rest/v1/users?name=eq.${encodeURIComponent(name)}`, {
+    method:'DELETE',
+    headers:HEADERS
+  });
+
+  await loadConfig();
+  renderAdminDashboard();
+  renderAll();
+}
+
+function renderInstruments(){
+  const el = document.getElementById('admin-instruments');
+
+  el.innerHTML = INSTRUMENTS.map(i => `
+    <div class="admin-card">
+      <strong>${i.name}</strong><br>
+
+      Max:
+      <input value="${i.maxSlot}" onchange="updateInstr('${i.id}','maxSlot',this.value)">
+
+      Weekly:
+      <input value="${i.weeklyHours}" onchange="updateInstr('${i.id}','weeklyHours',this.value)">
+
+      Advance:
+      <input value="${i.advanceDays}" onchange="updateInstr('${i.id}','advanceDays',this.value)">
+    </div>
+  `).join('');
+}
+
+async function updateInstr(id, field, value){
+  await fetch(`${SUPABASE_URL}/rest/v1/instruments?id=eq.${id}`, {
+    method:'PATCH',
+    headers:HEADERS,
+    body:JSON.stringify({ [field]: Number(value) })
+  });
+
+  await loadConfig();
+  renderAll();
+}
+
+
+
+function setUser(v){ currentUser=v; localStorage.setItem('labBookingUser',v); renderAll(); }
+
+async function init(){
+  const body = document.getElementById('cal-body');
+  body.style.display='flex';
+  body.style.alignItems='center';
+  body.style.justifyContent='center';
+  body.innerHTML='<div class="loading">Loading bookings...</div>';
+  await loadConfig();
+  await loadBookings();
+  body.style.display='';
+  body.style.alignItems='';
+  body.style.justifyContent='';
+  renderAll();
+}
+init();
+</script>
+
+
+</body></html>
