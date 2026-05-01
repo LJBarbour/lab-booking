@@ -56,14 +56,16 @@ button.active { background:#e8f0ea; font-weight:bold; }
 </main>
 
 <script>
-const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+const SUPABASE_URL = 'https://mqpvnisphntdwhqoiqlt.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg';
 
 const HEADERS = {
-  "apikey": KEY,
-  "Authorization": `Bearer ${KEY}`,
+  "apikey": SUPABASE_KEY,
+  "Authorization": `Bearer ${SUPABASE_KEY}`,
   "Content-Type": "application/json"
 };
+
+const API = `${SUPABASE_URL}/rest/v1/bookings`;
 
 let users = [];
 let instruments = [];
@@ -86,9 +88,9 @@ function weekDates(){
 }
 
 async function load(){
-  users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  users = await fetch(`${SUPABASE_URL}/rest/v1/users`, { headers: HEADERS }).then(r=>r.json());
+  instruments = await fetch(`${SUPABASE_URL}/rest/v1/instruments`, { headers: HEADERS }).then(r=>r.json());
+  bookings = await fetch(API, { headers: HEADERS }).then(r=>r.json());
 
   currentUser = users[0]?.name;
   currentInstr = instruments[0];
@@ -152,10 +154,11 @@ function renderCalendar(){
       const c=document.createElement("div");
       c.className="cell";
 
+      // 🔧 ONLY FIX: include date
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
         x.hour===h &&
-        x.date===date   // FIX: include date
+        x.date===date
       );
 
       if(b){
@@ -181,13 +184,13 @@ async function book(hour,date){
     note:""
   };
 
-  await fetch(`${URL}/bookings`,{
+  await fetch(`${SUPABASE_URL}/rest/v1/bookings`,{
     method:"POST",
     headers:HEADERS,
     body:JSON.stringify(row)
   });
 
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  bookings = await fetch(API, { headers: HEADERS }).then(r=>r.json());
   renderCalendar();
 }
 
