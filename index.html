@@ -27,6 +27,12 @@ select { width:100%; margin-bottom:10px; padding:6px; }
 .time { text-align:right; background:#eee; }
 .header { background:#ddd; text-align:center; font-weight:bold; }
 .booking { background:#c8dff5; }
+
+#debug {
+  margin-top:10px;
+  font-size:11px;
+  white-space:pre-wrap;
+}
 </style>
 </head>
 
@@ -43,11 +49,13 @@ select { width:100%; margin-bottom:10px; padding:6px; }
 <main>
   <h2 id="title"></h2>
   <div id="calendar" class="calendar"></div>
+  <div id="debug"></div>
 </main>
 
 <script>
-const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const PROJECT = "mqpvnisphntdwhqoiqlt";   // ← your project ID
+const URL = `https://${PROJECT}.supabase.co/rest/v1`;
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // ← your anon key
 
 const HEADERS = {
   "apikey": KEY,
@@ -57,6 +65,10 @@ const HEADERS = {
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
+
+function log(msg){
+  document.getElementById("debug").textContent += msg + "\n";
+}
 
 function weekDates(){
   const base = new Date();
@@ -73,18 +85,36 @@ function weekDates(){
 
 async function load(){
   try {
-    users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-    instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-    bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+    log("Loading users...");
+    const uRes = await fetch(`${URL}/users?select=*`, {headers:HEADERS});
+    const uText = await uRes.text();
+    log("users raw: " + uText);
+    users = JSON.parse(uText);
+
+    log("Loading instruments...");
+    const iRes = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS});
+    const iText = await iRes.text();
+    log("instruments raw: " + iText);
+    instruments = JSON.parse(iText);
+
+    log("Loading bookings...");
+    const bRes = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS});
+    const bText = await bRes.text();
+    log("bookings raw: " + bText);
+    bookings = JSON.parse(bText);
 
     if(!Array.isArray(users) || !Array.isArray(instruments)){
-      document.body.innerHTML = "Supabase returned an error — check console";
-      console.log(users, instruments);
+      log("ERROR: Not arrays returned");
       return;
     }
 
-    if(!users.length || !instruments.length){
-      document.body.innerHTML = "No data found in Supabase tables";
+    if(!users.length){
+      log("ERROR: users table is empty OR wrong project");
+      return;
+    }
+
+    if(!instruments.length){
+      log("ERROR: instruments table is empty OR wrong project");
       return;
     }
 
@@ -94,8 +124,7 @@ async function load(){
     render();
 
   } catch(e){
-    document.body.innerHTML = "Error loading data";
-    console.error(e);
+    log("ERROR: " + e.message);
   }
 }
 
@@ -184,10 +213,7 @@ async function book(hour,date){
     body:JSON.stringify(row)
   });
 
-  if(!res.ok){
-    alert("Booking failed");
-    return;
-  }
+  log("POST status: " + res.status);
 
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
