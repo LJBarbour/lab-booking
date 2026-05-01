@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lab Booking</title>
 
 <style>
@@ -19,6 +18,7 @@ button.active { background:#e8f0ea; font-weight:bold; }
   grid-template-columns:60px repeat(5,1fr);
   border:1px solid #ddd;
 }
+
 .cell { border:1px solid #eee; height:40px; font-size:12px; padding:4px; }
 .cell.clickable:hover { background:#e8f0ea; cursor:pointer; }
 .header { background:#fafafa; font-weight:bold; text-align:center; }
@@ -45,7 +45,7 @@ button.active { background:#e8f0ea; font-weight:bold; }
 
 <script>
 const SUPABASE_URL = 'https://mqpvnisphntdwhqoiqlt.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 
 const HEADERS = {
   "apikey": SUPABASE_KEY,
@@ -61,6 +61,22 @@ let bookings = [];
 
 let currentUser = null;
 let currentInstr = null;
+
+function getWeekDates(){
+  const today = new Date();
+  const monday = new Date(today);
+  const day = today.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  monday.setDate(today.getDate() + diff);
+
+  const dates = [];
+  for(let i=0;i<5;i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    dates.push(d.toISOString().split("T")[0]);
+  }
+  return dates;
+}
 
 async function load() {
   users = await fetch(`${SUPABASE_URL}/rest/v1/users`, { headers: HEADERS }).then(r=>r.json());
@@ -112,9 +128,11 @@ function renderCalendar(){
   cal.innerHTML = "";
 
   const days = ["Mon","Tue","Wed","Thu","Fri"];
+  const dates = getWeekDates();
 
   cal.appendChild(document.createElement("div"));
-  days.forEach(d=>{
+
+  days.forEach((d,i)=>{
     const h = document.createElement("div");
     h.className = "cell header";
     h.textContent = d;
@@ -127,13 +145,16 @@ function renderCalendar(){
     t.textContent = hour + ":00";
     cal.appendChild(t);
 
-    for(let d=0; d<5; d++){
+    for(let i=0;i<5;i++){
+      const date = dates[i];
+
       const c = document.createElement("div");
       c.className = "cell";
 
       const existing = bookings.find(b =>
         b.instrument === currentInstr.id &&
-        b.hour === hour
+        b.hour === hour &&
+        b.date === date   // ✅ FIX
       );
 
       if(existing){
@@ -141,7 +162,7 @@ function renderCalendar(){
         c.classList.add("booking");
       } else {
         c.classList.add("clickable");
-        c.onclick = () => createBooking(hour);
+        c.onclick = () => createBooking(hour, date);
       }
 
       cal.appendChild(c);
@@ -149,18 +170,16 @@ function renderCalendar(){
   }
 }
 
-async function createBooking(hour){
+async function createBooking(hour, date){
   if(!currentUser) return alert("Select a user first");
-
-  const today = new Date().toISOString().split("T")[0];
 
   const newBooking = {
     id: Date.now().toString(),
     instrument: currentInstr.id,
-    date: today,     // ✅ REQUIRED
+    date: date,   // ✅ correct per-day booking
     hour: hour,
     name: currentUser,
-    note: ""         // ✅ REQUIRED if column exists
+    note: ""
   };
 
   const res = await fetch(API, {
