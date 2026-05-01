@@ -36,6 +36,12 @@ button.active { background:#e8f0ea; font-weight:bold; }
 .header { background:#fafafa; font-weight:bold; text-align:center; }
 .time { text-align:right; background:#fafafa; }
 .booking { background:#c8dff5; }
+
+#debug {
+  margin-top:10px;
+  font-size:11px;
+  color:#666;
+}
 </style>
 </head>
 
@@ -53,6 +59,7 @@ button.active { background:#e8f0ea; font-weight:bold; }
   <h2 id="title"></h2>
   <div id="desc"></div>
   <div id="calendar" class="calendar"></div>
+  <div id="debug"></div>
 </main>
 
 <script>
@@ -74,6 +81,10 @@ let bookings = [];
 let currentUser = null;
 let currentInstr = null;
 
+function log(msg){
+  document.getElementById("debug").innerText += msg + "\n";
+}
+
 function getWeekDates(){
   const today = new Date();
   const monday = new Date(today);
@@ -91,14 +102,32 @@ function getWeekDates(){
 }
 
 async function load(){
-  users = await fetch(`${SUPABASE_URL}/rest/v1/users`, { headers: HEADERS }).then(r=>r.json());
-  instruments = await fetch(`${SUPABASE_URL}/rest/v1/instruments`, { headers: HEADERS }).then(r=>r.json());
-  bookings = await fetch(API, { headers: HEADERS }).then(r=>r.json());
+  try {
+    log("Loading users...");
+    users = await fetch(`${SUPABASE_URL}/rest/v1/users`, { headers: HEADERS }).then(r=>r.json());
 
-  currentUser = users[0]?.name;
-  currentInstr = instruments[0];
+    log("Loading instruments...");
+    instruments = await fetch(`${SUPABASE_URL}/rest/v1/instruments`, { headers: HEADERS }).then(r=>r.json());
 
-  render();
+    log("Loading bookings...");
+    bookings = await fetch(API, { headers: HEADERS }).then(r=>r.json());
+
+    log("Users: " + users.length);
+    log("Instruments: " + instruments.length);
+
+    if(!users.length || !instruments.length){
+      log("Missing data");
+      return;
+    }
+
+    currentUser = users[0].name;
+    currentInstr = instruments[0];
+
+    render();
+
+  } catch(e){
+    log("ERROR: " + e.message);
+  }
 }
 
 function render(){
@@ -121,7 +150,8 @@ function renderInstr(){
   const el = document.getElementById("instr");
 
   el.innerHTML = instruments.map(i =>
-    `<button class="${currentInstr?.id===i.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button class="${currentInstr?.id===i.id?'active':''}"
+      onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
@@ -183,7 +213,7 @@ function renderCalendar(){
 }
 
 async function createBooking(hour, date){
-  if(!currentUser) return alert("Select a user first");
+  log("Creating booking...");
 
   const newBooking = {
     id: Date.now().toString(),
@@ -200,14 +230,18 @@ async function createBooking(hour, date){
     body: JSON.stringify(newBooking)
   });
 
+  log("Response: " + res.status);
+
   if(!res.ok){
     const err = await res.text();
-    console.log(err);
+    log("ERROR: " + err);
     alert("Booking failed");
     return;
   }
 
-  bookings.push(newBooking);
+  // ✅ CRITICAL FIX: reload bookings
+  bookings = await fetch(API, { headers: HEADERS }).then(r=>r.json());
+
   renderCalendar();
 }
 
