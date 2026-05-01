@@ -72,19 +72,31 @@ function weekDates(){
 }
 
 async function load(){
-  users = await fetch(`${URL}/users`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${URL}/instruments`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${URL}/bookings`, {headers:HEADERS}).then(r=>r.json());
+  try {
+    users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
+    instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
+    bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
 
-  if(!users.length || !instruments.length){
-    document.body.innerHTML = "No data found in Supabase tables";
-    return;
+    if(!Array.isArray(users) || !Array.isArray(instruments)){
+      document.body.innerHTML = "Supabase returned an error — check console";
+      console.log(users, instruments);
+      return;
+    }
+
+    if(!users.length || !instruments.length){
+      document.body.innerHTML = "No data found in Supabase tables";
+      return;
+    }
+
+    currentUser = users[0].name;
+    currentInstr = instruments[0];
+
+    render();
+
+  } catch(e){
+    document.body.innerHTML = "Error loading data";
+    console.error(e);
   }
-
-  currentUser = users[0].name;
-  currentInstr = instruments[0];
-
-  render();
 }
 
 function render(){
@@ -177,7 +189,7 @@ async function book(hour,date){
     return;
   }
 
-  bookings = await fetch(`${URL}/bookings`, {headers:HEADERS}).then(r=>r.json());
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
 }
 
