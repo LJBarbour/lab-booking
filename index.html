@@ -65,6 +65,17 @@ main {
   padding:24px;
 }
 
+#title {
+  font-size:18px;
+  font-weight:500;
+}
+
+#desc {
+  font-size:13px;
+  color:#6e6c65;
+  margin-bottom:18px;
+}
+
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(5,1fr);
@@ -78,30 +89,41 @@ main {
   border-bottom:1px solid #e3e1d9;
   border-right:1px solid #e3e1d9;
   height:44px;
-  font-size:12px;
   display:flex;
   align-items:center;
   justify-content:center;
-  position:relative;
+  font-size:12px;
 }
 
-.header { background:#f7f6f2; font-weight:500; }
-.time { font-size:11px; color:#7a7870; justify-content:flex-end; padding-right:8px; }
+.header {
+  background:#f7f6f2;
+  font-weight:500;
+}
 
-.cell.clickable:hover { background:#eef3ef; cursor:pointer; }
+.time {
+  font-size:11px;
+  color:#7a7870;
+  justify-content:flex-end;
+  padding-right:8px;
+  background:#faf9f6;
+}
+
+.cell.clickable:hover {
+  background:#eef3ef;
+  cursor:pointer;
+}
 
 .booking {
   background:#cfe3f5;
   color:#1a4a7a;
-  font-weight:500;
   border-radius:6px;
   padding:2px 6px;
-  cursor:pointer;
 }
 
 .booking.mine {
   background:#d4f5d8;
   color:#1a7a3a;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -225,7 +247,7 @@ function renderCalendar(){
         c.classList.add("booking");
         if(b.name === currentUser){
           c.classList.add("mine");
-          c.onclick = () => deleteBooking(b.id);
+          c.onclick = () => deleteBooking(b);
         }
         c.textContent=b.name;
       } else {
@@ -258,13 +280,19 @@ async function book(hour,date){
   renderCalendar();
 }
 
-async function deleteBooking(id){
+async function deleteBooking(b){
   if(!confirm("Delete this booking?")) return;
 
-  await fetch(`${URL}/bookings?id=eq.${id}`, {
-    method:"DELETE",
-    headers:HEADERS
-  });
+  await fetch(
+    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
+    {
+      method:"DELETE",
+      headers:{
+        "apikey": KEY,
+        "Authorization": `Bearer ${KEY}`
+      }
+    }
+  );
 
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
