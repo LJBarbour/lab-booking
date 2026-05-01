@@ -5,43 +5,28 @@
 <title>Lab Booking</title>
 
 <style>
-body { margin:0; font-family:Arial; display:grid; grid-template-columns:260px 1fr; height:100vh; }
-aside { background:#fff; border-right:1px solid #ddd; padding:20px; }
+body { margin:0; font-family:Arial; display:grid; grid-template-columns:250px 1fr; height:100vh; }
+aside { padding:20px; background:#f4f4f4; }
 main { padding:20px; }
 
-h3 { font-size:12px; text-transform:uppercase; color:#777; }
-
-select { width:100%; padding:8px; margin-bottom:20px; }
-
-button {
-  width:100%;
-  padding:8px;
-  margin-bottom:5px;
-  border:none;
-  background:#f5f4f0;
-  cursor:pointer;
-}
-
-button.active { background:#e8f0ea; font-weight:bold; }
+button { width:100%; margin:4px 0; padding:6px; cursor:pointer; }
+select { width:100%; margin-bottom:10px; padding:6px; }
 
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(5,1fr);
+}
+
+.cell {
   border:1px solid #ddd;
+  height:40px;
+  font-size:12px;
+  padding:4px;
 }
 
-.cell { border:1px solid #eee; height:40px; font-size:12px; padding:4px; }
-.cell.clickable:hover { background:#e8f0ea; cursor:pointer; }
-
-.header { background:#fafafa; font-weight:bold; text-align:center; }
-.time { text-align:right; background:#fafafa; }
+.time { text-align:right; background:#eee; }
+.header { background:#ddd; text-align:center; font-weight:bold; }
 .booking { background:#c8dff5; }
-
-#debug {
-  margin-top:10px;
-  font-size:11px;
-  color:#666;
-}
 </style>
 </head>
 
@@ -57,154 +42,113 @@ button.active { background:#e8f0ea; font-weight:bold; }
 
 <main>
   <h2 id="title"></h2>
-  <div id="desc"></div>
   <div id="calendar" class="calendar"></div>
-  <div id="debug"></div>
 </main>
 
 <script>
-const SUPABASE_URL = 'https://mqpvnisphntdwhqoiqlt.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 
 const HEADERS = {
-  "apikey": SUPABASE_KEY,
-  "Authorization": `Bearer ${SUPABASE_KEY}`,
+  "apikey": KEY,
+  "Authorization": `Bearer ${KEY}`,
   "Content-Type": "application/json"
 };
 
-const API = `${SUPABASE_URL}/rest/v1/bookings`;
+let users=[], instruments=[], bookings=[];
+let currentUser=null, currentInstr=null;
 
-let users = [];
-let instruments = [];
-let bookings = [];
+function weekDates(){
+  const base = new Date();
+  const monday = new Date(base);
+  const diff = (base.getDay()===0?-6:1-base.getDay());
+  monday.setDate(base.getDate()+diff);
 
-let currentUser = null;
-let currentInstr = null;
-
-function log(msg){
-  document.getElementById("debug").innerText += msg + "\n";
-}
-
-function getWeekDates(){
-  const today = new Date();
-  const monday = new Date(today);
-  const day = today.getDay();
-  const diff = (day === 0 ? -6 : 1 - day);
-  monday.setDate(today.getDate() + diff);
-
-  const dates = [];
-  for(let i=0;i<5;i++){
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    dates.push(d.toISOString().split("T")[0]);
-  }
-  return dates;
+  return Array.from({length:5},(_,i)=>{
+    const d=new Date(monday);
+    d.setDate(monday.getDate()+i);
+    return d.toISOString().split("T")[0];
+  });
 }
 
 async function load(){
-  try {
-    log("Loading users...");
-    users = await fetch(`${SUPABASE_URL}/rest/v1/users`, { headers: HEADERS }).then(r=>r.json());
+  users = await fetch(`${URL}/users`, {headers:HEADERS}).then(r=>r.json());
+  instruments = await fetch(`${URL}/instruments`, {headers:HEADERS}).then(r=>r.json());
+  bookings = await fetch(`${URL}/bookings`, {headers:HEADERS}).then(r=>r.json());
 
-    log("Loading instruments...");
-    instruments = await fetch(`${SUPABASE_URL}/rest/v1/instruments`, { headers: HEADERS }).then(r=>r.json());
-
-    log("Loading bookings...");
-    bookings = await fetch(API, { headers: HEADERS }).then(r=>r.json());
-
-    log("Users: " + users.length);
-    log("Instruments: " + instruments.length);
-
-    if(!users.length || !instruments.length){
-      log("Missing data");
-      return;
-    }
-
-    currentUser = users[0].name;
-    currentInstr = instruments[0];
-
-    render();
-
-  } catch(e){
-    log("ERROR: " + e.message);
+  if(!users.length || !instruments.length){
+    document.body.innerHTML = "No data found in Supabase tables";
+    return;
   }
+
+  currentUser = users[0].name;
+  currentInstr = instruments[0];
+
+  render();
 }
 
 function render(){
   renderUsers();
   renderInstr();
-  renderMain();
   renderCalendar();
+  document.getElementById("title").textContent = currentInstr.name;
 }
 
 function renderUsers(){
   const el = document.getElementById("user");
-  el.innerHTML = users.map(u =>
-    `<option ${u.name===currentUser?"selected":""}>${u.name}</option>`
-  ).join("");
-
-  el.onchange = e => currentUser = e.target.value;
+  el.innerHTML = users.map(u=>`<option>${u.name}</option>`).join("");
+  el.onchange = e=>currentUser=e.target.value;
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
-
   el.innerHTML = instruments.map(i =>
-    `<button class="${currentInstr?.id===i.id?'active':''}"
-      onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
 function selectInstr(id){
-  currentInstr = instruments.find(i => i.id === id);
+  currentInstr = instruments.find(i=>i.id===id);
   render();
-}
-
-function renderMain(){
-  document.getElementById("title").textContent = currentInstr.name;
-  document.getElementById("desc").textContent = currentInstr.description;
 }
 
 function renderCalendar(){
   const cal = document.getElementById("calendar");
-  cal.innerHTML = "";
+  cal.innerHTML="";
 
-  const days = ["Mon","Tue","Wed","Thu","Fri"];
-  const dates = getWeekDates();
+  const days=["Mon","Tue","Wed","Thu","Fri"];
+  const dates=weekDates();
 
   cal.appendChild(document.createElement("div"));
-
   days.forEach(d=>{
-    const h = document.createElement("div");
-    h.className = "cell header";
-    h.textContent = d;
+    const h=document.createElement("div");
+    h.className="cell header";
+    h.textContent=d;
     cal.appendChild(h);
   });
 
-  for(let hour=8; hour<20; hour++){
-    const t = document.createElement("div");
-    t.className = "cell time";
-    t.textContent = hour + ":00";
+  for(let h=8;h<20;h++){
+    const t=document.createElement("div");
+    t.className="cell time";
+    t.textContent=h+":00";
     cal.appendChild(t);
 
     for(let i=0;i<5;i++){
-      const date = dates[i];
+      const date=dates[i];
+      const c=document.createElement("div");
+      c.className="cell";
 
-      const c = document.createElement("div");
-      c.className = "cell";
-
-      const existing = bookings.find(b =>
-        b.instrument === currentInstr.id &&
-        b.hour === hour &&
-        b.date === date
+      const b = bookings.find(x =>
+        x.instrument===currentInstr.id &&
+        x.hour===h &&
+        x.date===date
       );
 
-      if(existing){
-        c.textContent = existing.name;
+      if(b){
+        c.textContent=b.name;
         c.classList.add("booking");
       } else {
-        c.classList.add("clickable");
-        c.onclick = () => createBooking(hour, date);
+        c.onclick=()=>book(h,date);
       }
 
       cal.appendChild(c);
@@ -212,36 +156,28 @@ function renderCalendar(){
   }
 }
 
-async function createBooking(hour, date){
-  log("Creating booking...");
-
-  const newBooking = {
+async function book(hour,date){
+  const row={
     id: Date.now().toString(),
     instrument: currentInstr.id,
     date: date,
     hour: hour,
     name: currentUser,
-    note: ""
+    note:""
   };
 
-  const res = await fetch(API, {
+  const res = await fetch(`${URL}/bookings`,{
     method:"POST",
-    headers: HEADERS,
-    body: JSON.stringify(newBooking)
+    headers:HEADERS,
+    body:JSON.stringify(row)
   });
 
-  log("Response: " + res.status);
-
   if(!res.ok){
-    const err = await res.text();
-    log("ERROR: " + err);
     alert("Booking failed");
     return;
   }
 
-  // ✅ CRITICAL FIX: reload bookings
-  bookings = await fetch(API, { headers: HEADERS }).then(r=>r.json());
-
+  bookings = await fetch(`${URL}/bookings`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
 }
 
