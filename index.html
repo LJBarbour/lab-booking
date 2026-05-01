@@ -102,7 +102,7 @@ button.active {
 </main>
 
 <script>
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 const BASE = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 
 let users = [];
@@ -117,7 +117,12 @@ async function load(){
   instruments = await fetch(`${BASE}/instruments?select=*&apikey=${KEY}`).then(r=>r.json());
   bookings = await fetch(`${BASE}/bookings?select=*&apikey=${KEY}`).then(r=>r.json());
 
-  currentUser = users[0]?.name;
+  if (!users.length || !instruments.length){
+    document.body.innerHTML = "Missing data in Supabase tables";
+    return;
+  }
+
+  currentUser = users[0].name;
   currentInstr = instruments[0];
 
   render();
@@ -203,9 +208,12 @@ function renderCalendar(){
 async function createBooking(hour){
   if(!currentUser) return alert("Select a user first");
 
+  const today = new Date().toISOString().split("T")[0];
+
   const newBooking = {
     id: Date.now().toString(),
     instrument: currentInstr.id,
+    date: today,          // ✅ FIX
     hour: hour,
     name: currentUser
   };
@@ -221,8 +229,9 @@ async function createBooking(hour){
   });
 
   if(!res.ok){
+    const err = await res.text();
+    console.log(err);
     alert("Booking failed");
-    console.log(await res.text());
     return;
   }
 
