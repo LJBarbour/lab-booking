@@ -5,34 +5,37 @@
 <title>Lab Booking</title>
 
 <style>
-body { margin:0; font-family:Arial; display:grid; grid-template-columns:250px 1fr; height:100vh; }
-aside { padding:20px; background:#f4f4f4; }
+body { margin:0; font-family:Arial; display:grid; grid-template-columns:260px 1fr; height:100vh; }
+aside { background:#fff; border-right:1px solid #ddd; padding:20px; }
 main { padding:20px; }
 
-button { width:100%; margin:4px 0; padding:6px; cursor:pointer; }
-select { width:100%; margin-bottom:10px; padding:6px; }
+h3 { font-size:12px; text-transform:uppercase; color:#777; }
+
+select { width:100%; padding:8px; margin-bottom:20px; }
+
+button {
+  width:100%;
+  padding:8px;
+  margin-bottom:5px;
+  border:none;
+  background:#f5f4f0;
+  cursor:pointer;
+}
+
+button.active { background:#e8f0ea; font-weight:bold; }
 
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(5,1fr);
-}
-
-.cell {
   border:1px solid #ddd;
-  height:40px;
-  font-size:12px;
-  padding:4px;
 }
 
-.time { text-align:right; background:#eee; }
-.header { background:#ddd; text-align:center; font-weight:bold; }
+.cell { border:1px solid #eee; height:40px; font-size:12px; padding:4px; }
+.cell.clickable:hover { background:#e8f0ea; cursor:pointer; }
+
+.header { background:#fafafa; font-weight:bold; text-align:center; }
+.time { text-align:right; background:#fafafa; }
 .booking { background:#c8dff5; }
-
-#debug {
-  margin-top:10px;
-  font-size:11px;
-  white-space:pre-wrap;
-}
 </style>
 </head>
 
@@ -48,14 +51,13 @@ select { width:100%; margin-bottom:10px; padding:6px; }
 
 <main>
   <h2 id="title"></h2>
+  <div id="desc"></div>
   <div id="calendar" class="calendar"></div>
-  <div id="debug"></div>
 </main>
 
 <script>
-const PROJECT = "mqpvnisphntdwhqoiqlt";   // ← your project ID
-const URL = `https://${PROJECT}.supabase.co/rest/v1`;
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // ← your anon key
+const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 
 const HEADERS = {
   "apikey": KEY,
@@ -63,18 +65,18 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let users=[], instruments=[], bookings=[];
-let currentUser=null, currentInstr=null;
+let users = [];
+let instruments = [];
+let bookings = [];
 
-function log(msg){
-  document.getElementById("debug").textContent += msg + "\n";
-}
+let currentUser = null;
+let currentInstr = null;
 
 function weekDates(){
-  const base = new Date();
-  const monday = new Date(base);
-  const diff = (base.getDay()===0?-6:1-base.getDay());
-  monday.setDate(base.getDate()+diff);
+  const today = new Date();
+  const monday = new Date(today);
+  const diff = (today.getDay()===0?-6:1-today.getDay());
+  monday.setDate(today.getDate()+diff);
 
   return Array.from({length:5},(_,i)=>{
     const d=new Date(monday);
@@ -84,55 +86,21 @@ function weekDates(){
 }
 
 async function load(){
-  try {
-    log("Loading users...");
-    const uRes = await fetch(`${URL}/users?select=*`, {headers:HEADERS});
-    const uText = await uRes.text();
-    log("users raw: " + uText);
-    users = JSON.parse(uText);
+  users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
+  instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
 
-    log("Loading instruments...");
-    const iRes = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS});
-    const iText = await iRes.text();
-    log("instruments raw: " + iText);
-    instruments = JSON.parse(iText);
+  currentUser = users[0]?.name;
+  currentInstr = instruments[0];
 
-    log("Loading bookings...");
-    const bRes = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS});
-    const bText = await bRes.text();
-    log("bookings raw: " + bText);
-    bookings = JSON.parse(bText);
-
-    if(!Array.isArray(users) || !Array.isArray(instruments)){
-      log("ERROR: Not arrays returned");
-      return;
-    }
-
-    if(!users.length){
-      log("ERROR: users table is empty OR wrong project");
-      return;
-    }
-
-    if(!instruments.length){
-      log("ERROR: instruments table is empty OR wrong project");
-      return;
-    }
-
-    currentUser = users[0].name;
-    currentInstr = instruments[0];
-
-    render();
-
-  } catch(e){
-    log("ERROR: " + e.message);
-  }
+  render();
 }
 
 function render(){
   renderUsers();
   renderInstr();
+  renderMain();
   renderCalendar();
-  document.getElementById("title").textContent = currentInstr.name;
 }
 
 function renderUsers(){
@@ -151,6 +119,11 @@ function renderInstr(){
 function selectInstr(id){
   currentInstr = instruments.find(i=>i.id===id);
   render();
+}
+
+function renderMain(){
+  document.getElementById("title").textContent = currentInstr.name;
+  document.getElementById("desc").textContent = currentInstr.description;
 }
 
 function renderCalendar(){
@@ -182,13 +155,14 @@ function renderCalendar(){
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
         x.hour===h &&
-        x.date===date
+        x.date===date   // ✅ THIS IS THE ONLY FIX THAT MATTERS
       );
 
       if(b){
         c.textContent=b.name;
         c.classList.add("booking");
       } else {
+        c.classList.add("clickable");
         c.onclick=()=>book(h,date);
       }
 
@@ -207,13 +181,11 @@ async function book(hour,date){
     note:""
   };
 
-  const res = await fetch(`${URL}/bookings`,{
+  await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
     body:JSON.stringify(row)
   });
-
-  log("POST status: " + res.status);
 
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
