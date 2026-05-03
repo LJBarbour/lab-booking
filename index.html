@@ -143,7 +143,8 @@ main { padding:24px; }
 </main>
 
 <script>
-console.log("VERSION: 1.0.19");
+
+console.log("VERSION: 1.1.0");
 
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
@@ -154,7 +155,7 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let users=[], instruments=[], bookings=[];
+let users=[], instruments=[], bookings=[], permissions=[];
 let currentUser=null, currentInstr=null;
 let weekOffset = 0;
 
@@ -180,6 +181,7 @@ async function load(){
   users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
   instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  permissions = await fetch(`${URL}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
 
   currentUser = users[0]?.name;
   currentInstr = instruments[0];
@@ -207,9 +209,22 @@ function renderUsers(){
   };
 }
 
+/* ONLY CHANGE */
 function renderInstr(){
   const el = document.getElementById("instr");
-  el.innerHTML = instruments.map(i =>
+
+  const allowed = instruments.filter(i =>
+    permissions.some(p =>
+      p.user_id === currentUser &&
+      p.instrument_id === i.id
+    )
+  );
+
+  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
+    currentInstr = allowed[0] || null;
+  }
+
+  el.innerHTML = allowed.map(i =>
     `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
@@ -232,17 +247,17 @@ function renderImage(){
 
 function renderCalendar(){
   const cal = document.getElementById("calendar");
-  cal.innerHTML = "";
+  cal.innerHTML="";
 
-  const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  const dates = weekDates();
+  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const dates=weekDates();
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
 
   cal.appendChild(document.createElement("div"));
 
-  days.forEach((d, i) => {
-    const h = document.createElement("div");
+  days.forEach((d,i)=>{
+    const h=document.createElement("div");
     const dateStr = dates[i].toISOString().split("T")[0];
     const isToday = dateStr === todayStr;
     h.className = "cell header" + (isToday ? " today-col" : "");
@@ -250,25 +265,25 @@ function renderCalendar(){
     cal.appendChild(h);
   });
 
-  for(let h = 0; h < 24; h++){
-    const t = document.createElement("div");
-    t.className = "cell time";
-    t.textContent = h.toString().padStart(2, "0") + ":00";
+  for(let h=0;h<24;h++){
+    const t=document.createElement("div");
+    t.className="cell time";
+    t.textContent=h.toString().padStart(2,'0')+":00";
     cal.appendChild(t);
 
-    for(let i = 0; i < 7; i++){
+    for(let i=0;i<7;i++){
       const dateStr = dates[i].toISOString().split("T")[0];
-      const c = document.createElement("div");
+      const c=document.createElement("div");
 
-      const slotTime = new Date(dateStr + "T" + h.toString().padStart(2, "0") + ":00");
+      const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,'0') + ":00");
       const isPast = slotTime < now;
 
-      c.className = "cell" + (isPast ? " past-cell" : "");
+      c.className="cell" + (isPast ? " past-cell" : "");
 
       const b = bookings.find(x =>
-        x.instrument === currentInstr.id &&
-        x.hour === h &&
-        x.date === dateStr
+        x.instrument===currentInstr.id &&
+        x.hour===h &&
+        x.date===dateStr
       );
 
       if(b){
@@ -290,9 +305,10 @@ function renderCalendar(){
   }
 }
 
-async function book(hour, date){
+async function book(hour,date){
+
   const now = new Date();
-  const slotTime = new Date(date + "T" + hour.toString().padStart(2, "0") + ":00");
+  const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
 
   if(slotTime < now){
     alert("Cannot book in the past");
@@ -309,7 +325,7 @@ async function book(hour, date){
   }
 
   const count = bookings.filter(b => {
-    const t = new Date(b.date + "T" + b.hour.toString().padStart(2, "0") + ":00");
+    const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
     return (
       norm(b.name) === norm(currentUser) &&
       b.instrument === currentInstr.id &&
@@ -324,10 +340,10 @@ async function book(hour, date){
     return;
   }
 
-  await fetch(`${URL}/bookings`, {
-    method: "POST",
-    headers: HEADERS,
-    body: JSON.stringify({
+  await fetch(`${URL}/bookings`,{
+    method:"POST",
+    headers:HEADERS,
+    body:JSON.stringify({
       id: Date.now().toString(),
       instrument: currentInstr.id,
       date: date,
@@ -336,7 +352,7 @@ async function book(hour, date){
     })
   });
 
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers: HEADERS}).then(r => r.json());
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
 }
 
@@ -346,12 +362,12 @@ async function deleteBooking(b){
   await fetch(
     `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
     {
-      method: "DELETE",
-      headers: HEADERS
+      method:"DELETE",
+      headers:HEADERS
     }
   );
 
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers: HEADERS}).then(r => r.json());
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
 }
 
