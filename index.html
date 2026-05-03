@@ -131,7 +131,7 @@ main { padding:24px; }
   <div id="auth">
     <button onclick="login()">Login</button>
     <button onclick="logout()">Logout</button>
-    <div id="user-email" style="font-size:12px; margin-top:6px;"></div>
+    <div id="user-email" style="font-size:12px; margin-top:6px;">Not logged in</div>
   </div>
 
   <h3>Researcher</h3>
@@ -157,14 +157,18 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.2.1");
+console.log("VERSION: 1.2.2");
 
+// ✅ CORRECT BASE URL (NO /rest/v1)
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
+
+// 🔴 PUT YOUR REAL ANON KEY HERE
 const KEY = "YOUR_ANON_KEY_HERE";
 
-// ✅ renamed to avoid conflict
+// Supabase client
 const sb = window.supabase.createClient(URL, KEY);
 
+// REST endpoint (separate)
 const REST = URL + "/rest/v1";
 
 const HEADERS = {
@@ -197,6 +201,7 @@ async function login(){
 async function logout(){
   await sb.auth.signOut();
   currentUser = null;
+  document.getElementById("user-email").textContent = "Not logged in";
   render();
 }
 
@@ -204,18 +209,13 @@ async function getSession(){
   const { data } = await sb.auth.getSession();
 
   if(data.session){
-    document.getElementById("user-email").textContent = data.session.user.email;
+    const user = data.session.user;
+    document.getElementById("user-email").textContent = user.email;
 
-    const userId = data.session.user.id;
-
-    const res = await fetch(`${REST}/users?auth_id=eq.${userId}`, {headers:HEADERS});
+    const res = await fetch(`${REST}/users?auth_id=eq.${user.id}`, {headers:HEADERS});
     const row = await res.json();
 
     currentUser = row[0]?.name || null;
-
-  } else {
-    document.getElementById("user-email").textContent = "Not logged in";
-    currentUser = null;
   }
 }
 
@@ -274,9 +274,7 @@ function renderInstr(){
   const el = document.getElementById("instr");
 
   if(!currentUser){
-    el.innerHTML = instruments.map(i =>
-      `<button>${i.name}</button>`
-    ).join("");
+    el.innerHTML = instruments.map(i => `<button>${i.name}</button>`).join("");
     return;
   }
 
@@ -318,7 +316,6 @@ function renderCalendar(){
 
   const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const dates=weekDates();
-  const now = new Date();
 
   cal.appendChild(document.createElement("div"));
 
@@ -391,9 +388,7 @@ async function book(hour,date){
 
 async function deleteBooking(b){
 
-  if(!currentUser){
-    return;
-  }
+  if(!currentUser) return;
 
   await fetch(
     `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
@@ -408,6 +403,7 @@ async function deleteBooking(b){
 }
 
 load();
+
 </script>
 </body>
 </html>
