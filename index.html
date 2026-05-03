@@ -15,7 +15,7 @@ body {
 }
 
 aside {
-  background:#fff;
+  background:#ffffff;
   border-right:1px solid #e3e1d9;
   padding:24px 20px;
 }
@@ -50,8 +50,34 @@ button.active {
   font-weight:bold;
 }
 
-main { padding:24px; }
+main {
+  padding:24px;
+}
 
+/* Admin UI */
+.admin-box {
+  margin-top:20px;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  background:#fafafa;
+}
+
+.admin-banner {
+  margin-top:10px;
+  padding:6px;
+  font-size:11px;
+  background:#ffe0e0;
+  color:#8b2020;
+  border-radius:6px;
+  display:none;
+}
+
+.admin-active {
+  display:block;
+}
+
+/* Calendar */
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(5,1fr);
@@ -84,15 +110,12 @@ main { padding:24px; }
   padding:2px 6px;
 }
 
-.booking.mine { background:#d4f5d8; }
-.booking.admin { background:#ffdede; }
+.booking.mine {
+  background:#d4f5d8;
+}
 
-.admin-box {
-  margin-top:20px;
-  padding:10px;
-  border:1px solid #ddd;
-  border-radius:6px;
-  background:#fafafa;
+.booking.admin {
+  background:#ffd6d6;
 }
 </style>
 </head>
@@ -110,6 +133,7 @@ main { padding:24px; }
     <label>
       <input type="checkbox" id="adminToggle"> Admin mode
     </label>
+    <div id="admin-banner" class="admin-banner">ADMIN ACTIVE</div>
   </div>
 </aside>
 
@@ -135,6 +159,10 @@ let adminMode=false;
 
 document.getElementById("adminToggle").onchange = e => {
   adminMode = e.target.checked;
+
+  document.getElementById("admin-banner")
+    .classList.toggle("admin-active", adminMode);
+
   renderCalendar();
 };
 
@@ -273,10 +301,7 @@ async function deleteBooking(b){
     `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
     {
       method:"DELETE",
-      headers:{
-        "apikey": KEY,
-        "Authorization": `Bearer ${KEY}`
-      }
+      headers:HEADERS
     }
   );
 
