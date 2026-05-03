@@ -32,7 +32,6 @@ button.active {
 
 main { padding:24px; }
 
-/* NEW NAV */
 .week-nav {
   display:flex;
   justify-content:space-between;
@@ -41,7 +40,6 @@ main { padding:24px; }
 
 .week-nav button {
   width:auto;
-  padding:6px 10px;
 }
 
 .calendar {
@@ -62,7 +60,7 @@ main { padding:24px; }
   position:relative;
 }
 
-.header { background:#fafbff; flex-direction:column; font-size:12px; }
+.header { background:#fafbff; flex-direction:column; }
 .date { font-size:10px; color:#888; }
 
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
@@ -102,7 +100,6 @@ main { padding:24px; }
 <main>
   <h2 id="title"></h2>
 
-  <!-- NEW -->
   <div class="week-nav">
     <button onclick="changeWeek(-1)">← Previous</button>
     <button onclick="changeWeek(1)">Next →</button>
@@ -135,9 +132,8 @@ function changeWeek(delta){
 function weekDates(){
   const today = new Date();
   const monday = new Date(today);
-
   const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff + (weekOffset*7));
+  monday.setDate(today.getDate()+diff + weekOffset*7);
 
   return Array.from({length:5},(_,i)=>{
     const d=new Date(monday);
@@ -160,6 +156,7 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
+  renderTitle();      // FIX
   renderCalendar();
 }
 
@@ -188,6 +185,11 @@ function selectInstr(id){
   render();
 }
 
+/* FIX: restore label */
+function renderTitle(){
+  document.getElementById("title").textContent = currentInstr?.name || "";
+}
+
 function renderCalendar(){
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
@@ -200,10 +202,7 @@ function renderCalendar(){
   days.forEach((d,i)=>{
     const h=document.createElement("div");
     h.className="cell header";
-
-    const dateStr = dates[i].toISOString().split("T")[0];
-
-    h.innerHTML = `${d}<div class="date">${dateStr}</div>`;
+    h.innerHTML = `${d}<div class="date">${dates[i].toISOString().split("T")[0]}</div>`;
     cal.appendChild(h);
   });
 
@@ -214,9 +213,7 @@ function renderCalendar(){
     cal.appendChild(t);
 
     for(let i=0;i<5;i++){
-      const dateObj = dates[i];
-      const date = dateObj.toISOString().split("T")[0];
-
+      const date = dates[i].toISOString().split("T")[0];
       const c=document.createElement("div");
       c.className="cell";
 
@@ -253,7 +250,7 @@ async function book(hour,date){
   ).length;
 
   if(count >= max){
-    alert("Booking limit reached for this instrument");
+    alert("Booking limit reached");
     return;
   }
 
