@@ -160,23 +160,22 @@ function renderCalendar(){
   }
 }
 
-// ✅ FIXED BOOKING LIMIT
 async function book(hour,date){
-
-  // get fresh data
-  const freshBookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
 
   const today = new Date().toISOString().split("T")[0];
 
-  const userBookings = freshBookings.filter(b =>
+  // 🔴 STRICT COUNT
+  const count = bookings.filter(b =>
     norm(b.name) === norm(currentUser) &&
     b.instrument === currentInstr.id &&
     b.date >= today
-  );
+  ).length;
 
-  if(userBookings.length >= MAX_FUTURE_BOOKINGS){
+  console.log("Booking count:", count);
+
+  if(count >= MAX_FUTURE_BOOKINGS){
     alert("Booking limit reached");
-    return;
+    return; // 🔴 HARD STOP
   }
 
   await fetch(`${URL}/bookings`,{
@@ -191,6 +190,7 @@ async function book(hour,date){
     })
   });
 
+  // refresh AFTER booking
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
 }
