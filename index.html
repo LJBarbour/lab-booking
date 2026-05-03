@@ -40,15 +40,13 @@ main { padding:24px; }
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24ი...";
+const KEY = "YOUR_FULL_KEY_HERE";
 
 const HEADERS = {
   "apikey": KEY,
   "Authorization": `Bearer ${KEY}`,
   "Content-Type": "application/json"
 };
-
-const MAX_FUTURE_BOOKINGS = 5;
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
@@ -87,8 +85,18 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
-  el.innerHTML = users.map(u=>`<option>${u.name}</option>`).join("");
-  el.onchange = e => { currentUser = e.target.value; render(); };
+
+  el.innerHTML = users.map(u =>
+    `<option value="${u.name}">${u.name}</option>`
+  ).join("");
+
+  // ✅ FIX: ensure correct selection is shown
+  el.value = currentUser;
+
+  el.onchange = e => {
+    currentUser = e.target.value;
+    render();
+  };
 }
 
 function renderInstr(){
@@ -118,8 +126,6 @@ function renderCalendar(){
     cal.appendChild(h);
   });
 
-  const today = new Date().toISOString().split("T")[0];
-
   for(let h=8;h<20;h++){
     const t=document.createElement("div");
     t.className="cell time";
@@ -142,7 +148,7 @@ function renderCalendar(){
         c.textContent=b.name;
       } else {
         c.classList.add("clickable");
-        c.onclick=()=>book(h,date,today);
+        c.onclick=()=>book(h,date);
       }
 
       cal.appendChild(c);
@@ -150,19 +156,7 @@ function renderCalendar(){
   }
 }
 
-async function book(hour,date,today){
-
-  const count = bookings.filter(b =>
-    norm(b.name) === norm(currentUser) &&
-    b.instrument === currentInstr.id &&
-    b.date >= today
-  ).length;
-
-  if(count >= MAX_FUTURE_BOOKINGS){
-    alert("Booking limit reached");
-    return;
-  }
-
+async function book(hour,date){
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
