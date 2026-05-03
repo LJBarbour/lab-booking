@@ -22,6 +22,7 @@ button {
 
 button:hover { background:#f0f3ff; }
 
+/* ✅ STRONGER HIGHLIGHT */
 button.active {
   background:#dbe7ff;
   font-weight:600;
@@ -31,16 +32,6 @@ button.active {
 }
 
 main { padding:24px; }
-
-#title {
-  margin-bottom:4px;
-}
-
-#instr-desc {
-  margin-bottom:16px;
-  color:#666;
-  font-size:14px;
-}
 
 .calendar {
   display:grid;
@@ -97,7 +88,6 @@ main { padding:24px; }
 
 <main>
   <h2 id="title"></h2>
-  <p id="instr-desc"></p> <!-- NEW -->
   <div id="calendar" class="calendar"></div>
 </main>
 
@@ -143,7 +133,6 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
-  renderInstrumentInfo();   // NEW
   renderCalendar();
 }
 
@@ -170,12 +159,6 @@ function renderInstr(){
 function selectInstr(id){
   currentInstr = instruments.find(i=>i.id===id);
   render();
-}
-
-/* NEW FUNCTION */
-function renderInstrumentInfo(){
-  document.getElementById("title").textContent = currentInstr?.name || "";
-  document.getElementById("instr-desc").textContent = currentInstr?.description || "";
 }
 
 function renderCalendar(){
