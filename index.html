@@ -61,7 +61,6 @@ main { padding:24px; }
   position:relative;
 }
 
-/* ✅ ONLY CHANGE */
 .header {
   background:#fafbff;
   flex-direction:column;
@@ -94,6 +93,12 @@ main { padding:24px; }
 .booking-box.mine {
   background:#d7f5e3;
   cursor:pointer;
+}
+
+/* NEW */
+.booking-box.past {
+  background:#e0e0e0;
+  color:#888;
 }
 </style>
 </head>
@@ -172,7 +177,6 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
-
   el.innerHTML = users.map(u =>
     `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
@@ -203,8 +207,9 @@ function renderCalendar(){
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
-  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const dates=weekDates();
+  const now = new Date();
 
   cal.appendChild(document.createElement("div"));
 
@@ -222,9 +227,13 @@ function renderCalendar(){
     cal.appendChild(t);
 
     for(let i=0;i<7;i++){
-      const date = dates[i].toISOString().split("T")[0];
+      const dateObj = dates[i];
+      const date = dateObj.toISOString().split("T")[0];
       const c=document.createElement("div");
       c.className="cell";
+
+      const slotTime = new Date(date + "T" + h.toString().padStart(2,'0') + ":00");
+      const isPast = slotTime < now;
 
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
@@ -234,13 +243,15 @@ function renderCalendar(){
 
       if(b){
         const mine = norm(b.name) === norm(currentUser);
-        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
+        const pastClass = isPast ? "past" : "";
 
-        if(mine){
+        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''} ${pastClass}">${b.name}</div>`;
+
+        if(mine && !isPast){
           c.onclick = () => deleteBooking(b);
         }
 
-      } else {
+      } else if(!isPast){
         c.classList.add("clickable");
         c.onclick=()=>book(h,date);
       }
@@ -251,6 +262,12 @@ function renderCalendar(){
 }
 
 async function book(hour,date){
+  const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
+  if(slotTime < new Date()){
+    alert("Cannot book in the past");
+    return;
+  }
+
   const max = currentInstr.maxslot ?? 999;
 
   const count = bookings.filter(b =>
@@ -280,6 +297,12 @@ async function book(hour,date){
 }
 
 async function deleteBooking(b){
+  const slotTime = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
+  if(slotTime < new Date()){
+    alert("Cannot delete past bookings");
+    return;
+  }
+
   if(!confirm("Delete this booking?")) return;
 
   await fetch(
