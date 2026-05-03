@@ -115,18 +115,6 @@ main { padding:24px; }
   background:#f0f0f0;
   color:#999;
 }
-
-/* NEW MESSAGE BOX */
-#message-box {
-  display:none;
-  padding:10px;
-  margin-bottom:10px;
-  background:#ffe0e0;
-  border:1px solid #ffaaaa;
-  border-radius:6px;
-  color:#900;
-  font-size:14px;
-}
 </style>
 </head>
 
@@ -145,9 +133,6 @@ main { padding:24px; }
 <main>
   <h2 id="title"></h2>
 
-  <!-- NEW -->
-  <div id="message-box"></div>
-
   <div class="week-nav">
     <button onclick="changeWeek(-1)">← Previous</button>
     <button onclick="goToday()">Today</button>
@@ -159,7 +144,7 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.0.4");
+console.log("VERSION: 1.0.5");
 
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
@@ -173,14 +158,6 @@ const HEADERS = {
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
 let weekOffset = 0;
-
-/* NEW */
-function showMessage(msg){
-  const box = document.getElementById("message-box");
-  box.textContent = msg;
-  box.style.display = "block";
-  setTimeout(()=>{ box.style.display="none"; },3000);
-}
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -315,13 +292,12 @@ function renderCalendar(){
 }
 
 async function book(hour,date){
-
   const now = new Date();
 
   const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
 
   if(slotTime < now){
-    showMessage("Cannot book in the past");
+    alert("Cannot book in the past");
     return;
   }
 
@@ -330,7 +306,7 @@ async function book(hour,date){
   maxDate.setDate(now.getDate() + maxDays);
 
   if(slotTime > maxDate){
-    showMessage("Booking too far in advance");
+    alert("Booking too far in advance");
     return;
   }
 
@@ -346,7 +322,7 @@ async function book(hour,date){
   const maxSlots = currentInstr.maxslot ?? 999;
 
   if(count >= maxSlots){
-    showMessage("Booking limit reached");
+    alert("Booking limit reached");
     return;
   }
 
@@ -369,7 +345,7 @@ async function book(hour,date){
 async function deleteBooking(b){
   const slotTime = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
   if(slotTime < new Date()){
-    showMessage("Cannot delete past bookings");
+    alert("Cannot delete past bookings");
     return;
   }
 
