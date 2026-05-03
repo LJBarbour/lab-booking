@@ -5,22 +5,93 @@
 <title>Lab Booking</title>
 
 <style>
-/* (same styles as before — unchanged for brevity) */
-body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
-aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
-h3 { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#8a8f9c; margin-bottom:10px; }
-select { width:100%; padding:10px; border-radius:8px; border:1px solid #dcdfe6; margin-bottom:20px; background:#fafbff; }
-button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; border-radius:8px; cursor:pointer; }
+body {
+  margin:0;
+  font-family: system-ui, -apple-system, sans-serif;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  height:100vh;
+  background:#f6f7fb;
+}
+
+aside {
+  background:#ffffff;
+  border-right:1px solid #e6e8ef;
+  padding:24px;
+}
+
+h3 {
+  font-size:11px;
+  text-transform:uppercase;
+  color:#8a8f9c;
+  margin-bottom:10px;
+}
+
+select {
+  width:100%;
+  padding:10px;
+  margin-bottom:20px;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  margin-bottom:6px;
+  border:none;
+  background:none;
+  text-align:left;
+  cursor:pointer;
+}
+
 button:hover { background:#f0f3ff; }
-button.active { background:#e4ebff; color:#2a4bd7; font-weight:500; }
+
 main { padding:24px; }
-.calendar { display:grid; grid-template-columns:60px repeat(5,1fr); border:1px solid #e6e8ef; border-radius:12px; overflow:hidden; background:#ffffff; }
-.cell { border:1px solid #f0f1f5; height:46px; display:flex; align-items:center; justify-content:center; font-size:12px; }
-.header { background:#fafbff; font-weight:600; }
-.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; background:#fafbff; }
-.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
-.booking { background:#dbe7ff; color:#1d3fd3; font-weight:500; border-radius:6px; padding:4px 8px; }
-.booking.mine { background:#d7f5e3; color:#1a7a4f; }
+
+.calendar {
+  display:grid;
+  grid-template-columns:60px repeat(5,1fr);
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+}
+
+/* ✅ SIMPLE, CONSISTENT GRID */
+.cell {
+  border:1px solid #e6e8ef;
+  height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+}
+
+.header {
+  background:#fafbff;
+  font-weight:600;
+}
+
+.time {
+  font-size:11px;
+  color:#9aa0ad;
+  justify-content:flex-end;
+  padding-right:8px;
+}
+
+.cell.clickable:hover {
+  background:#eef2ff;
+  cursor:pointer;
+}
+
+.booking {
+  background:#dbe7ff;
+  border-radius:6px;
+  padding:4px 8px;
+}
+
+.booking.mine {
+  background:#d7f5e3;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -36,13 +107,12 @@ main { padding:24px; }
 
 <main>
   <h2 id="title"></h2>
-  <div id="desc"></div>
   <div id="calendar" class="calendar"></div>
 </main>
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
   "apikey": KEY,
@@ -51,13 +121,9 @@ const HEADERS = {
 };
 
 let users=[], instruments=[], bookings=[];
-let currentUser = localStorage.getItem("labBookingUser") || null;
-let currentInstr = null;
+let currentUser=null, currentInstr=null;
 
-// 🔧 normalize helper
-function norm(s){
-  return (s || "").trim().toLowerCase();
-}
+function norm(s){ return (s || "").trim().toLowerCase(); }
 
 function weekDates(){
   const today = new Date();
@@ -77,11 +143,8 @@ async function load(){
   instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
 
-  if (!currentUser || !users.some(u => norm(u.name) === norm(currentUser))) {
-    currentUser = users[0]?.name || null;
-  }
-
-  currentInstr = instruments[0] || null;
+  currentUser = users[0]?.name;
+  currentInstr = instruments[0];
 
   render();
 }
@@ -89,7 +152,6 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
-  renderMain();
   renderCalendar();
 }
 
@@ -97,35 +159,25 @@ function renderUsers(){
   const el = document.getElementById("user");
 
   el.innerHTML = users.map(u =>
-    `<option value="${u.name}" ${norm(u.name) === norm(currentUser) ? "selected" : ""}>${u.name}</option>`
+    `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
-
-  el.value = currentUser || "";
 
   el.onchange = e => {
     currentUser = e.target.value;
-    localStorage.setItem("labBookingUser", currentUser);
-    renderCalendar();
+    render();
   };
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
   el.innerHTML = instruments.map(i =>
-    `<button class="${currentInstr && i.id===currentInstr.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
 function selectInstr(id){
   currentInstr = instruments.find(i=>i.id===id);
-  renderInstr();
-  renderMain();
-  renderCalendar();
-}
-
-function renderMain(){
-  document.getElementById("title").textContent = currentInstr.name;
-  document.getElementById("desc").textContent = currentInstr.description;
+  render();
 }
 
 function renderCalendar(){
@@ -164,7 +216,6 @@ function renderCalendar(){
         c.classList.add("booking");
         c.textContent=b.name;
 
-        // 🔧 FIX HERE
         if(norm(b.name) === norm(currentUser)){
           c.classList.add("mine");
           c.onclick = () => deleteBooking(b);
@@ -181,19 +232,16 @@ function renderCalendar(){
 }
 
 async function book(hour,date){
-  const row={
-    id: Date.now().toString(),
-    instrument: currentInstr.id,
-    date: date,
-    hour: hour,
-    name: currentUser,
-    note:""
-  };
-
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
-    body:JSON.stringify(row)
+    body:JSON.stringify({
+      id: Date.now().toString(),
+      instrument: currentInstr.id,
+      date: date,
+      hour: hour,
+      name: currentUser
+    })
   });
 
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
@@ -217,6 +265,5 @@ async function deleteBooking(b){
 
 load();
 </script>
-
 </body>
 </html>
