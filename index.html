@@ -91,6 +91,7 @@ main {
   align-items:center;
   justify-content:center;
   font-size:12px;
+  position:relative;
 }
 
 .header {
@@ -123,6 +124,11 @@ main {
   background:#d7f5e3;
   color:#1a7a4f;
 }
+
+.booking.mine:hover {
+  cursor:pointer;
+  filter:brightness(0.98);
+}
 </style>
 </head>
 
@@ -152,106 +158,133 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let users=[], instruments=[], bookings=[];
-let currentUser=null, currentInstr=null;
+let users = [];
+let instruments = [];
+let bookings = [];
+let currentUser = localStorage.getItem("labBookingUser") || null;
+let currentInstr = null;
 
-function weekDates(){
+function weekDates() {
   const today = new Date();
   const monday = new Date(today);
-  const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff);
+  const diff = (today.getDay() === 0 ? -6 : 1 - today.getDay());
+  monday.setDate(today.getDate() + diff);
 
-  return Array.from({length:5},(_,i)=>{
-    const d=new Date(monday);
-    d.setDate(monday.getDate()+i);
+  return Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
     return d.toISOString().split("T")[0];
   });
 }
 
-async function load(){
-  users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+async function load() {
+  users = await fetch(`${URL}/users?select=*`, { headers: HEADERS }).then(r => r.json());
+  instruments = await fetch(`${URL}/instruments?select=*`, { headers: HEADERS }).then(r => r.json());
+  bookings = await fetch(`${URL}/bookings?select=*`, { headers: HEADERS }).then(r => r.json());
 
-  currentUser = users[0]?.name;
-  currentInstr = instruments[0];
+  if (!currentUser || !users.some(u => u.name === currentUser)) {
+    currentUser = users[0]?.name || null;
+  }
+
+  currentInstr = instruments[0] || null;
 
   render();
 }
 
-function render(){
+function render() {
   renderUsers();
   renderInstr();
   renderMain();
   renderCalendar();
 }
 
-function renderUsers(){
+function renderUsers() {
   const el = document.getElementById("user");
 
   el.innerHTML = users.map(u =>
     `<option value="${u.name}" ${u.name === currentUser ? "selected" : ""}>${u.name}</option>`
   ).join("");
 
-  el.onchange = e => currentUser = e.target.value;
+  el.value = currentUser || "";
+
+  el.onchange = e => {
+    currentUser = e.target.value;
+    localStorage.setItem("labBookingUser", currentUser);
+    renderCalendar();
+  };
 }
 
-function renderInstr(){
+function renderInstr() {
   const el = document.getElementById("instr");
   el.innerHTML = instruments.map(i =>
-    `<button class="${i.id===currentInstr.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button class="${currentInstr && i.id === currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
-function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
-  render(); // now preserves selected user
+function selectInstr(id) {
+  currentInstr = instruments.find(i => i.id === id) || currentInstr;
+  renderInstr();
+  renderMain();
+  renderCalendar();
 }
 
-function renderMain(){
+function renderMain() {
+  if (!currentInstr) {
+    document.getElementById("title").textContent = "";
+    document.getElementById("desc").textContent = "";
+    return;
+  }
+
   document.getElementById("title").textContent = currentInstr.name;
   document.getElementById("desc").textContent = currentInstr.description;
 }
 
-function renderCalendar(){
+function renderCalendar() {
   const cal = document.getElementById("calendar");
-  cal.innerHTML="";
+  cal.innerHTML = "";
 
-  const days=["Mon","Tue","Wed","Thu","Fri"];
-  const dates=weekDates();
+  if (!currentInstr) return;
+
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const dates = weekDates();
 
   cal.appendChild(document.createElement("div"));
-  days.forEach(d=>{
-    const h=document.createElement("div");
-    h.className="cell header";
-    h.textContent=d;
+  days.forEach(d => {
+    const h = document.createElement("div");
+    h.className = "cell header";
+    h.textContent = d;
     cal.appendChild(h);
   });
 
-  for(let h=8;h<20;h++){
-    const t=document.createElement("div");
-    t.className="cell time";
-    t.textContent=h+":00";
+  for (let h = 8; h < 20; h++) {
+    const t = document.createElement("div");
+    t.className = "cell time";
+    t.textContent = h + ":00";
     cal.appendChild(t);
 
-    for(let i=0;i<5;i++){
-      const date=dates[i];
-      const c=document.createElement("div");
-      c.className="cell";
+    for (let i = 0; i < 5; i++) {
+      const date = dates[i];
+      const c = document.createElement("div");
+      c.className = "cell";
 
       const b = bookings.find(x =>
-        x.instrument===currentInstr.id &&
-        x.hour===h &&
-        x.date===date
+        x.instrument === currentInstr.id &&
+        x.hour === h &&
+        x.date === date
       );
 
-      if(b){
+      if (b) {
         c.classList.add("booking");
-        if(b.name===currentUser) c.classList.add("mine");
-        c.textContent=b.name;
+        c.textContent = b.name;
+
+        if (b.name === currentUser) {
+          c.classList.add("mine");
+          c.onclick = () => deleteBooking(b);
+          c.title = "Click to delete your booking";
+        }
       } else {
         c.classList.add("clickable");
-        c.onclick=()=>book(h,date);
+        c.onclick = () => book(h, date);
       }
 
       cal.appendChild(c);
@@ -259,23 +292,40 @@ function renderCalendar(){
   }
 }
 
-async function book(hour,date){
-  const row={
+async function book(hour, date) {
+  if (!currentUser || !currentInstr) return;
+
+  const row = {
     id: Date.now().toString(),
     instrument: currentInstr.id,
     date: date,
     hour: hour,
     name: currentUser,
-    note:""
+    note: ""
   };
 
-  await fetch(`${URL}/bookings`,{
-    method:"POST",
-    headers:HEADERS,
-    body:JSON.stringify(row)
+  await fetch(`${URL}/bookings`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify(row)
   });
 
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  bookings = await fetch(`${URL}/bookings?select=*`, { headers: HEADERS }).then(r => r.json());
+  renderCalendar();
+}
+
+async function deleteBooking(b) {
+  if (!confirm("Delete this booking?")) return;
+
+  await fetch(
+    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
+    {
+      method: "DELETE",
+      headers: HEADERS
+    }
+  );
+
+  bookings = await fetch(`${URL}/bookings?select=*`, { headers: HEADERS }).then(r => r.json());
   renderCalendar();
 }
 
