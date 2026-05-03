@@ -40,7 +40,7 @@ main { padding:24px; }
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24ი...";
 
 const HEADERS = {
   "apikey": KEY,
@@ -52,6 +52,8 @@ const MAX_FUTURE_BOOKINGS = 5;
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
+
+function norm(s){ return (s || "").trim().toLowerCase(); }
 
 function weekDates(){
   const today = new Date();
@@ -116,6 +118,8 @@ function renderCalendar(){
     cal.appendChild(h);
   });
 
+  const today = new Date().toISOString().split("T")[0];
+
   for(let h=8;h<20;h++){
     const t=document.createElement("div");
     t.className="cell time";
@@ -138,7 +142,7 @@ function renderCalendar(){
         c.textContent=b.name;
       } else {
         c.classList.add("clickable");
-        c.onclick=()=>book(h,date);
+        c.onclick=()=>book(h,date,today);
       }
 
       cal.appendChild(c);
@@ -146,20 +150,16 @@ function renderCalendar(){
   }
 }
 
-// ✅ FIXED BOOKING LIMIT
-async function book(hour,date){
+async function book(hour,date,today){
 
-  const today = new Date().toISOString().split("T")[0];
+  const count = bookings.filter(b =>
+    norm(b.name) === norm(currentUser) &&
+    b.instrument === currentInstr.id &&
+    b.date >= today
+  ).length;
 
-  const res = await fetch(
-    `${URL}/bookings?select=*&name=eq.${encodeURIComponent(currentUser)}&instrument=eq.${currentInstr.id}&date=gte.${today}`,
-    { headers: HEADERS }
-  );
-
-  const userBookings = await res.json();
-
-  if(userBookings.length >= MAX_FUTURE_BOOKINGS){
-    alert("Booking limit reached for this instrument");
+  if(count >= MAX_FUTURE_BOOKINGS){
+    alert("Booking limit reached");
     return;
   }
 
