@@ -5,126 +5,20 @@
 <title>Lab Booking</title>
 
 <style>
-body {
-  margin:0;
-  font-family: system-ui, -apple-system, sans-serif;
-  display:grid;
-  grid-template-columns:260px 1fr;
-  height:100vh;
-  background:#f7f6f2;
-  color:#1a1917;
-}
-
-aside {
-  background:#ffffff;
-  border-right:1px solid #e3e1d9;
-  padding:24px 20px;
-}
-
-h3 {
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:0.08em;
-  color:#7a7870;
-  margin-bottom:8px;
-}
-
-select {
-  width:100%;
-  padding:8px 10px;
-  margin-bottom:20px;
-  border:1px solid #ddd;
-  border-radius:6px;
-  background:#fafafa;
-  font-size:13px;
-}
-
-button {
-  width:100%;
-  padding:8px 10px;
-  margin-bottom:4px;
-  border:none;
-  background:none;
-  text-align:left;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:13px;
-}
-
-button:hover {
-  background:#f0efea;
-}
-
-button.active {
-  background:#e8f0ea;
-  color:#2d5a3d;
-  font-weight:500;
-}
-
-main {
-  padding:24px;
-}
-
-#title {
-  font-size:18px;
-  font-weight:500;
-}
-
-#desc {
-  font-size:13px;
-  color:#6e6c65;
-  margin-bottom:18px;
-}
-
-.calendar {
-  display:grid;
-  grid-template-columns:60px repeat(5,1fr);
-  border:1px solid #e3e1d9;
-  border-radius:10px;
-  overflow:hidden;
-  background:#ffffff;
-}
-
-.cell {
-  border-bottom:1px solid #e3e1d9;
-  border-right:1px solid #e3e1d9;
-  height:44px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-}
-
-.header {
-  background:#f7f6f2;
-  font-weight:500;
-}
-
-.time {
-  font-size:11px;
-  color:#7a7870;
-  justify-content:flex-end;
-  padding-right:8px;
-  background:#faf9f6;
-}
-
-.cell.clickable:hover {
-  background:#eef3ef;
-  cursor:pointer;
-}
-
-.booking {
-  background:#cfe3f5;
-  color:#1a4a7a;
-  border-radius:6px;
-  padding:2px 6px;
-}
-
-.booking.mine {
-  background:#d4f5d8;
-  color:#1a7a3a;
-  cursor:pointer;
-}
+body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
+aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
+h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
+select { width:100%; padding:10px; margin-bottom:20px; }
+button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; cursor:pointer; }
+button:hover { background:#f0f3ff; }
+main { padding:24px; }
+.calendar { display:grid; grid-template-columns:60px repeat(5,1fr); border:1px solid #e6e8ef; border-radius:12px; overflow:hidden; background:#fff; }
+.cell { border:1px solid #e6e8ef; height:46px; display:flex; align-items:center; justify-content:center; }
+.header { background:#fafbff; }
+.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
+.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
+.booking { background:#dbe7ff; border-radius:6px; padding:4px 8px; }
+.booking.mine { background:#d7f5e3; cursor:pointer; }
 </style>
 </head>
 
@@ -140,13 +34,12 @@ main {
 
 <main>
   <h2 id="title"></h2>
-  <div id="desc"></div>
   <div id="calendar" class="calendar"></div>
 </main>
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+const KEY = "YOUR_FULL_KEY_HERE";
 
 const HEADERS = {
   "apikey": KEY,
@@ -154,8 +47,13 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
+const MAX_FUTURE_BOOKINGS = 5;
+
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
+let currentWeekDates=[];
+
+function norm(s){ return (s || "").trim().toLowerCase(); }
 
 function weekDates(){
   const today = new Date();
@@ -184,20 +82,26 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
-  renderMain();
   renderCalendar();
 }
 
 function renderUsers(){
   const el = document.getElementById("user");
-  el.innerHTML = users.map(u=>`<option>${u.name}</option>`).join("");
-  el.onchange = e=>currentUser=e.target.value;
+
+  el.innerHTML = users.map(u =>
+    `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
+  ).join("");
+
+  el.onchange = e => {
+    currentUser = e.target.value;
+    render();
+  };
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
   el.innerHTML = instruments.map(i =>
-    `<button class="${i.id===currentInstr.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
@@ -206,17 +110,12 @@ function selectInstr(id){
   render();
 }
 
-function renderMain(){
-  document.getElementById("title").textContent = currentInstr.name;
-  document.getElementById("desc").textContent = currentInstr.description;
-}
-
 function renderCalendar(){
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
   const days=["Mon","Tue","Wed","Thu","Fri"];
-  const dates=weekDates();
+  currentWeekDates = weekDates();
 
   cal.appendChild(document.createElement("div"));
   days.forEach(d=>{
@@ -233,7 +132,7 @@ function renderCalendar(){
     cal.appendChild(t);
 
     for(let i=0;i<5;i++){
-      const date=dates[i];
+      const date=currentWeekDates[i];
       const c=document.createElement("div");
       c.className="cell";
 
@@ -245,11 +144,13 @@ function renderCalendar(){
 
       if(b){
         c.classList.add("booking");
-        if(b.name === currentUser){
+        c.textContent=b.name;
+
+        if(norm(b.name) === norm(currentUser)){
           c.classList.add("mine");
           c.onclick = () => deleteBooking(b);
         }
-        c.textContent=b.name;
+
       } else {
         c.classList.add("clickable");
         c.onclick=()=>book(h,date);
@@ -260,20 +161,30 @@ function renderCalendar(){
   }
 }
 
+// ✅ FIXED LIMIT (week-based)
 async function book(hour,date){
-  const row={
-    id: Date.now().toString(),
-    instrument: currentInstr.id,
-    date: date,
-    hour: hour,
-    name: currentUser,
-    note:""
-  };
+
+  const count = bookings.filter(b =>
+    norm(b.name) === norm(currentUser) &&
+    b.instrument === currentInstr.id &&
+    currentWeekDates.includes(b.date)
+  ).length;
+
+  if(count >= MAX_FUTURE_BOOKINGS){
+    alert("Booking limit reached for this instrument this week");
+    return;
+  }
 
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
-    body:JSON.stringify(row)
+    body:JSON.stringify({
+      id: Date.now().toString(),
+      instrument: currentInstr.id,
+      date: date,
+      hour: hour,
+      name: currentUser
+    })
   });
 
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
@@ -287,10 +198,7 @@ async function deleteBooking(b){
     `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
     {
       method:"DELETE",
-      headers:{
-        "apikey": KEY,
-        "Authorization": `Bearer ${KEY}`
-      }
+      headers:HEADERS
     }
   );
 
@@ -300,6 +208,5 @@ async function deleteBooking(b){
 
 load();
 </script>
-
 </body>
 </html>
