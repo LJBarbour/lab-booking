@@ -86,9 +86,15 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
+
   el.innerHTML = users.map(u =>
     `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
+
+  el.value = currentUser;
+
+  // ✅ FIX: keep currentUser aligned with dropdown
+  currentUser = el.value;
 
   el.onchange = e => {
     currentUser = e.target.value;
@@ -182,7 +188,7 @@ async function book(hour,date){
       instrument: currentInstr.id,
       date: date,
       hour: hour,
-      name: currentUser.trim()   // ✅ FIX
+      name: currentUser
     })
   });
 
