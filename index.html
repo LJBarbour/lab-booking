@@ -11,105 +11,135 @@ body {
   display:grid;
   grid-template-columns:260px 1fr;
   height:100vh;
-  background:#f7f6f2;
+  background:#f6f7fb;
+  color:#1a1a1a;
 }
 
+/* Sidebar */
 aside {
   background:#ffffff;
-  border-right:1px solid #e3e1d9;
-  padding:24px 20px;
+  border-right:1px solid #e6e8ef;
+  padding:24px;
 }
 
 h3 {
   font-size:11px;
   text-transform:uppercase;
-  color:#7a7870;
-  margin-bottom:8px;
+  letter-spacing:0.08em;
+  color:#8a8f9c;
+  margin-bottom:10px;
 }
 
+/* Dropdown */
 select {
   width:100%;
-  padding:8px;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #dcdfe6;
   margin-bottom:20px;
+  background:#fafbff;
 }
 
+/* Instrument buttons */
 button {
   width:100%;
-  padding:8px;
-  margin-bottom:4px;
+  padding:10px;
+  margin-bottom:6px;
   border:none;
   background:none;
   text-align:left;
-  border-radius:6px;
+  border-radius:8px;
   cursor:pointer;
+  transition: all 0.15s ease;
 }
 
-button:hover { background:#f0efea; }
+button:hover {
+  background:#f0f3ff;
+}
 
 button.active {
-  background:#e8f0ea;
-  font-weight:bold;
+  background:#e4ebff;
+  color:#2a4bd7;
+  font-weight:500;
 }
-
-/* Admin */
-.admin-box {
-  margin-top:20px;
-  padding:10px;
-  border:1px solid #ddd;
-  border-radius:6px;
-  background:#fafafa;
-}
-
-.admin-banner {
-  margin-top:10px;
-  padding:6px;
-  font-size:11px;
-  background:#ffe0e0;
-  color:#8b2020;
-  border-radius:6px;
-  display:none;
-}
-
-.admin-active { display:block; }
 
 /* Main */
-main { padding:24px; }
+main {
+  padding:24px;
+}
+
+#title {
+  font-size:20px;
+  font-weight:600;
+}
+
+#desc {
+  color:#6e7380;
+  font-size:13px;
+  margin-bottom:16px;
+}
 
 /* Calendar */
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(5,1fr);
-  border:1px solid #ddd;
-  border-radius:10px;
+  border:1px solid #e6e8ef;
+  border-radius:12px;
   overflow:hidden;
-  background:white;
+  background:#ffffff;
 }
 
 .cell {
-  border:1px solid #eee;
-  height:44px;
+  border:1px solid #f0f1f5;
+  height:46px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:12px;
+  position:relative;
 }
 
-.header { background:#f7f6f2; }
-.time { font-size:11px; color:#777; justify-content:flex-end; padding-right:8px; }
+/* Header */
+.header {
+  background:#fafbff;
+  font-weight:600;
+}
 
+/* Time column */
+.time {
+  font-size:11px;
+  color:#9aa0ad;
+  justify-content:flex-end;
+  padding-right:8px;
+  background:#fafbff;
+}
+
+/* Hover */
 .cell.clickable:hover {
-  background:#eef3ef;
+  background:#eef2ff;
   cursor:pointer;
 }
 
+/* Booking blocks */
 .booking {
-  background:#cfe3f5;
+  background:#dbe7ff;
+  color:#1d3fd3;
+  font-weight:500;
   border-radius:6px;
-  padding:2px 6px;
+  padding:4px 8px;
 }
 
-.booking.mine { background:#d4f5d8; }
-.booking.admin { background:#ffd6d6; }
+/* Current user booking */
+.booking.mine {
+  background:#d7f5e3;
+  color:#1a7a4f;
+}
+
+/* Slight animation */
+.booking,
+.cell.clickable {
+  transition: all 0.15s ease;
+}
 </style>
 </head>
 
@@ -121,13 +151,6 @@ main { padding:24px; }
 
   <h3>Instruments</h3>
   <div id="instr"></div>
-
-  <div class="admin-box">
-    <label>
-      <input type="checkbox" id="adminToggle"> Admin mode
-    </label>
-    <div id="admin-banner" class="admin-banner">ADMIN ACTIVE</div>
-  </div>
 </aside>
 
 <main>
@@ -148,14 +171,6 @@ const HEADERS = {
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
-let adminMode=false;
-
-document.getElementById("adminToggle").onchange = e => {
-  adminMode = e.target.checked;
-  document.getElementById("admin-banner")
-    .classList.toggle("admin-active", adminMode);
-  renderCalendar();
-};
 
 function weekDates(){
   const today = new Date();
@@ -245,16 +260,8 @@ function renderCalendar(){
 
       if(b){
         c.classList.add("booking");
-
         if(b.name===currentUser) c.classList.add("mine");
-        if(adminMode) c.classList.add("admin");
-
         c.textContent=b.name;
-
-        if(b.name===currentUser || adminMode){
-          c.onclick = () => deleteBooking(b);
-        }
-
       } else {
         c.classList.add("clickable");
         c.onclick=()=>book(h,date);
@@ -280,21 +287,6 @@ async function book(hour,date){
     headers:HEADERS,
     body:JSON.stringify(row)
   });
-
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function deleteBooking(b){
-  if(!confirm("Delete this booking?")) return;
-
-  await fetch(
-    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
-    {
-      method:"DELETE",
-      headers:HEADERS
-    }
-  );
 
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
