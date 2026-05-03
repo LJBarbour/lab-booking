@@ -32,7 +32,6 @@ button.active {
 
 main { padding:24px; }
 
-/* NEW */
 .week-nav {
   display:flex;
   gap:10px;
@@ -44,20 +43,9 @@ main { padding:24px; }
   padding:6px 10px;
 }
 
-/* NEW */
-.header {
-  background:#fafbff;
-  flex-direction:column;
-}
-
-.date {
-  font-size:12px;
-  color:#666;
-}
-
 .calendar {
   display:grid;
-  grid-template-columns:60px repeat(5,1fr);
+  grid-template-columns:60px repeat(7,1fr); /* ✅ changed */
   border:1px solid #e6e8ef;
   border-radius:12px;
   overflow:hidden;
@@ -71,6 +59,13 @@ main { padding:24px; }
   align-items:center;
   justify-content:center;
   position:relative;
+}
+
+.header { background:#fafbff; flex-direction:column; }
+
+.date {
+  font-size:12px;
+  color:#666;
 }
 
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
@@ -110,7 +105,6 @@ main { padding:24px; }
 <main>
   <h2 id="title"></h2>
 
-  <!-- NEW -->
   <div class="week-nav">
     <button onclick="changeWeek(-1)">← Previous</button>
     <button onclick="goToday()">Today</button>
@@ -132,7 +126,7 @@ const HEADERS = {
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
-let weekOffset = 0; // NEW
+let weekOffset = 0;
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -145,7 +139,7 @@ function weekDates(){
   const diff = (today.getDay()===0?-6:1-today.getDay());
   monday.setDate(today.getDate()+diff + weekOffset*7);
 
-  return Array.from({length:5},(_,i)=>{
+  return Array.from({length:7},(_,i)=>{  /* ✅ changed */
     const d=new Date(monday);
     d.setDate(monday.getDate()+i);
     return d;
@@ -198,7 +192,7 @@ function renderCalendar(){
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
-  const days=["Mon","Tue","Wed","Thu","Fri"];
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]; /* ✅ changed */
   const dates=weekDates();
 
   cal.appendChild(document.createElement("div"));
@@ -216,7 +210,7 @@ function renderCalendar(){
     t.textContent=h+":00";
     cal.appendChild(t);
 
-    for(let i=0;i<5;i++){
+    for(let i=0;i<7;i++){  /* ✅ changed */
       const date=dates[i].toISOString().split("T")[0];
       const c=document.createElement("div");
       c.className="cell";
@@ -254,7 +248,7 @@ async function book(hour,date){
   ).length;
 
   if(count >= max){
-    alert("Booking limit reached for this instrument");
+    alert("Booking limit reached");
     return;
   }
 
