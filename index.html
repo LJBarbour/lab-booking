@@ -180,14 +180,16 @@ function renderCalendar(){
 
 async function book(hour,date){
 
-  // ✅ FIX: reliable future booking count
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
 
-  const userBookings = bookings.filter(b =>
-    norm(b.name) === norm(currentUser) &&
-    b.instrument === currentInstr.id &&
-    b.date >= today
-  );
+  const userBookings = bookings.filter(b => {
+    const dt = new Date(b.date + "T" + String(b.hour).padStart(2,'0') + ":00:00");
+    return (
+      norm(b.name) === norm(currentUser) &&
+      b.instrument === currentInstr.id &&
+      dt >= now
+    );
+  });
 
   if(userBookings.length >= MAX_FUTURE_BOOKINGS){
     alert("Booking limit reached for this instrument");
