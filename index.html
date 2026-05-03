@@ -12,6 +12,7 @@ body {
   grid-template-columns:260px 1fr;
   height:100vh;
   background:#f6f7fb;
+  color:#1a1a1a;
 }
 
 aside {
@@ -23,6 +24,7 @@ aside {
 h3 {
   font-size:11px;
   text-transform:uppercase;
+  letter-spacing:0.08em;
   color:#8a8f9c;
   margin-bottom:10px;
 }
@@ -33,6 +35,7 @@ select {
   border-radius:8px;
   border:1px solid #dcdfe6;
   margin-bottom:20px;
+  background:#fafbff;
 }
 
 button {
@@ -85,6 +88,7 @@ main { padding:24px; }
 .booking {
   background:#dbe7ff;
   color:#1d3fd3;
+  font-weight:500;
   border-radius:6px;
   padding:4px 8px;
 }
@@ -122,8 +126,11 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let users=[], instruments=[], bookings=[];
-let currentUser=null, currentInstr=null;
+let users = [];
+let instruments = [];
+let bookings = [];
+let currentUser = localStorage.getItem("labBookingUser") || null;
+let currentInstr = null;
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -145,8 +152,11 @@ async function load(){
   instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
 
-  currentUser = users[0]?.name;
-  currentInstr = instruments[0];
+  if (!currentUser || !users.some(u => norm(u.name) === norm(currentUser))) {
+    currentUser = users[0]?.name || null;
+  }
+
+  currentInstr = instruments[0] || null;
 
   render();
 }
@@ -162,26 +172,34 @@ function renderUsers(){
   const el = document.getElementById("user");
 
   el.innerHTML = users.map(u =>
-    `<option value="${u.name}" ${norm(u.name)===norm(currentUser)?"selected":""}>${u.name}</option>`
+    `<option value="${u.name}" ${norm(u.name) === norm(currentUser) ? "selected" : ""}>${u.name}</option>`
   ).join("");
 
-  el.onchange = e => currentUser = e.target.value;
+  el.value = currentUser || "";
+
+  el.onchange = e => {
+    currentUser = e.target.value;
+    localStorage.setItem("labBookingUser", currentUser);
+    renderCalendar();
+  };
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
-
   el.innerHTML = instruments.map(i =>
-    `<button class="${i.id===currentInstr.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button class="${currentInstr && i.id===currentInstr.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
 function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
-  render();
+  currentInstr = instruments.find(i=>i.id===id) || currentInstr;
+  renderInstr();
+  renderMain();
+  renderCalendar();
 }
 
 function renderMain(){
+  if (!currentInstr) return;
   document.getElementById("title").textContent = currentInstr.name;
   document.getElementById("desc").textContent = currentInstr.description;
 }
@@ -220,11 +238,13 @@ function renderCalendar(){
 
       if(b){
         c.classList.add("booking");
-        if(norm(b.name)===norm(currentUser)){
+        c.textContent=b.name;
+
+        if(norm(b.name) === norm(currentUser)){
           c.classList.add("mine");
           c.onclick = () => deleteBooking(b);
         }
-        c.textContent=b.name;
+
       } else {
         c.classList.add("clickable");
         c.onclick=()=>book(h,date);
@@ -236,6 +256,7 @@ function renderCalendar(){
 }
 
 async function book(hour,date){
+
   const duration = parseInt(prompt("Duration (1–4 hours):", "1"));
   if(!duration || duration < 1 || duration > 4) return;
 
@@ -278,5 +299,6 @@ async function deleteBooking(b){
 
 load();
 </script>
+
 </body>
 </html>
