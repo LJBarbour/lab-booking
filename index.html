@@ -84,9 +84,16 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
-  el.innerHTML = users.map(u=>`<option value="${u.name}">${u.name}</option>`).join("");
-  el.value = currentUser;
-  el.onchange = e => { currentUser = e.target.value; render(); };
+
+  el.innerHTML = users.map(u =>
+    `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
+  ).join("");
+
+  // ✅ FIX: keep state aligned
+  el.onchange = e => {
+    currentUser = e.target.value;
+    render();
+  };
 }
 
 function renderInstr(){
@@ -137,7 +144,7 @@ function renderCalendar(){
         c.classList.add("booking");
         c.textContent=b.name;
 
-        // ✅ RESTORED DELETE FUNCTIONALITY
+        // ✅ NOW WORKS AGAIN
         if(norm(b.name) === norm(currentUser)){
           c.classList.add("mine");
           c.onclick = () => deleteBooking(b);
@@ -187,6 +194,5 @@ async function deleteBooking(b){
 
 load();
 </script>
-
 </body>
 </html>
