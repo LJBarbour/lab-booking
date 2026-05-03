@@ -5,22 +5,126 @@
 <title>Lab Booking</title>
 
 <style>
-/* (same styles as before — unchanged for brevity) */
-body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
-aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
-h3 { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#8a8f9c; margin-bottom:10px; }
-select { width:100%; padding:10px; border-radius:8px; border:1px solid #dcdfe6; margin-bottom:20px; background:#fafbff; }
-button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; border-radius:8px; cursor:pointer; }
-button:hover { background:#f0f3ff; }
-button.active { background:#e4ebff; color:#2a4bd7; font-weight:500; }
-main { padding:24px; }
-.calendar { display:grid; grid-template-columns:60px repeat(5,1fr); border:1px solid #e6e8ef; border-radius:12px; overflow:hidden; background:#ffffff; }
-.cell { border:1px solid #f0f1f5; height:46px; display:flex; align-items:center; justify-content:center; font-size:12px; }
-.header { background:#fafbff; font-weight:600; }
-.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; background:#fafbff; }
-.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
-.booking { background:#dbe7ff; color:#1d3fd3; font-weight:500; border-radius:6px; padding:4px 8px; }
-.booking.mine { background:#d7f5e3; color:#1a7a4f; }
+body {
+  margin:0;
+  font-family: system-ui, -apple-system, sans-serif;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  height:100vh;
+  background:#f7f6f2;
+  color:#1a1917;
+}
+
+aside {
+  background:#ffffff;
+  border-right:1px solid #e3e1d9;
+  padding:24px 20px;
+}
+
+h3 {
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:#7a7870;
+  margin-bottom:8px;
+}
+
+select {
+  width:100%;
+  padding:8px 10px;
+  margin-bottom:20px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  background:#fafafa;
+  font-size:13px;
+}
+
+button {
+  width:100%;
+  padding:8px 10px;
+  margin-bottom:4px;
+  border:none;
+  background:none;
+  text-align:left;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+button:hover {
+  background:#f0efea;
+}
+
+button.active {
+  background:#e8f0ea;
+  color:#2d5a3d;
+  font-weight:500;
+}
+
+main {
+  padding:24px;
+}
+
+#title {
+  font-size:18px;
+  font-weight:500;
+}
+
+#desc {
+  font-size:13px;
+  color:#6e6c65;
+  margin-bottom:18px;
+}
+
+.calendar {
+  display:grid;
+  grid-template-columns:60px repeat(5,1fr);
+  border:1px solid #e3e1d9;
+  border-radius:10px;
+  overflow:hidden;
+  background:#ffffff;
+}
+
+.cell {
+  border-bottom:1px solid #e3e1d9;
+  border-right:1px solid #e3e1d9;
+  height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+}
+
+.header {
+  background:#f7f6f2;
+  font-weight:500;
+}
+
+.time {
+  font-size:11px;
+  color:#7a7870;
+  justify-content:flex-end;
+  padding-right:8px;
+  background:#faf9f6;
+}
+
+.cell.clickable:hover {
+  background:#eef3ef;
+  cursor:pointer;
+}
+
+.booking {
+  background:#cfe3f5;
+  color:#1a4a7a;
+  border-radius:6px;
+  padding:2px 6px;
+}
+
+.booking.mine {
+  background:#d4f5d8;
+  color:#1a7a3a;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -42,7 +146,7 @@ main { padding:24px; }
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
   "apikey": KEY,
@@ -51,13 +155,7 @@ const HEADERS = {
 };
 
 let users=[], instruments=[], bookings=[];
-let currentUser = localStorage.getItem("labBookingUser") || null;
-let currentInstr = null;
-
-// 🔧 normalize helper
-function norm(s){
-  return (s || "").trim().toLowerCase();
-}
+let currentUser=null, currentInstr=null;
 
 function weekDates(){
   const today = new Date();
@@ -77,11 +175,8 @@ async function load(){
   instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
 
-  if (!currentUser || !users.some(u => norm(u.name) === norm(currentUser))) {
-    currentUser = users[0]?.name || null;
-  }
-
-  currentInstr = instruments[0] || null;
+  currentUser = users[0]?.name;
+  currentInstr = instruments[0];
 
   render();
 }
@@ -95,32 +190,20 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
-
-  el.innerHTML = users.map(u =>
-    `<option value="${u.name}" ${norm(u.name) === norm(currentUser) ? "selected" : ""}>${u.name}</option>`
-  ).join("");
-
-  el.value = currentUser || "";
-
-  el.onchange = e => {
-    currentUser = e.target.value;
-    localStorage.setItem("labBookingUser", currentUser);
-    renderCalendar();
-  };
+  el.innerHTML = users.map(u=>`<option>${u.name}</option>`).join("");
+  el.onchange = e=>currentUser=e.target.value;
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
   el.innerHTML = instruments.map(i =>
-    `<button class="${currentInstr && i.id===currentInstr.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button class="${i.id===currentInstr.id?'active':''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
 function selectInstr(id){
   currentInstr = instruments.find(i=>i.id===id);
-  renderInstr();
-  renderMain();
-  renderCalendar();
+  render();
 }
 
 function renderMain(){
@@ -162,14 +245,11 @@ function renderCalendar(){
 
       if(b){
         c.classList.add("booking");
-        c.textContent=b.name;
-
-        // 🔧 FIX HERE
-        if(norm(b.name) === norm(currentUser)){
+        if(b.name === currentUser){
           c.classList.add("mine");
           c.onclick = () => deleteBooking(b);
         }
-
+        c.textContent=b.name;
       } else {
         c.classList.add("clickable");
         c.onclick=()=>book(h,date);
@@ -207,7 +287,10 @@ async function deleteBooking(b){
     `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
     {
       method:"DELETE",
-      headers:HEADERS
+      headers:{
+        "apikey": KEY,
+        "Authorization": `Bearer ${KEY}`
+      }
     }
   );
 
