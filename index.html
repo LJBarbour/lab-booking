@@ -5,10 +5,10 @@
 <title>Lab Booking</title>
 
 <style>
-body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
+body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; color:#1a1a1a; }
 aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
-h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
-select { width:100%; padding:10px; border-radius:8px; border:1px solid #dcdfe6; margin-bottom:20px; }
+h3 { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#8a8f9c; margin-bottom:10px; }
+select { width:100%; padding:10px; border-radius:8px; border:1px solid #dcdfe6; margin-bottom:20px; background:#fafbff; }
 button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; border-radius:8px; cursor:pointer; }
 button:hover { background:#f0f3ff; }
 button.active { background:#e4ebff; color:#2a4bd7; font-weight:500; }
@@ -117,11 +117,12 @@ function renderInstr(){
 }
 
 function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
+  currentInstr = instruments.find(i=>i.id===id) || currentInstr;
   render();
 }
 
 function renderMain(){
+  if (!currentInstr) return;
   document.getElementById("title").textContent = currentInstr.name;
   document.getElementById("desc").textContent = currentInstr.description;
 }
@@ -179,16 +180,14 @@ function renderCalendar(){
 
 async function book(hour,date){
 
-  const now = new Date();
+  // ✅ FIX: reliable future booking count
+  const today = new Date().toISOString().split("T")[0];
 
-  const userBookings = bookings.filter(b => {
-    const bookingDateTime = new Date(b.date + "T" + String(b.hour).padStart(2,'0') + ":00:00");
-    return (
-      norm(b.name) === norm(currentUser) &&
-      b.instrument === currentInstr.id &&
-      bookingDateTime >= now
-    );
-  });
+  const userBookings = bookings.filter(b =>
+    norm(b.name) === norm(currentUser) &&
+    b.instrument === currentInstr.id &&
+    b.date >= today
+  );
 
   if(userBookings.length >= MAX_FUTURE_BOOKINGS){
     alert("Booking limit reached for this instrument");
