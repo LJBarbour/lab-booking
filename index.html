@@ -22,11 +22,13 @@ button {
 
 button:hover { background:#f0f3ff; }
 
-/* ✅ NEW */
+/* ✅ STRONGER HIGHLIGHT */
 button.active {
-  background:#e4ebff;
+  background:#dbe7ff;
   font-weight:600;
-  border-radius:6px;
+  border-left:4px solid #4a6cf7;
+  padding-left:6px;
+  border-radius:4px;
 }
 
 main { padding:24px; }
@@ -147,7 +149,6 @@ function renderUsers(){
   };
 }
 
-/* ✅ ONLY CHANGE */
 function renderInstr(){
   const el = document.getElementById("instr");
   el.innerHTML = instruments.map(i =>
