@@ -84,7 +84,7 @@ main { padding:24px; }
   background:#fff3cd;
 }
 
-/* ✅ NEW */
+/* ✅ current hour highlight */
 .current-hour {
   background:#e8f2ff;
 }
@@ -288,7 +288,69 @@ function renderCalendar(){
   }
 }
 
-/* rest unchanged */
+async function book(hour,date){
+  const now = new Date();
+
+  const count = bookings.filter(b => {
+    const slotTime = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
+    return (
+      norm(b.name) === norm(currentUser) &&
+      b.instrument === currentInstr.id &&
+      slotTime >= now
+    );
+  }).length;
+
+  const max = currentInstr.maxslot ?? 999;
+
+  if(count >= max){
+    alert("Booking limit reached");
+    return;
+  }
+
+  const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
+  if(slotTime < now){
+    alert("Cannot book in the past");
+    return;
+  }
+
+  await fetch(`${URL}/bookings`,{
+    method:"POST",
+    headers:HEADERS,
+    body:JSON.stringify({
+      id: Date.now().toString(),
+      instrument: currentInstr.id,
+      date: date,
+      hour: hour,
+      name: currentUser
+    })
+  });
+
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+async function deleteBooking(b){
+  const slotTime = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
+  if(slotTime < new Date()){
+    alert("Cannot delete past bookings");
+    return;
+  }
+
+  if(!confirm("Delete this booking?")) return;
+
+  await fetch(
+    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
+    {
+      method:"DELETE",
+      headers:HEADERS
+    }
+  );
+
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+load();
 </script>
 </body>
 </html>
