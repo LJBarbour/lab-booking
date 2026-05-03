@@ -5,102 +5,22 @@
 <title>Lab Booking</title>
 
 <style>
-body {
-  margin:0;
-  font-family: system-ui, -apple-system, sans-serif;
-  display:grid;
-  grid-template-columns:260px 1fr;
-  height:100vh;
-  background:#f6f7fb;
-  color:#1a1a1a;
-}
-
-aside {
-  background:#ffffff;
-  border-right:1px solid #e6e8ef;
-  padding:24px;
-}
-
-h3 {
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:0.08em;
-  color:#8a8f9c;
-  margin-bottom:10px;
-}
-
-select {
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #dcdfe6;
-  margin-bottom:20px;
-  background:#fafbff;
-}
-
-button {
-  width:100%;
-  padding:10px;
-  margin-bottom:6px;
-  border:none;
-  background:none;
-  text-align:left;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-button:hover {
-  background:#f0f3ff;
-}
-
-button.active {
-  background:#e4ebff;
-  color:#2a4bd7;
-  font-weight:500;
-}
-
-main {
-  padding:24px;
-}
-
-.calendar {
-  display:grid;
-  grid-template-columns:60px repeat(5,1fr);
-  border:1px solid #e6e8ef;
-  border-radius:12px;
-  overflow:hidden;
-  background:#ffffff;
-}
-
-.cell {
-  border:1px solid #f0f1f5;
-  height:46px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-}
-
+/* unchanged styles */
+body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
+aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
+h3 { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#8a8f9c; margin-bottom:10px; }
+select { width:100%; padding:10px; border-radius:8px; border:1px solid #dcdfe6; margin-bottom:20px; background:#fafbff; }
+button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; border-radius:8px; cursor:pointer; }
+button:hover { background:#f0f3ff; }
+button.active { background:#e4ebff; color:#2a4bd7; font-weight:500; }
+main { padding:24px; }
+.calendar { display:grid; grid-template-columns:60px repeat(5,1fr); border:1px solid #e6e8ef; border-radius:12px; overflow:hidden; background:#ffffff; }
+.cell { border:1px solid #f0f1f5; height:46px; display:flex; align-items:center; justify-content:center; font-size:12px; }
 .header { background:#fafbff; font-weight:600; }
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
-
-.cell.clickable:hover {
-  background:#eef2ff;
-  cursor:pointer;
-}
-
-.booking {
-  background:#dbe7ff;
-  color:#1d3fd3;
-  font-weight:500;
-  border-radius:6px;
-  padding:4px 8px;
-}
-
-.booking.mine {
-  background:#d7f5e3;
-  color:#1a7a4f;
-}
+.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
+.booking { background:#dbe7ff; color:#1d3fd3; border-radius:6px; padding:4px 8px; }
+.booking.mine { background:#d7f5e3; color:#1a7a4f; }
 </style>
 </head>
 
@@ -122,15 +42,14 @@ main {
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
-
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 const HEADERS = {
   "apikey": KEY,
   "Authorization": `Bearer ${KEY}`,
   "Content-Type": "application/json"
 };
 
-const MAX_FUTURE_BOOKINGS = 5; // ✅ NEW RULE
+const MAX_FUTURE_BOOKINGS = 5;
 
 let users = [];
 let instruments = [];
@@ -151,12 +70,6 @@ function weekDates(){
     d.setDate(monday.getDate()+i);
     return d.toISOString().split("T")[0];
   });
-}
-
-function isFuture(date, hour){
-  const now = new Date();
-  const slot = new Date(date + "T" + String(hour).padStart(2,'0') + ":00:00");
-  return slot > now;
 }
 
 async function load(){
@@ -204,10 +117,8 @@ function renderInstr(){
 }
 
 function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id) || currentInstr;
-  renderInstr();
-  renderMain();
-  renderCalendar();
+  currentInstr = instruments.find(i=>i.id===id);
+  render();
 }
 
 function renderMain(){
@@ -269,11 +180,12 @@ function renderCalendar(){
 
 async function book(hour,date){
 
-  // 🔧 NEW LOGIC: enforce future booking limit
+  const todayStr = new Date().toISOString().split("T")[0];
+
   const userBookings = bookings.filter(b =>
     norm(b.name) === norm(currentUser) &&
     b.instrument === currentInstr.id &&
-    isFuture(b.date, b.hour)
+    b.date >= todayStr
   );
 
   if(userBookings.length >= MAX_FUTURE_BOOKINGS){
@@ -317,6 +229,5 @@ async function deleteBooking(b){
 
 load();
 </script>
-
 </body>
 </html>
