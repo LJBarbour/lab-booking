@@ -63,17 +63,6 @@ main {
   padding:24px;
 }
 
-#title {
-  font-size:20px;
-  font-weight:600;
-}
-
-#desc {
-  color:#6e7380;
-  font-size:13px;
-  margin-bottom:16px;
-}
-
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(5,1fr);
@@ -126,7 +115,6 @@ main {
 
 .booking.mine:hover {
   cursor:pointer;
-  filter:brightness(0.98);
 }
 </style>
 </head>
@@ -163,9 +151,7 @@ let bookings = [];
 let currentUser = localStorage.getItem("labBookingUser") || null;
 let currentInstr = null;
 
-function norm(s){
-  return (s || "").trim().toLowerCase();
-}
+function norm(s){ return (s || "").trim().toLowerCase(); }
 
 function weekDates(){
   const today = new Date();
@@ -213,8 +199,6 @@ function renderUsers(){
   el.onchange = e => {
     currentUser = e.target.value;
     localStorage.setItem("labBookingUser", currentUser);
-
-    // ✅ ONLY CHANGE IS HERE
     render();
   };
 }
@@ -290,7 +274,9 @@ function renderCalendar(){
   }
 }
 
+// ✅ ONLY CHANGE: simplified booking (no duration)
 async function book(hour,date){
+
   const row={
     id: Date.now().toString(),
     instrument: currentInstr.id,
