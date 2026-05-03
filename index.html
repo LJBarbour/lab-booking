@@ -39,6 +39,8 @@ main { padding:24px; }
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
+
+/* 🔴 IMPORTANT: your REAL key */
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
@@ -160,7 +162,7 @@ function renderCalendar(){
   }
 }
 
-// ✅ FIXED LIMIT (simple, reliable)
+// ✅ LIMIT FIX
 async function book(hour,date){
 
   const count = bookings.filter(b =>
