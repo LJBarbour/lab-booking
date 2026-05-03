@@ -95,7 +95,6 @@ main { padding:24px; }
   cursor:pointer;
 }
 
-/* NEW */
 .booking-box.past {
   background:#e0e0e0;
   color:#888;
@@ -261,22 +260,33 @@ function renderCalendar(){
   }
 }
 
+/* ✅ ONLY CHANGE: ignore past bookings */
 async function book(hour,date){
-  const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
-  if(slotTime < new Date()){
-    alert("Cannot book in the past");
-    return;
-  }
+
+  const now = new Date();
+
+  const count = bookings.filter(b => {
+    const slotTime = new Date(
+      b.date + "T" + b.hour.toString().padStart(2,'0') + ":00"
+    );
+
+    return (
+      norm(b.name) === norm(currentUser) &&
+      b.instrument === currentInstr.id &&
+      slotTime >= now
+    );
+  }).length;
 
   const max = currentInstr.maxslot ?? 999;
 
-  const count = bookings.filter(b =>
-    norm(b.name) === norm(currentUser) &&
-    b.instrument === currentInstr.id
-  ).length;
-
   if(count >= max){
     alert("Booking limit reached");
+    return;
+  }
+
+  const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
+  if(slotTime < new Date()){
+    alert("Cannot book in the past");
     return;
   }
 
