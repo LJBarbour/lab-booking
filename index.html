@@ -25,10 +25,10 @@ main { padding:24px; }
 .cell {
   border:1px solid #e6e8ef;
   height:46px;
-  position:relative;
   display:flex;
   align-items:center;
   justify-content:center;
+  position:relative;
 }
 
 .header { background:#fafbff; }
@@ -39,10 +39,9 @@ main { padding:24px; }
   cursor:pointer;
 }
 
-/* ✅ NEW: fill cell but keep borders visible */
 .booking-box {
   position:absolute;
-  inset:1px;                /* key line */
+  inset:1px;
   background:#dbe7ff;
   border-radius:6px;
   display:flex;
@@ -82,8 +81,6 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-const MAX_FUTURE_BOOKINGS = 5;
-
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
 
@@ -121,6 +118,7 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
+
   el.innerHTML = users.map(u =>
     `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
@@ -193,14 +191,18 @@ function renderCalendar(){
   }
 }
 
+// ✅ ONLY CHANGE HERE
 async function book(hour,date){
+
+  const max = currentInstr.maxslot ?? 999;
+
   const count = bookings.filter(b =>
     norm(b.name) === norm(currentUser) &&
     b.instrument === currentInstr.id
   ).length;
 
-  if(count >= MAX_FUTURE_BOOKINGS){
-    alert("Booking limit reached");
+  if(count >= max){
+    alert("Booking limit reached for this instrument");
     return;
   }
 
