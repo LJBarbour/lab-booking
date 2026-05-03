@@ -6,16 +6,17 @@
 
 <style>
 body { font-family: system-ui; padding:40px; }
-button { padding:10px 20px; margin-right:10px; }
+button { padding:10px 20px; margin-right:10px; margin-top:10px; }
 #status { margin-top:20px; font-family: monospace; white-space: pre-wrap; }
 </style>
 </head>
 
 <body>
 
-<h2>Auth Test (v1.2.9)</h2>
+<h2>Auth Test (v1.2.10)</h2>
 
 <button id="init">Init</button>
+<button id="signup">Sign Up</button>
 <button id="login">Login</button>
 <button id="logout">Logout</button>
 
@@ -25,12 +26,10 @@ button { padding:10px 20px; margin-right:10px; }
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-console.log("VERSION: 1.2.9");
+console.log("VERSION: 1.2.10");
 
-// ✅ Correct base URL
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 
-// ✅ Your working anon key
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 let sb = null;
@@ -43,8 +42,6 @@ function log(msg){
 // INIT
 document.getElementById("init").onclick = () => {
   log("---- INIT ----");
-  log("URL = " + JSON.stringify(URL));
-  log("Length = " + URL.length);
 
   try {
     sb = createClient(URL, KEY);
@@ -55,8 +52,33 @@ document.getElementById("init").onclick = () => {
   }
 };
 
+// SIGN UP
+document.getElementById("signup").onclick = async () => {
+
+  if(!sb){
+    log("❌ Not initialized");
+    return;
+  }
+
+  const email = prompt("Email:");
+  const password = prompt("Password (min 6 chars):");
+
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password
+  });
+
+  if(error){
+    log("❌ Signup failed: " + error.message);
+    return;
+  }
+
+  log("✅ Signup success: " + data.user.email);
+};
+
 // LOGIN
 document.getElementById("login").onclick = async () => {
+
   if(!sb){
     log("❌ Not initialized");
     return;
@@ -66,7 +88,8 @@ document.getElementById("login").onclick = async () => {
   const password = prompt("Password:");
 
   const { data, error } = await sb.auth.signInWithPassword({
-    email, password
+    email,
+    password
   });
 
   if(error){
