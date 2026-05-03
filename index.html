@@ -32,12 +32,15 @@ button.active {
 
 main { padding:24px; }
 
+/* 🔧 MAKE TITLE OBVIOUS */
 #instr-name {
-  margin:0 0 4px 0;
+  margin:0 0 6px 0;
+  font-size:20px;
+  font-weight:600;
 }
 
 #instr-desc {
-  margin:0 0 16px 0;
+  margin:0 0 20px 0;
   color:#666;
   font-size:14px;
 }
@@ -96,7 +99,6 @@ main { padding:24px; }
 </aside>
 
 <main>
-  <!-- NEW -->
   <h2 id="instr-name"></h2>
   <p id="instr-desc"></p>
 
@@ -145,7 +147,7 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
-  renderInstrumentInfo();   // NEW
+  renderInstrumentInfo();
   renderCalendar();
 }
 
@@ -174,10 +176,16 @@ function selectInstr(id){
   render();
 }
 
-/* NEW FUNCTION */
+/* 🔧 FORCE VISIBLE TITLE */
 function renderInstrumentInfo(){
-  document.getElementById("instr-name").textContent = currentInstr?.name || "";
-  document.getElementById("instr-desc").textContent = currentInstr?.description || "";
+  if(!currentInstr) return;
+
+  document.getElementById("instr-name").textContent = currentInstr.name || "Unknown instrument";
+
+  document.getElementById("instr-desc").textContent =
+    currentInstr.description && currentInstr.description.trim() !== ""
+      ? currentInstr.description
+      : "";
 }
 
 function renderCalendar(){
@@ -231,18 +239,6 @@ function renderCalendar(){
 }
 
 async function book(hour,date){
-  const max = currentInstr.maxslot ?? 999;
-
-  const count = bookings.filter(b =>
-    norm(b.name) === norm(currentUser) &&
-    b.instrument === currentInstr.id
-  ).length;
-
-  if(count >= max){
-    alert("Booking limit reached for this instrument");
-    return;
-  }
-
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
