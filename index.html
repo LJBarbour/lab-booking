@@ -5,20 +5,104 @@
 <title>Lab Booking</title>
 
 <style>
-body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
-aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
-h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
-select { width:100%; padding:10px; margin-bottom:20px; }
-button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; cursor:pointer; }
+body {
+  margin:0;
+  font-family: system-ui, -apple-system, sans-serif;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  height:100vh;
+  background:#f6f7fb;
+}
+
+aside {
+  background:#ffffff;
+  border-right:1px solid #e6e8ef;
+  padding:24px;
+}
+
+h3 {
+  font-size:11px;
+  text-transform:uppercase;
+  color:#8a8f9c;
+  margin-bottom:10px;
+}
+
+select {
+  width:100%;
+  padding:10px;
+  margin-bottom:20px;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  margin-bottom:6px;
+  border:none;
+  background:none;
+  text-align:left;
+  cursor:pointer;
+}
+
 button:hover { background:#f0f3ff; }
+
 main { padding:24px; }
-.calendar { display:grid; grid-template-columns:60px repeat(5,1fr); border:1px solid #e6e8ef; border-radius:12px; overflow:hidden; background:#fff; }
-.cell { border:1px solid #f0f1f5; height:46px; display:flex; align-items:center; justify-content:center; }
-.header { background:#fafbff; }
-.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
-.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
-.booking { background:#dbe7ff; border-radius:6px; padding:4px 8px; }
-.booking.mine { background:#d7f5e3; cursor:pointer; }
+
+/* ✅ FIXED GRID */
+.calendar {
+  display:grid;
+  grid-template-columns:60px repeat(5,1fr);
+  border:1px solid #e6e8ef;
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+}
+
+.cell {
+  border-right:1px solid #e6e8ef;
+  border-bottom:1px solid #e6e8ef;
+  height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+}
+
+/* remove extra borders on edges */
+.cell:nth-child(6n) {
+  border-right:none;
+}
+
+.calendar > .cell:nth-last-child(-n+6) {
+  border-bottom:none;
+}
+
+.header {
+  background:#fafbff;
+  font-weight:600;
+}
+
+.time {
+  font-size:11px;
+  color:#9aa0ad;
+  justify-content:flex-end;
+  padding-right:8px;
+}
+
+.cell.clickable:hover {
+  background:#eef2ff;
+  cursor:pointer;
+}
+
+.booking {
+  background:#dbe7ff;
+  border-radius:6px;
+  padding:4px 8px;
+}
+
+.booking.mine {
+  background:#d7f5e3;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -46,8 +130,6 @@ const HEADERS = {
   "Authorization": `Bearer ${KEY}`,
   "Content-Type": "application/json"
 };
-
-const MAX_FUTURE_BOOKINGS = 5;
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
@@ -92,9 +174,6 @@ function renderUsers(){
   ).join("");
 
   el.value = currentUser;
-
-  // ✅ FIX: keep currentUser aligned with dropdown
-  currentUser = el.value;
 
   el.onchange = e => {
     currentUser = e.target.value;
@@ -166,20 +245,6 @@ function renderCalendar(){
 }
 
 async function book(hour,date){
-
-  const today = new Date().toISOString().split("T")[0];
-
-  const count = bookings.filter(b =>
-    norm(b.name) === norm(currentUser) &&
-    b.instrument === currentInstr.id &&
-    b.date >= today
-  ).length;
-
-  if(count >= MAX_FUTURE_BOOKINGS){
-    alert("Booking limit reached");
-    return;
-  }
-
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
