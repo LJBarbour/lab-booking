@@ -32,7 +32,6 @@ button.active {
 
 main { padding:24px; }
 
-/* 🔧 MAKE TITLE OBVIOUS */
 #instr-name {
   margin:0 0 6px 0;
   font-size:20px;
@@ -107,7 +106,9 @@ main { padding:24px; }
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "YOUR_FULL_KEY_HERE";
+
+/* ✅ YOUR REAL KEY (restored) */
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
   "apikey": KEY,
@@ -176,16 +177,9 @@ function selectInstr(id){
   render();
 }
 
-/* 🔧 FORCE VISIBLE TITLE */
 function renderInstrumentInfo(){
-  if(!currentInstr) return;
-
-  document.getElementById("instr-name").textContent = currentInstr.name || "Unknown instrument";
-
-  document.getElementById("instr-desc").textContent =
-    currentInstr.description && currentInstr.description.trim() !== ""
-      ? currentInstr.description
-      : "";
+  document.getElementById("instr-name").textContent = currentInstr?.name || "";
+  document.getElementById("instr-desc").textContent = currentInstr?.description || "";
 }
 
 function renderCalendar(){
