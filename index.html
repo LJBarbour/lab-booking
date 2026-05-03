@@ -79,21 +79,10 @@ main {
   align-items:center;
   justify-content:center;
   font-size:12px;
-  position:relative;
 }
 
-.header {
-  background:#fafbff;
-  font-weight:600;
-}
-
-.time {
-  font-size:11px;
-  color:#9aa0ad;
-  justify-content:flex-end;
-  padding-right:8px;
-  background:#fafbff;
-}
+.header { background:#fafbff; font-weight:600; }
+.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
 .cell.clickable:hover {
   background:#eef2ff;
@@ -111,10 +100,6 @@ main {
 .booking.mine {
   background:#d7f5e3;
   color:#1a7a4f;
-}
-
-.booking.mine:hover {
-  cursor:pointer;
 }
 </style>
 </head>
@@ -145,6 +130,8 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
+const MAX_FUTURE_BOOKINGS = 5; // ✅ NEW RULE
+
 let users = [];
 let instruments = [];
 let bookings = [];
@@ -164,6 +151,12 @@ function weekDates(){
     d.setDate(monday.getDate()+i);
     return d.toISOString().split("T")[0];
   });
+}
+
+function isFuture(date, hour){
+  const now = new Date();
+  const slot = new Date(date + "T" + String(hour).padStart(2,'0') + ":00:00");
+  return slot > now;
 }
 
 async function load(){
@@ -274,8 +267,19 @@ function renderCalendar(){
   }
 }
 
-// ✅ ONLY CHANGE: simplified booking (no duration)
 async function book(hour,date){
+
+  // 🔧 NEW LOGIC: enforce future booking limit
+  const userBookings = bookings.filter(b =>
+    norm(b.name) === norm(currentUser) &&
+    b.instrument === currentInstr.id &&
+    isFuture(b.date, b.hour)
+  );
+
+  if(userBookings.length >= MAX_FUTURE_BOOKINGS){
+    alert("Booking limit reached for this instrument");
+    return;
+  }
 
   const row={
     id: Date.now().toString(),
