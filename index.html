@@ -7,402 +7,91 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
-aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
-h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
-select { width:100%; padding:10px; margin-bottom:20px; }
-
-button {
-  width:100%;
-  padding:10px;
-  margin-bottom:6px;
-  border:none;
-  background:none;
-  text-align:left;
-  cursor:pointer;
-}
-
-button:hover { background:#f0f3ff; }
-
-button.active {
-  background:#dbe7ff;
-  font-weight:600;
-  border-left:4px solid #4a6cf7;
-  padding-left:6px;
-  border-radius:4px;
-}
-
-#instr-image {
-  width:100%;
-  max-width:140px;
-  margin-top:10px;
-  border-radius:6px;
-}
-
-main { padding:24px; }
-
-.week-nav {
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.week-nav button {
-  width:auto;
-  padding:6px 10px;
-}
-
-.calendar {
-  display:grid;
-  grid-template-columns:60px repeat(7,1fr);
-  border:1px solid #e6e8ef;
-  border-radius:12px;
-  overflow:hidden;
-  background:#fff;
-}
-
-.cell {
-  border:1px solid #e6e8ef;
-  height:26px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-}
-
-.header {
-  background:#fafbff;
-  flex-direction:column;
-  height:50px;
-}
-
-.date {
-  font-size:14px;
-  font-weight:600;
-  color:#444;
-}
-
-.header.today-col {
-  background:#ffe082;
-}
-
-.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
-
-.cell.clickable:hover {
-  background:#eef2ff;
-  cursor:pointer;
-}
-
-.booking-box {
-  position:absolute;
-  inset:1px;
-  background:#dbe7ff;
-  border-radius:6px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.booking-box.mine {
-  background:#d7f5e3;
-  cursor:pointer;
-}
-
-.booking-box.past {
-  background:#e0e0e0;
-  color:#888;
-}
-
-.past-cell {
-  background:#f0f0f0;
-  color:#999;
-}
-
-#auth {
-  margin-bottom:20px;
-}
+body { margin:0; font-family: system-ui; display:grid; grid-template-columns:260px 1fr; height:100vh; }
+aside { padding:20px; border-right:1px solid #ddd; }
+main { padding:20px; }
+button { display:block; margin-bottom:8px; width:100%; }
 </style>
 </head>
 
 <body>
 
 <aside>
-
-  <div id="auth">
-    <button onclick="login()">Login</button>
-    <button onclick="logout()">Logout</button>
-    <div id="user-email" style="font-size:12px; margin-top:6px;">Not logged in</div>
-  </div>
-
-  <h3>Researcher</h3>
-  <select id="user"></select>
-
-  <h3>Instruments</h3>
-  <div id="instr"></div>
-
-  <img id="instr-image" src="" alt="">
+  <h3>Auth</h3>
+  <button id="loginBtn">Login</button>
+  <button id="logoutBtn">Logout</button>
+  <div id="user-email">Not logged in</div>
 </aside>
 
 <main>
-  <h2 id="title"></h2>
-
-  <div class="week-nav">
-    <button onclick="changeWeek(-1)">← Previous</button>
-    <button onclick="goToday()">Today</button>
-    <button onclick="changeWeek(1)">Next →</button>
-  </div>
-
-  <div id="calendar" class="calendar"></div>
+  <h2>Lab Booking (Auth Test)</h2>
 </main>
 
 <script>
 
-console.log("VERSION: 1.2.2");
+console.log("VERSION: 1.2.3");
 
-// ✅ CORRECT BASE URL (NO /rest/v1)
+// ✅ MUST be EXACTLY this format
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 
-// 🔴 PUT YOUR REAL ANON KEY HERE
+// 🔴 PUT YOUR REAL KEY HERE
 const KEY = "YOUR_ANON_KEY_HERE";
 
-// Supabase client
-const sb = window.supabase.createClient(URL, KEY);
+let sb = null;
 
-// REST endpoint (separate)
-const REST = URL + "/rest/v1";
+// ✅ Initialize AFTER page loads
+window.addEventListener("load", async () => {
 
-const HEADERS = {
-  "apikey": KEY,
-  "Authorization": `Bearer ${KEY}`,
-  "Content-Type": "application/json"
-};
+  try {
+    sb = window.supabase.createClient(URL, KEY);
+    console.log("Supabase initialized");
 
-let users=[], instruments=[], bookings=[], permissions=[];
-let currentUser=null, currentInstr=null;
-let weekOffset = 0;
+    await checkSession();
 
-function norm(s){ return (s || "").trim().toLowerCase(); }
+  } catch (err) {
+    console.error("Supabase init failed:", err);
+  }
 
-async function login(){
+});
+
+// ✅ Safe login binding (after load)
+document.getElementById("loginBtn").onclick = async () => {
+  if (!sb) {
+    alert("Supabase not ready");
+    return;
+  }
+
   const email = prompt("Email:");
   const password = prompt("Password:");
 
   const { error } = await sb.auth.signInWithPassword({ email, password });
 
-  if(error){
+  if (error) {
     alert(error.message);
     return;
   }
 
-  await getSession();
-  render();
-}
+  await checkSession();
+};
 
-async function logout(){
+document.getElementById("logoutBtn").onclick = async () => {
+  if (!sb) return;
+
   await sb.auth.signOut();
-  currentUser = null;
   document.getElementById("user-email").textContent = "Not logged in";
-  render();
-}
+};
 
-async function getSession(){
+// ✅ Session check
+async function checkSession() {
   const { data } = await sb.auth.getSession();
 
-  if(data.session){
-    const user = data.session.user;
-    document.getElementById("user-email").textContent = user.email;
-
-    const res = await fetch(`${REST}/users?auth_id=eq.${user.id}`, {headers:HEADERS});
-    const row = await res.json();
-
-    currentUser = row[0]?.name || null;
+  if (data.session) {
+    document.getElementById("user-email").textContent =
+      data.session.user.email;
+  } else {
+    document.getElementById("user-email").textContent = "Not logged in";
   }
 }
-
-function goToday(){ weekOffset = 0; renderCalendar(); }
-function changeWeek(delta){ weekOffset += delta; renderCalendar(); }
-
-function weekDates(){
-  const today = new Date();
-  const monday = new Date(today);
-  const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff + weekOffset*7);
-
-  return Array.from({length:7},(_,i)=>{
-    const d=new Date(monday);
-    d.setDate(monday.getDate()+i);
-    return d;
-  });
-}
-
-async function load(){
-
-  await getSession();
-
-  users = await fetch(`${REST}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
-
-  currentInstr = instruments[0];
-
-  render();
-}
-
-function render(){
-  renderUsers();
-  renderInstr();
-  renderTitle();
-  renderImage();
-  renderCalendar();
-}
-
-function renderUsers(){
-  const el = document.getElementById("user");
-
-  if(!currentUser){
-    el.innerHTML = `<option>Guest</option>`;
-    el.disabled = true;
-    return;
-  }
-
-  el.innerHTML = `<option>${currentUser}</option>`;
-  el.disabled = true;
-}
-
-function renderInstr(){
-  const el = document.getElementById("instr");
-
-  if(!currentUser){
-    el.innerHTML = instruments.map(i => `<button>${i.name}</button>`).join("");
-    return;
-  }
-
-  const allowed = instruments.filter(i =>
-    permissions.some(p =>
-      p.user_id === currentUser &&
-      p.instrument_id === i.id
-    )
-  );
-
-  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
-    currentInstr = allowed[0] || null;
-  }
-
-  el.innerHTML = allowed.map(i =>
-    `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
-  ).join("");
-}
-
-function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
-  render();
-}
-
-function renderTitle(){
-  document.getElementById("title").textContent = currentInstr?.description || "";
-}
-
-function renderImage(){
-  const img = document.getElementById("instr-image");
-  if(currentInstr){
-    img.src = currentInstr.id + ".jpg";
-  }
-}
-
-function renderCalendar(){
-  const cal = document.getElementById("calendar");
-  cal.innerHTML="";
-
-  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  const dates=weekDates();
-
-  cal.appendChild(document.createElement("div"));
-
-  days.forEach((d,i)=>{
-    const h=document.createElement("div");
-    h.className = "cell header";
-    h.innerHTML = `${d}<div class="date">${dates[i].toISOString().split("T")[0]}</div>`;
-    cal.appendChild(h);
-  });
-
-  for(let h=0;h<24;h++){
-    const t=document.createElement("div");
-    t.className="cell time";
-    t.textContent=h.toString().padStart(2,'0')+":00";
-    cal.appendChild(t);
-
-    for(let i=0;i<7;i++){
-      const dateStr = dates[i].toISOString().split("T")[0];
-      const c=document.createElement("div");
-
-      const b = bookings.find(x =>
-        x.instrument===currentInstr?.id &&
-        x.hour===h &&
-        x.date===dateStr
-      );
-
-      if(b){
-        const mine = norm(b.name) === norm(currentUser);
-        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
-
-        if(mine && currentUser){
-          c.onclick = () => deleteBooking(b);
-        }
-
-      } else if(currentUser){
-        c.classList.add("clickable");
-        c.onclick = () => book(h, dateStr);
-      }
-
-      cal.appendChild(c);
-    }
-  }
-}
-
-async function book(hour,date){
-
-  if(!currentUser){
-    alert("Please login to book");
-    return;
-  }
-
-  const { data } = await sb.auth.getUser();
-
-  await fetch(`${REST}/bookings`,{
-    method:"POST",
-    headers:HEADERS,
-    body:JSON.stringify({
-      id: Date.now().toString(),
-      instrument: currentInstr.id,
-      date,
-      hour,
-      name: currentUser,
-      user_id: data.user.id
-    })
-  });
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function deleteBooking(b){
-
-  if(!currentUser) return;
-
-  await fetch(
-    `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
-    {
-      method:"DELETE",
-      headers:HEADERS
-    }
-  );
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-load();
 
 </script>
 </body>
