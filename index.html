@@ -45,7 +45,7 @@ main { padding:24px; }
 
 .calendar {
   display:grid;
-  grid-template-columns:60px repeat(7,1fr); /* ✅ changed */
+  grid-template-columns:60px repeat(7,1fr);
   border:1px solid #e6e8ef;
   border-radius:12px;
   overflow:hidden;
@@ -64,8 +64,9 @@ main { padding:24px; }
 .header { background:#fafbff; flex-direction:column; }
 
 .date {
-  font-size:12px;
-  color:#666;
+  font-size:14px;
+  font-weight:600;
+  color:#444;
 }
 
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
@@ -115,7 +116,6 @@ main { padding:24px; }
 </main>
 
 <script>
-console.log("VERSION: 7-day test");
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
@@ -140,7 +140,7 @@ function weekDates(){
   const diff = (today.getDay()===0?-6:1-today.getDay());
   monday.setDate(today.getDate()+diff + weekOffset*7);
 
-  return Array.from({length:7},(_,i)=>{  /* ✅ changed */
+  return Array.from({length:7},(_,i)=>{
     const d=new Date(monday);
     d.setDate(monday.getDate()+i);
     return d;
@@ -161,6 +161,7 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
+  renderTitle();
   renderCalendar();
 }
 
@@ -189,11 +190,15 @@ function selectInstr(id){
   render();
 }
 
+function renderTitle(){
+  document.getElementById("title").textContent = currentInstr?.name || "";
+}
+
 function renderCalendar(){
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
-  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]; /* ✅ changed */
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   const dates=weekDates();
 
   cal.appendChild(document.createElement("div"));
@@ -211,8 +216,9 @@ function renderCalendar(){
     t.textContent=h+":00";
     cal.appendChild(t);
 
-    for(let i=0;i<7;i++){  /* ✅ changed */
-      const date=dates[i].toISOString().split("T")[0];
+    for(let i=0;i<7;i++){
+      const dateObj = dates[i];
+      const date = dateObj.toISOString().split("T")[0];
       const c=document.createElement("div");
       c.className="cell";
 
@@ -240,7 +246,22 @@ function renderCalendar(){
   }
 }
 
+/* ✅ NEW LOGIC HERE */
 async function book(hour,date){
+
+  const today = new Date();
+  const maxDays = currentInstr.advancedays ?? 999;
+
+  const maxDate = new Date();
+  maxDate.setDate(today.getDate() + maxDays);
+
+  const bookingDate = new Date(date);
+
+  if(bookingDate > maxDate){
+    alert("Booking too far in advance for this instrument");
+    return;
+  }
+
   const max = currentInstr.maxslot ?? 999;
 
   const count = bookings.filter(b =>
@@ -249,7 +270,7 @@ async function book(hour,date){
   ).length;
 
   if(count >= max){
-    alert("Booking limit reached");
+    alert("Booking limit reached for this instrument");
     return;
   }
 
