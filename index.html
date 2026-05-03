@@ -2,97 +2,65 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Lab Booking</title>
+<title>Supabase Test</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-body { margin:0; font-family: system-ui; display:grid; grid-template-columns:260px 1fr; height:100vh; }
-aside { padding:20px; border-right:1px solid #ddd; }
-main { padding:20px; }
-button { display:block; margin-bottom:8px; width:100%; }
-</style>
 </head>
 
 <body>
 
-<aside>
-  <h3>Auth</h3>
-  <button id="loginBtn">Login</button>
-  <button id="logoutBtn">Logout</button>
-  <div id="user-email">Not logged in</div>
-</aside>
-
-<main>
-  <h2>Lab Booking (Auth Test)</h2>
-</main>
+<button id="loginBtn">Login</button>
+<div id="status">Not logged in</div>
 
 <script>
 
-console.log("VERSION: 1.2.3");
+console.log("VERSION: 1.2.4");
 
-// ✅ MUST be EXACTLY this format
-const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
+// ✅ Hard-coded + trimmed to remove hidden characters
+const URL = ("https://mqpvnisphntdwhqoiqlt.supabase.co").trim();
 
-// 🔴 PUT YOUR REAL KEY HERE
+// 🔴 REPLACE THIS WITH YOUR REAL KEY
 const KEY = "YOUR_ANON_KEY_HERE";
 
 let sb = null;
 
-// ✅ Initialize AFTER page loads
 window.addEventListener("load", async () => {
+
+  console.log("URL being used:", URL);
 
   try {
     sb = window.supabase.createClient(URL, KEY);
-    console.log("Supabase initialized");
-
-    await checkSession();
+    console.log("Supabase initialized OK");
 
   } catch (err) {
-    console.error("Supabase init failed:", err);
+    console.error("INIT FAILED:", err);
   }
 
 });
 
-// ✅ Safe login binding (after load)
 document.getElementById("loginBtn").onclick = async () => {
+
   if (!sb) {
-    alert("Supabase not ready");
+    alert("Supabase failed to initialize");
     return;
   }
 
   const email = prompt("Email:");
   const password = prompt("Password:");
 
-  const { error } = await sb.auth.signInWithPassword({ email, password });
+  const { data, error } = await sb.auth.signInWithPassword({
+    email, password
+  });
 
-  if (error) {
-    alert(error.message);
-    return;
+  console.log(data, error);
+
+  if (data?.user) {
+    document.getElementById("status").textContent = data.user.email;
   }
 
-  await checkSession();
 };
-
-document.getElementById("logoutBtn").onclick = async () => {
-  if (!sb) return;
-
-  await sb.auth.signOut();
-  document.getElementById("user-email").textContent = "Not logged in";
-};
-
-// ✅ Session check
-async function checkSession() {
-  const { data } = await sb.auth.getSession();
-
-  if (data.session) {
-    document.getElementById("user-email").textContent =
-      data.session.user.email;
-  } else {
-    document.getElementById("user-email").textContent = "Not logged in";
-  }
-}
 
 </script>
+
 </body>
 </html>
