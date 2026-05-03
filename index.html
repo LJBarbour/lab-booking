@@ -18,7 +18,7 @@ main { padding:24px; }
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 .cell.clickable:hover { background:#eef2ff; cursor:pointer; }
 .booking { background:#dbe7ff; border-radius:6px; padding:4px 8px; }
-.booking.mine { background:#d7f5e3; }
+.booking.mine { background:#d7f5e3; cursor:pointer; }
 </style>
 </head>
 
@@ -143,6 +143,12 @@ function renderCalendar(){
       if(b){
         c.classList.add("booking");
         c.textContent=b.name;
+
+        if(norm(b.name) === norm(currentUser)){
+          c.classList.add("mine");
+          c.onclick = () => deleteBooking(b);
+        }
+
       } else {
         c.classList.add("clickable");
         c.onclick=()=>book(h,date);
@@ -153,7 +159,6 @@ function renderCalendar(){
   }
 }
 
-// 🔴 FINAL FIX
 async function book(hour,date){
 
   const today = new Date().toISOString().split("T")[0];
@@ -163,8 +168,6 @@ async function book(hour,date){
     b.instrument === currentInstr.id &&
     b.date >= today
   ).length;
-
-  console.log("Count:", count);
 
   if(count >= MAX_FUTURE_BOOKINGS){
     alert("Booking limit reached");
@@ -179,9 +182,24 @@ async function book(hour,date){
       instrument: currentInstr.id,
       date: date,
       hour: hour,
-      name: currentUser
+      name: currentUser.trim()   // ✅ FIX
     })
   });
+
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+async function deleteBooking(b){
+  if(!confirm("Delete this booking?")) return;
+
+  await fetch(
+    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
+    {
+      method:"DELETE",
+      headers:HEADERS
+    }
+  );
 
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
