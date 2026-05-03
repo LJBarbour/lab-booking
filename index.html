@@ -68,20 +68,10 @@ main { padding:24px; }
   position:relative;
 }
 
-/* HEADER */
 .header {
+  background:#fafbff;
   flex-direction:column;
   height:50px;
-}
-
-/* TODAY COLUMN */
-.today-col {
-  background:#fff8dc;
-}
-
-/* DARKER HEADER FOR TODAY */
-.header.today-col {
-  background:#ffe082;
 }
 
 .date {
@@ -90,27 +80,18 @@ main { padding:24px; }
   color:#444;
 }
 
-/* PAST CELLS */
-.past-cell {
-  background:#f0f0f0;
-  color:#999;
+/* only header highlighted */
+.header.today-col {
+  background:#ffe082;
 }
 
-/* TIME COLUMN */
-.time {
-  font-size:11px;
-  color:#9aa0ad;
-  justify-content:flex-end;
-  padding-right:8px;
-}
+.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
-/* INTERACTIONS */
 .cell.clickable:hover {
   background:#eef2ff;
   cursor:pointer;
 }
 
-/* BOOKINGS */
 .booking-box {
   position:absolute;
   inset:1px;
@@ -129,6 +110,11 @@ main { padding:24px; }
 .booking-box.past {
   background:#e0e0e0;
   color:#888;
+}
+
+.past-cell {
+  background:#f0f0f0;
+  color:#999;
 }
 </style>
 </head>
@@ -256,6 +242,7 @@ function renderCalendar(){
 
   days.forEach((d,i)=>{
     const h=document.createElement("div");
+
     const dateStr = dates[i].toISOString().split("T")[0];
     const isToday = dateStr === todayStr;
 
@@ -274,13 +261,10 @@ function renderCalendar(){
       const dateStr = dates[i].toISOString().split("T")[0];
       const c=document.createElement("div");
 
-      const isToday = dateStr === todayStr;
       const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,'0') + ":00");
       const isPast = slotTime < now;
 
-      c.className="cell"
-        + (isToday ? " today-col" : "")
-        + (isPast ? " past-cell" : "");
+      c.className="cell" + (isPast ? " past-cell" : "");
 
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
