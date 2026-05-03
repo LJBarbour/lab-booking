@@ -22,6 +22,7 @@ button {
 
 button:hover { background:#f0f3ff; }
 
+/* ✅ STRONGER HIGHLIGHT */
 button.active {
   background:#dbe7ff;
   font-weight:600;
@@ -32,33 +33,9 @@ button.active {
 
 main { padding:24px; }
 
-#title {
-  font-size:22px;
-  font-weight:600;
-  margin-bottom:6px;
-}
-
-#instr-desc {
-  margin-bottom:16px;
-  color:#666;
-  font-size:14px;
-}
-
-/* NAV */
-.week-nav {
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:10px;
-}
-
-.week-nav button {
-  width:auto;
-}
-
-/* GRID */
 .calendar {
   display:grid;
-  grid-template-columns:60px repeat(7,1fr); /* 🔧 7 days */
+  grid-template-columns:60px repeat(5,1fr);
   border:1px solid #e6e8ef;
   border-radius:12px;
   overflow:hidden;
@@ -74,14 +51,7 @@ main { padding:24px; }
   position:relative;
 }
 
-.header { background:#fafbff; flex-direction:column; }
-
-.date {
-  font-size:14px;
-  font-weight:600;
-  color:#444;
-}
-
+.header { background:#fafbff; }
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
 .cell.clickable:hover {
@@ -118,20 +88,12 @@ main { padding:24px; }
 
 <main>
   <h2 id="title"></h2>
-  <p id="instr-desc"></p>
-
-  <div class="week-nav">
-    <button onclick="changeWeek(-1)">← Previous</button>
-    <button onclick="goToday()">Today</button> <!-- NEW -->
-    <button onclick="changeWeek(1)">Next →</button>
-  </div>
-
   <div id="calendar" class="calendar"></div>
 </main>
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "YOUR_KEY_HERE";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
   "apikey": KEY,
@@ -141,38 +103,25 @@ const HEADERS = {
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
-let weekOffset = 0;
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
-
-/* NEW */
-function goToday(){
-  weekOffset = 0;
-  renderCalendar();
-}
-
-function changeWeek(delta){
-  weekOffset += delta;
-  renderCalendar();
-}
 
 function weekDates(){
   const today = new Date();
   const monday = new Date(today);
-
   const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff + weekOffset*7);
+  monday.setDate(today.getDate()+diff);
 
-  return Array.from({length:7},(_,i)=>{   // 🔧 7 days
+  return Array.from({length:5},(_,i)=>{
     const d=new Date(monday);
     d.setDate(monday.getDate()+i);
-    return d;
+    return d.toISOString().split("T")[0];
   });
 }
 
 async function load(){
   users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${URL}/instruments?select=id,name,description,maxslot,advancedays,weeklyhours,color`, {headers:HEADERS}).then(r=>r.json());
+  instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
 
   currentUser = users[0]?.name;
@@ -184,7 +133,6 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
-  renderTitle();
   renderCalendar();
 }
 
@@ -213,24 +161,18 @@ function selectInstr(id){
   render();
 }
 
-function renderTitle(){
-  document.getElementById("title").textContent = currentInstr?.name || "";
-  document.getElementById("instr-desc").textContent = currentInstr?.description || "(no description)";
-}
-
 function renderCalendar(){
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
-  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]; // 🔧 full week
+  const days=["Mon","Tue","Wed","Thu","Fri"];
   const dates=weekDates();
 
   cal.appendChild(document.createElement("div"));
-
-  days.forEach((d,i)=>{
+  days.forEach(d=>{
     const h=document.createElement("div");
     h.className="cell header";
-    h.innerHTML = `${d}<div class="date">${dates[i].toISOString().split("T")[0]}</div>`;
+    h.textContent=d;
     cal.appendChild(h);
   });
 
@@ -240,8 +182,8 @@ function renderCalendar(){
     t.textContent=h+":00";
     cal.appendChild(t);
 
-    for(let i=0;i<7;i++){   // 🔧 7 days
-      const date = dates[i].toISOString().split("T")[0];
+    for(let i=0;i<5;i++){
+      const date=dates[i];
       const c=document.createElement("div");
       c.className="cell";
 
@@ -278,7 +220,7 @@ async function book(hour,date){
   ).length;
 
   if(count >= max){
-    alert("Booking limit reached");
+    alert("Booking limit reached for this instrument");
     return;
   }
 
