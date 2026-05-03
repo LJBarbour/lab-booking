@@ -32,6 +32,14 @@ button.active {
 
 main { padding:24px; }
 
+/* FIXED LABEL VISIBILITY */
+#title {
+  font-size:22px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+
+/* WEEK NAV */
 .week-nav {
   display:flex;
   justify-content:space-between;
@@ -42,6 +50,7 @@ main { padding:24px; }
   width:auto;
 }
 
+/* GRID */
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(5,1fr);
@@ -61,7 +70,13 @@ main { padding:24px; }
 }
 
 .header { background:#fafbff; flex-direction:column; }
-.date { font-size:10px; color:#888; }
+
+/* BIGGER DATE */
+.date {
+  font-size:13px;
+  font-weight:500;
+  color:#555;
+}
 
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
@@ -156,7 +171,7 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
-  renderTitle();      // FIX
+  renderTitle();
   renderCalendar();
 }
 
@@ -185,7 +200,7 @@ function selectInstr(id){
   render();
 }
 
-/* FIX: restore label */
+/* FIXED LABEL */
 function renderTitle(){
   document.getElementById("title").textContent = currentInstr?.name || "";
 }
