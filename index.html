@@ -157,12 +157,13 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.2.0");
+console.log("VERSION: 1.2.1");
 
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 const KEY = "YOUR_ANON_KEY_HERE";
 
-const supabase = window.supabase.createClient(URL, KEY);
+// ✅ renamed to avoid conflict
+const sb = window.supabase.createClient(URL, KEY);
 
 const REST = URL + "/rest/v1";
 
@@ -182,7 +183,7 @@ async function login(){
   const email = prompt("Email:");
   const password = prompt("Password:");
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await sb.auth.signInWithPassword({ email, password });
 
   if(error){
     alert(error.message);
@@ -194,13 +195,13 @@ async function login(){
 }
 
 async function logout(){
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   currentUser = null;
   render();
 }
 
 async function getSession(){
-  const { data } = await supabase.auth.getSession();
+  const { data } = await sb.auth.getSession();
 
   if(data.session){
     document.getElementById("user-email").textContent = data.session.user.email;
@@ -369,7 +370,7 @@ async function book(hour,date){
     return;
   }
 
-  const { data } = await supabase.auth.getUser();
+  const { data } = await sb.auth.getUser();
 
   await fetch(`${REST}/bookings`,{
     method:"POST",
