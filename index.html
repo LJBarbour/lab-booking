@@ -47,6 +47,8 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
+const MAX_FUTURE_BOOKINGS = 5;
+
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
 
@@ -89,7 +91,6 @@ function renderUsers(){
     `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
 
-  // ✅ FIX: keep state aligned
   el.onchange = e => {
     currentUser = e.target.value;
     render();
@@ -144,7 +145,6 @@ function renderCalendar(){
         c.classList.add("booking");
         c.textContent=b.name;
 
-        // ✅ NOW WORKS AGAIN
         if(norm(b.name) === norm(currentUser)){
           c.classList.add("mine");
           c.onclick = () => deleteBooking(b);
@@ -160,7 +160,25 @@ function renderCalendar(){
   }
 }
 
+// ✅ FIXED BOOKING LIMIT
 async function book(hour,date){
+
+  // get fresh data
+  const freshBookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const userBookings = freshBookings.filter(b =>
+    norm(b.name) === norm(currentUser) &&
+    b.instrument === currentInstr.id &&
+    b.date >= today
+  );
+
+  if(userBookings.length >= MAX_FUTURE_BOOKINGS){
+    alert("Booking limit reached");
+    return;
+  }
+
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
