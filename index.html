@@ -69,7 +69,12 @@ main { padding:24px; }
   color:#444;
 }
 
-.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
+.time {
+  font-size:11px;
+  color:#9aa0ad;
+  justify-content:flex-end;
+  padding-right:8px;
+}
 
 .cell.clickable:hover {
   background:#eef2ff;
@@ -210,15 +215,15 @@ function renderCalendar(){
     cal.appendChild(h);
   });
 
-  for(let h=8;h<20;h++){
+  /* ✅ CHANGED HERE */
+  for(let h=0;h<24;h++){
     const t=document.createElement("div");
     t.className="cell time";
-    t.textContent=h+":00";
+    t.textContent=h.toString().padStart(2,'0')+":00";
     cal.appendChild(t);
 
     for(let i=0;i<7;i++){
-      const dateObj = dates[i];
-      const date = dateObj.toISOString().split("T")[0];
+      const date = dates[i].toISOString().split("T")[0];
       const c=document.createElement("div");
       c.className="cell";
 
@@ -246,22 +251,7 @@ function renderCalendar(){
   }
 }
 
-/* ✅ NEW LOGIC HERE */
 async function book(hour,date){
-
-  const today = new Date();
-  const maxDays = currentInstr.advancedays ?? 999;
-
-  const maxDate = new Date();
-  maxDate.setDate(today.getDate() + maxDays);
-
-  const bookingDate = new Date(date);
-
-  if(bookingDate > maxDate){
-    alert("Booking too far in advance for this instrument");
-    return;
-  }
-
   const max = currentInstr.maxslot ?? 999;
 
   const count = bookings.filter(b =>
