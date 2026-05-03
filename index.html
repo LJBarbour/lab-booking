@@ -2,46 +2,63 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Supabase Test</title>
+<title>Supabase Auth Test</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body { font-family: system-ui; padding:40px; }
+button { padding:10px 20px; margin-right:10px; }
+#status { margin-top:20px; font-family: monospace; white-space: pre-wrap; }
+</style>
 </head>
 
 <body>
 
-<button id="loginBtn">Login</button>
-<div id="status">Not logged in</div>
+<h2>Auth Test (v1.2.8)</h2>
+
+<button id="init">Init</button>
+<button id="login">Login</button>
+<button id="logout">Logout</button>
+
+<div id="status"></div>
 
 <script>
 
-console.log("VERSION: 1.2.4");
+console.log("VERSION: 1.2.8");
 
-// ✅ Hard-coded + trimmed to remove hidden characters
-const URL = ("https://mqpvnisphntdwhqoiqlt.supabase.co").trim();
+// ✅ Correct Supabase base URL (fixed)
+const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 
-// 🔴 REPLACE THIS WITH YOUR REAL KEY
-const KEY = "YOUR_ANON_KEY_HERE";
+// ✅ Your actual anon key (from your original working app)
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 let sb = null;
 
-window.addEventListener("load", async () => {
+function log(msg){
+  console.log(msg);
+  document.getElementById("status").textContent += msg + "\n";
+}
 
-  console.log("URL being used:", URL);
+// INIT
+document.getElementById("init").onclick = () => {
+  log("---- INIT ----");
+  log("URL = " + JSON.stringify(URL));
+  log("Length = " + URL.length);
 
   try {
     sb = window.supabase.createClient(URL, KEY);
-    console.log("Supabase initialized OK");
-
+    log("✅ Init success");
   } catch (err) {
-    console.error("INIT FAILED:", err);
+    log("❌ Init failed:");
+    log(err.message);
   }
+};
 
-});
-
-document.getElementById("loginBtn").onclick = async () => {
-
-  if (!sb) {
-    alert("Supabase failed to initialize");
+// LOGIN
+document.getElementById("login").onclick = async () => {
+  if(!sb){
+    log("❌ Not initialized");
     return;
   }
 
@@ -52,12 +69,20 @@ document.getElementById("loginBtn").onclick = async () => {
     email, password
   });
 
-  console.log(data, error);
-
-  if (data?.user) {
-    document.getElementById("status").textContent = data.user.email;
+  if(error){
+    log("❌ Login failed: " + error.message);
+    return;
   }
 
+  log("✅ Logged in: " + data.user.email);
+};
+
+// LOGOUT
+document.getElementById("logout").onclick = async () => {
+  if(!sb) return;
+
+  await sb.auth.signOut();
+  log("Logged out");
 };
 
 </script>
