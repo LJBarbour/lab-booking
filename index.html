@@ -144,7 +144,7 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.0.14");
+console.log("VERSION: 1.0.15");
 
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
@@ -291,7 +291,42 @@ function renderCalendar(){
   }
 }
 
+/* ✅ ONLY CHANGE: full booking logic restored */
 async function book(hour,date){
+
+  const now = new Date();
+  const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
+
+  if(slotTime < now){
+    alert("Cannot book in the past");
+    return;
+  }
+
+  const maxDays = currentInstr.advancedays ?? 999;
+  const maxDate = new Date();
+  maxDate.setDate(now.getDate() + maxDays);
+
+  if(slotTime > maxDate){
+    alert("Booking too far in advance");
+    return;
+  }
+
+  const count = bookings.filter(b => {
+    const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
+    return (
+      norm(b.name) === norm(currentUser) &&
+      b.instrument === currentInstr.id &&
+      t >= now
+    );
+  }).length;
+
+  const maxSlots = currentInstr.maxslot ?? 999;
+
+  if(count >= maxSlots){
+    alert("Booking limit reached");
+    return;
+  }
+
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
@@ -325,6 +360,5 @@ async function deleteBooking(b){
 
 load();
 </script>
-
 </body>
 </html>
