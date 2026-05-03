@@ -68,10 +68,20 @@ main { padding:24px; }
   position:relative;
 }
 
+/* HEADER */
 .header {
-  background:#fafbff;
   flex-direction:column;
   height:50px;
+}
+
+/* TODAY COLUMN */
+.today-col {
+  background:#fff8dc;
+}
+
+/* DARKER HEADER FOR TODAY */
+.header.today-col {
+  background:#ffe082;
 }
 
 .date {
@@ -80,17 +90,27 @@ main { padding:24px; }
   color:#444;
 }
 
-.today-col {
-  background:#fff3cd;
+/* PAST CELLS */
+.past-cell {
+  background:#f0f0f0;
+  color:#999;
 }
 
-.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
+/* TIME COLUMN */
+.time {
+  font-size:11px;
+  color:#9aa0ad;
+  justify-content:flex-end;
+  padding-right:8px;
+}
 
+/* INTERACTIONS */
 .cell.clickable:hover {
   background:#eef2ff;
   cursor:pointer;
 }
 
+/* BOOKINGS */
 .booking-box {
   position:absolute;
   inset:1px;
@@ -230,14 +250,12 @@ function renderCalendar(){
   const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const dates=weekDates();
   const now = new Date();
-
   const todayStr = now.toISOString().split("T")[0];
 
   cal.appendChild(document.createElement("div"));
 
   days.forEach((d,i)=>{
     const h=document.createElement("div");
-
     const dateStr = dates[i].toISOString().split("T")[0];
     const isToday = dateStr === todayStr;
 
@@ -257,10 +275,12 @@ function renderCalendar(){
       const c=document.createElement("div");
 
       const isToday = dateStr === todayStr;
-      c.className="cell" + (isToday ? " today-col" : "");
-
       const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,'0') + ":00");
       const isPast = slotTime < now;
+
+      c.className="cell"
+        + (isToday ? " today-col" : "")
+        + (isPast ? " past-cell" : "");
 
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
@@ -285,68 +305,6 @@ function renderCalendar(){
       cal.appendChild(c);
     }
   }
-}
-
-async function book(hour,date){
-  const now = new Date();
-
-  const count = bookings.filter(b => {
-    const slotTime = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
-    return (
-      norm(b.name) === norm(currentUser) &&
-      b.instrument === currentInstr.id &&
-      slotTime >= now
-    );
-  }).length;
-
-  const max = currentInstr.maxslot ?? 999;
-
-  if(count >= max){
-    alert("Booking limit reached");
-    return;
-  }
-
-  const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
-  if(slotTime < now){
-    alert("Cannot book in the past");
-    return;
-  }
-
-  await fetch(`${URL}/bookings`,{
-    method:"POST",
-    headers:HEADERS,
-    body:JSON.stringify({
-      id: Date.now().toString(),
-      instrument: currentInstr.id,
-      date: date,
-      hour: hour,
-      name: currentUser
-    })
-  });
-
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function deleteBooking(b){
-  const slotTime = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
-  if(slotTime < new Date()){
-    alert("Cannot delete past bookings");
-    return;
-  }
-
-  if(!confirm("Delete this booking?")) return;
-
-  await fetch(
-    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
-    {
-      method:"DELETE",
-      headers:HEADERS
-    }
-  );
-
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
 }
 
 load();
