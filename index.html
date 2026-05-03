@@ -18,7 +18,7 @@ main { padding:24px; }
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 .cell.clickable:hover { background:#eef2ff; cursor:pointer; }
 .booking { background:#dbe7ff; border-radius:6px; padding:4px 8px; }
-.booking.mine { background:#d7f5e3; cursor:pointer; }
+.booking.mine { background:#d7f5e3; }
 </style>
 </head>
 
@@ -51,6 +51,8 @@ const MAX_FUTURE_BOOKINGS = 5;
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
+
+function norm(s){ return (s || "").trim().toLowerCase(); }
 
 function weekDates(){
   const today = new Date();
@@ -151,19 +153,20 @@ function renderCalendar(){
   }
 }
 
-// 🔴 FIXED LIMIT (server-side accurate)
+// 🔴 FINAL FIX
 async function book(hour,date){
 
   const today = new Date().toISOString().split("T")[0];
 
-  const res = await fetch(
-    `${URL}/bookings?select=id&name=eq.${encodeURIComponent(currentUser)}&instrument=eq.${currentInstr.id}&date=gte.${today}`,
-    { headers: HEADERS }
-  );
+  const count = bookings.filter(b =>
+    norm(b.name) === norm(currentUser) &&
+    b.instrument === currentInstr.id &&
+    b.date >= today
+  ).length;
 
-  const userBookings = await res.json();
+  console.log("Count:", count);
 
-  if(userBookings.length >= MAX_FUTURE_BOOKINGS){
+  if(count >= MAX_FUTURE_BOOKINGS){
     alert("Booking limit reached");
     return;
   }
