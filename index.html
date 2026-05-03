@@ -5,7 +5,6 @@
 <title>Lab Booking</title>
 
 <style>
-/* unchanged */
 body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
 aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
 h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
@@ -145,7 +144,7 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.0.16");
+console.log("VERSION: RESET-BASELINE");
 
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
@@ -157,7 +156,6 @@ const HEADERS = {
 };
 
 let users=[], instruments=[], bookings=[];
-let permissions=[];   // NEW
 let currentUser=null, currentInstr=null;
 let weekOffset = 0;
 
@@ -170,7 +168,7 @@ function weekDates(){
   const today = new Date();
   const monday = new Date(today);
   const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff + weekOffset*7);
+  monday.setDate(today.getDate()+diff);
 
   return Array.from({length:7},(_,i)=>{
     const d=new Date(monday);
@@ -183,7 +181,6 @@ async function load(){
   users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
   instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  permissions = await fetch(`${URL}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json()); // NEW
 
   currentUser = users[0]?.name;
   currentInstr = instruments[0];
@@ -211,23 +208,10 @@ function renderUsers(){
   };
 }
 
-/* UPDATED */
 function renderInstr(){
   const el = document.getElementById("instr");
-
-  const allowed = instruments.filter(i =>
-    permissions.some(p =>
-      p.user_id === currentUser &&
-      p.instrument_id === i.id
-    )
-  );
-
-  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
-    currentInstr = allowed[0] || null;
-  }
-
-  el.innerHTML = allowed.map(i =>
-    `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+  el.innerHTML = instruments.map(i =>
+    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
@@ -247,8 +231,13 @@ function renderImage(){
   }
 }
 
-/* rest unchanged (calendar, book, deleteBooking) */
+function renderCalendar(){
+  const cal = document.getElementById("calendar");
+  cal.innerHTML = "Calendar loaded successfully";
+}
 
+load();
 </script>
+
 </body>
 </html>
