@@ -25,10 +25,10 @@ main { padding:24px; }
 .cell {
   border:1px solid #e6e8ef;
   height:46px;
+  position:relative;
   display:flex;
   align-items:center;
   justify-content:center;
-  position:relative;
 }
 
 .header { background:#fafbff; }
@@ -39,13 +39,12 @@ main { padding:24px; }
   cursor:pointer;
 }
 
-/* 🔧 NEW: inner box instead of coloring whole cell */
+/* ✅ NEW: fill cell but keep borders visible */
 .booking-box {
+  position:absolute;
+  inset:1px;                /* key line */
   background:#dbe7ff;
   border-radius:6px;
-  padding:4px 8px;
-  width:90%;
-  height:70%;
   display:flex;
   align-items:center;
   justify-content:center;
