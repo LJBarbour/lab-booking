@@ -51,7 +51,6 @@ const MAX_FUTURE_BOOKINGS = 5;
 
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
-let currentWeekDates=[];
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -115,7 +114,7 @@ function renderCalendar(){
   cal.innerHTML="";
 
   const days=["Mon","Tue","Wed","Thu","Fri"];
-  currentWeekDates = weekDates();
+  const dates=weekDates();
 
   cal.appendChild(document.createElement("div"));
   days.forEach(d=>{
@@ -132,7 +131,7 @@ function renderCalendar(){
     cal.appendChild(t);
 
     for(let i=0;i<5;i++){
-      const date=currentWeekDates[i];
+      const date=dates[i];
       const c=document.createElement("div");
       c.className="cell";
 
@@ -161,17 +160,21 @@ function renderCalendar(){
   }
 }
 
-// ✅ FIXED LIMIT (week-based)
+// 🔧 UPDATED LIMIT LOGIC
 async function book(hour,date){
+
+  const today = new Date().toISOString().split("T")[0];
 
   const count = bookings.filter(b =>
     norm(b.name) === norm(currentUser) &&
     b.instrument === currentInstr.id &&
-    currentWeekDates.includes(b.date)
+    b.date >= today   // ← ONLY CHANGE
   ).length;
 
+  console.log("count:", count);
+
   if(count >= MAX_FUTURE_BOOKINGS){
-    alert("Booking limit reached for this instrument this week");
+    alert("Booking limit reached");
     return;
   }
 
