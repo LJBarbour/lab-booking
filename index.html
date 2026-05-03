@@ -10,15 +10,8 @@ aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
 h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
 select { width:100%; padding:10px; margin-bottom:20px; }
 button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; cursor:pointer; }
-button:hover { background:#f0f3ff; }
 main { padding:24px; }
-.calendar { display:grid; grid-template-columns:60px repeat(5,1fr); border:1px solid #e6e8ef; border-radius:12px; overflow:hidden; background:#fff; }
-.cell { border:1px solid #e6e8ef; height:46px; display:flex; align-items:center; justify-content:center; }
-.header { background:#fafbff; }
-.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
-.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
-.booking { background:#dbe7ff; border-radius:6px; padding:4px 8px; }
-.booking.mine { background:#d7f5e3; cursor:pointer; }
+#error { color:red; margin-bottom:10px; }
 </style>
 </head>
 
@@ -33,166 +26,55 @@ main { padding:24px; }
 </aside>
 
 <main>
-  <h2 id="title"></h2>
-  <div id="calendar" class="calendar"></div>
+  <div id="error"></div>
+  <div id="calendar"></div>
 </main>
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-
-/* ✅ FIX: restored full valid key */
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+const KEY = "PASTE_YOUR_REAL_KEY_HERE";
 
 const HEADERS = {
   "apikey": KEY,
-  "Authorization": `Bearer ${KEY}`,
-  "Content-Type": "application/json"
+  "Authorization": `Bearer ${KEY}`
 };
 
 let users=[], instruments=[], bookings=[];
-let currentUser=null, currentInstr=null;
 
-function norm(s){ return (s || "").trim().toLowerCase(); }
+async function safeFetch(endpoint){
+  const res = await fetch(`${URL}/${endpoint}?select=*`, {headers:HEADERS});
+  const data = await res.json();
 
-function weekDates(){
-  const today = new Date();
-  const monday = new Date(today);
-  const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff);
+  if(!res.ok){
+    document.getElementById("error").innerText =
+      "Supabase error: " + JSON.stringify(data);
+    return [];
+  }
 
-  return Array.from({length:5},(_,i)=>{
-    const d=new Date(monday);
-    d.setDate(monday.getDate()+i);
-    return d.toISOString().split("T")[0];
-  });
+  return data;
 }
 
 async function load(){
-  users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-
-  currentUser = users[0]?.name;
-  currentInstr = instruments[0];
+  users = await safeFetch("users");
+  instruments = await safeFetch("instruments");
+  bookings = await safeFetch("bookings");
 
   render();
 }
 
 function render(){
-  renderUsers();
-  renderInstr();
-  renderCalendar();
-}
+  document.getElementById("user").innerHTML =
+    users.map(u=>`<option>${u.name}</option>`).join("");
 
-function renderUsers(){
-  const el = document.getElementById("user");
+  document.getElementById("instr").innerHTML =
+    instruments.map(i=>`<button>${i.name}</button>`).join("");
 
-  el.innerHTML = users.map(u =>
-    `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
-  ).join("");
-
-  el.onchange = e => {
-    currentUser = e.target.value;
-    render();
-  };
-}
-
-function renderInstr(){
-  const el = document.getElementById("instr");
-  el.innerHTML = instruments.map(i =>
-    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
-  ).join("");
-}
-
-function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
-  render();
-}
-
-function renderCalendar(){
-  const cal = document.getElementById("calendar");
-  cal.innerHTML="";
-
-  const days=["Mon","Tue","Wed","Thu","Fri"];
-  const dates=weekDates();
-
-  cal.appendChild(document.createElement("div"));
-  days.forEach(d=>{
-    const h=document.createElement("div");
-    h.className="cell header";
-    h.textContent=d;
-    cal.appendChild(h);
-  });
-
-  for(let h=8;h<20;h++){
-    const t=document.createElement("div");
-    t.className="cell time";
-    t.textContent=h+":00";
-    cal.appendChild(t);
-
-    for(let i=0;i<5;i++){
-      const date=dates[i];
-      const c=document.createElement("div");
-      c.className="cell";
-
-      const b = bookings.find(x =>
-        x.instrument===currentInstr.id &&
-        x.hour===h &&
-        x.date===date
-      );
-
-      if(b){
-        c.classList.add("booking");
-        c.textContent=b.name;
-
-        if(norm(b.name) === norm(currentUser)){
-          c.classList.add("mine");
-          c.onclick = () => deleteBooking(b);
-        }
-
-      } else {
-        c.classList.add("clickable");
-        c.onclick=()=>book(h,date);
-      }
-
-      cal.appendChild(c);
-    }
-  }
-}
-
-async function book(hour,date){
-  await fetch(`${URL}/bookings`,{
-    method:"POST",
-    headers:HEADERS,
-    body:JSON.stringify({
-      id: Date.now().toString(),
-      instrument: currentInstr.id,
-      date: date,
-      hour: hour,
-      name: currentUser
-    })
-  });
-
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function deleteBooking(b){
-  if(!confirm("Delete this booking?")) return;
-
-  await fetch(
-    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
-    {
-      method:"DELETE",
-      headers:HEADERS
-    }
-  );
-
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
+  document.getElementById("calendar").innerText =
+    bookings.length ? "Calendar loaded" : "No bookings / error";
 }
 
 load();
 </script>
+
 </body>
 </html>
