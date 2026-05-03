@@ -280,7 +280,7 @@ function renderCalendar(){
 
       } else if(!isPast){
         c.classList.add("clickable");
-        c.onclick = () => book(h, dateStr);  /* ✅ RESTORED */
+        c.onclick = () => book(h, dateStr);
       }
 
       cal.appendChild(c);
@@ -288,7 +288,43 @@ function renderCalendar(){
   }
 }
 
+/* ONLY FIXED FUNCTION */
 async function book(hour,date){
+
+  const now = new Date();
+
+  const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
+
+  if(slotTime < now){
+    alert("Cannot book in the past");
+    return;
+  }
+
+  const maxDays = currentInstr.advancedays ?? 999;
+  const maxDate = new Date();
+  maxDate.setDate(now.getDate() + maxDays);
+
+  if(slotTime > maxDate){
+    alert("Booking too far in advance");
+    return;
+  }
+
+  const count = bookings.filter(b => {
+    const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
+    return (
+      norm(b.name) === norm(currentUser) &&
+      b.instrument === currentInstr.id &&
+      t >= now
+    );
+  }).length;
+
+  const maxSlots = currentInstr.maxslot ?? 999;
+
+  if(count >= maxSlots){
+    alert("Booking limit reached");
+    return;
+  }
+
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
@@ -306,6 +342,12 @@ async function book(hour,date){
 }
 
 async function deleteBooking(b){
+  const slotTime = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
+  if(slotTime < new Date()){
+    alert("Cannot delete past bookings");
+    return;
+  }
+
   if(!confirm("Delete this booking?")) return;
 
   await fetch(
