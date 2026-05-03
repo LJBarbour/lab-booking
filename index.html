@@ -5,21 +5,83 @@
 <title>Lab Booking</title>
 
 <style>
-body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
-aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
-h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
-select { width:100%; padding:10px; margin-bottom:20px; }
-button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; cursor:pointer; }
+body {
+  margin:0;
+  font-family: system-ui, -apple-system, sans-serif;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  height:100vh;
+  background:#f6f7fb;
+}
+
+aside {
+  background:#ffffff;
+  border-right:1px solid #e6e8ef;
+  padding:24px;
+}
+
+h3 {
+  font-size:11px;
+  text-transform:uppercase;
+  color:#8a8f9c;
+  margin-bottom:10px;
+}
+
+select {
+  width:100%;
+  padding:10px;
+  margin-bottom:20px;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  margin-bottom:6px;
+  border:none;
+  background:none;
+  text-align:left;
+  cursor:pointer;
+}
+
 button:hover { background:#f0f3ff; }
 button.active { background:#e4ebff; }
+
 main { padding:24px; }
-.calendar { display:grid; grid-template-columns:60px repeat(5,1fr); border:1px solid #e6e8ef; border-radius:12px; overflow:hidden; background:#fff; }
-.cell { border:1px solid #f0f1f5; height:46px; display:flex; align-items:center; justify-content:center; }
+
+.calendar {
+  display:grid;
+  grid-template-columns:60px repeat(5,1fr);
+  border:1px solid #e6e8ef;
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+}
+
+.cell {
+  border:1px solid #f0f1f5;
+  height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
 .header { background:#fafbff; }
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
-.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
-.booking { background:#dbe7ff; border-radius:6px; padding:4px 8px; }
-.booking.mine { background:#d7f5e3; }
+
+.cell.clickable:hover {
+  background:#eef2ff;
+  cursor:pointer;
+}
+
+.booking {
+  background:#dbe7ff;
+  border-radius:6px;
+  padding:4px 8px;
+}
+
+.booking.mine {
+  background:#d7f5e3;
+}
 </style>
 </head>
 
@@ -48,10 +110,11 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let users=[], instruments=[], bookings=[];
-let currentUser=null, currentInstr=null;
-
-function norm(s){ return (s || "").trim().toLowerCase(); }
+let users = [];
+let instruments = [];
+let bookings = [];
+let currentUser = null;
+let currentInstr = null;
 
 function weekDates(){
   const today = new Date();
@@ -87,10 +150,10 @@ function renderUsers(){
   const el = document.getElementById("user");
 
   el.innerHTML = users.map(u =>
-    `<option value="${u.name}">${u.name}</option>`
+    `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
 
-  // ✅ FIX: ensure correct selection is shown
+  // ✅ FIX: force dropdown to match currentUser
   el.value = currentUser;
 
   el.onchange = e => {
@@ -176,5 +239,6 @@ async function book(hour,date){
 
 load();
 </script>
+
 </body>
 </html>
