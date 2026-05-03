@@ -80,7 +80,6 @@ main { padding:24px; }
   color:#444;
 }
 
-/* only header highlighted */
 .header.today-col {
   background:#ffe082;
 }
@@ -242,10 +241,8 @@ function renderCalendar(){
 
   days.forEach((d,i)=>{
     const h=document.createElement("div");
-
     const dateStr = dates[i].toISOString().split("T")[0];
     const isToday = dateStr === todayStr;
-
     h.className = "cell header" + (isToday ? " today-col" : "");
     h.innerHTML = `${d}<div class="date">${dateStr}</div>`;
     cal.appendChild(h);
@@ -283,12 +280,44 @@ function renderCalendar(){
 
       } else if(!isPast){
         c.classList.add("clickable");
-        c.onclick=()=>book(h,dateStr);
+        c.onclick = () => book(h, dateStr);  /* ✅ RESTORED */
       }
 
       cal.appendChild(c);
     }
   }
+}
+
+async function book(hour,date){
+  await fetch(`${URL}/bookings`,{
+    method:"POST",
+    headers:HEADERS,
+    body:JSON.stringify({
+      id: Date.now().toString(),
+      instrument: currentInstr.id,
+      date: date,
+      hour: hour,
+      name: currentUser
+    })
+  });
+
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+async function deleteBooking(b){
+  if(!confirm("Delete this booking?")) return;
+
+  await fetch(
+    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
+    {
+      method:"DELETE",
+      headers:HEADERS
+    }
+  );
+
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
 }
 
 load();
