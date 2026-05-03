@@ -16,44 +16,42 @@ main { padding:24px; }
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(5,1fr);
-  border:1px solid #dfe3ea;
+  border:1px solid #e6e8ef;
   border-radius:12px;
   overflow:hidden;
   background:#fff;
 }
 
 .cell {
-  border:1px solid #dfe3ea;  /* thinner feel */
+  border:1px solid #e6e8ef;
   height:46px;
   display:flex;
   align-items:center;
   justify-content:center;
+  position:relative;
 }
 
-.header {
-  background:#fafbff;
-}
-
-.time {
-  font-size:11px;
-  color:#9aa0ad;
-  justify-content:flex-end;
-  padding-right:8px;
-}
+.header { background:#fafbff; }
+.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
 .cell.clickable:hover {
   background:#eef2ff;
   cursor:pointer;
 }
 
-.booking {
+/* 🔧 NEW: inner box instead of coloring whole cell */
+.booking-box {
   background:#dbe7ff;
-  margin:2px;              /* 🔧 key fix */
-  padding:2px 6px;
-  border-radius:4px;
+  border-radius:6px;
+  padding:4px 8px;
+  width:90%;
+  height:70%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-.booking.mine {
+.booking-box.mine {
   background:#d7f5e3;
   cursor:pointer;
 }
@@ -179,9 +177,10 @@ function renderCalendar(){
       );
 
       if(b){
-        c.innerHTML = `<div class="booking ${norm(b.name)===norm(currentUser)?"mine":""}">${b.name}</div>`;
+        const mine = norm(b.name) === norm(currentUser);
+        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
 
-        if(norm(b.name) === norm(currentUser)){
+        if(mine){
           c.onclick = () => deleteBooking(b);
         }
 
