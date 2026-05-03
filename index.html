@@ -32,14 +32,19 @@ button.active {
 
 main { padding:24px; }
 
-/* FIXED LABEL VISIBILITY */
 #title {
   font-size:22px;
   font-weight:600;
-  margin-bottom:10px;
+  margin-bottom:6px;
 }
 
-/* WEEK NAV */
+#instr-desc {
+  margin-bottom:16px;
+  color:#666;
+  font-size:14px;
+}
+
+/* NAV */
 .week-nav {
   display:flex;
   justify-content:space-between;
@@ -71,11 +76,11 @@ main { padding:24px; }
 
 .header { background:#fafbff; flex-direction:column; }
 
-/* BIGGER DATE */
+/* 🔧 FORCED BIGGER DATE */
 .date {
-  font-size:13px;
-  font-weight:500;
-  color:#555;
+  font-size:14px !important;
+  font-weight:600;
+  color:#444;
 }
 
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
@@ -114,6 +119,7 @@ main { padding:24px; }
 
 <main>
   <h2 id="title"></h2>
+  <p id="instr-desc"></p>
 
   <div class="week-nav">
     <button onclick="changeWeek(-1)">← Previous</button>
@@ -200,9 +206,12 @@ function selectInstr(id){
   render();
 }
 
-/* FIXED LABEL */
 function renderTitle(){
   document.getElementById("title").textContent = currentInstr?.name || "";
+
+  /* 🔧 FIX */
+  document.getElementById("instr-desc").textContent =
+    currentInstr?.description || "(no description)";
 }
 
 function renderCalendar(){
