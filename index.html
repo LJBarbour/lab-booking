@@ -22,7 +22,6 @@ button {
 
 button:hover { background:#f0f3ff; }
 
-/* ✅ STRONGER HIGHLIGHT */
 button.active {
   background:#dbe7ff;
   font-weight:600;
@@ -32,6 +31,16 @@ button.active {
 }
 
 main { padding:24px; }
+
+#instr-name {
+  margin:0 0 4px 0;
+}
+
+#instr-desc {
+  margin:0 0 16px 0;
+  color:#666;
+  font-size:14px;
+}
 
 .calendar {
   display:grid;
@@ -87,13 +96,16 @@ main { padding:24px; }
 </aside>
 
 <main>
-  <h2 id="title"></h2>
+  <!-- NEW -->
+  <h2 id="instr-name"></h2>
+  <p id="instr-desc"></p>
+
   <div id="calendar" class="calendar"></div>
 </main>
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+const KEY = "YOUR_FULL_KEY_HERE";
 
 const HEADERS = {
   "apikey": KEY,
@@ -133,6 +145,7 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
+  renderInstrumentInfo();   // NEW
   renderCalendar();
 }
 
@@ -159,6 +172,12 @@ function renderInstr(){
 function selectInstr(id){
   currentInstr = instruments.find(i=>i.id===id);
   render();
+}
+
+/* NEW FUNCTION */
+function renderInstrumentInfo(){
+  document.getElementById("instr-name").textContent = currentInstr?.name || "";
+  document.getElementById("instr-desc").textContent = currentInstr?.description || "";
 }
 
 function renderCalendar(){
