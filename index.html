@@ -52,8 +52,6 @@ const MAX_FUTURE_BOOKINGS = 5;
 let users=[], instruments=[], bookings=[];
 let currentUser=null, currentInstr=null;
 
-function norm(s){ return (s || "").trim().toLowerCase(); }
-
 function weekDates(){
   const today = new Date();
   const monday = new Date(today);
@@ -86,7 +84,6 @@ function render(){
 
 function renderUsers(){
   const el = document.getElementById("user");
-
   el.innerHTML = users.map(u =>
     `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
@@ -144,12 +141,6 @@ function renderCalendar(){
       if(b){
         c.classList.add("booking");
         c.textContent=b.name;
-
-        if(norm(b.name) === norm(currentUser)){
-          c.classList.add("mine");
-          c.onclick = () => deleteBooking(b);
-        }
-
       } else {
         c.classList.add("clickable");
         c.onclick=()=>book(h,date);
@@ -160,22 +151,21 @@ function renderCalendar(){
   }
 }
 
+// 🔴 FIXED LIMIT (server-side accurate)
 async function book(hour,date){
 
   const today = new Date().toISOString().split("T")[0];
 
-  // 🔴 STRICT COUNT
-  const count = bookings.filter(b =>
-    norm(b.name) === norm(currentUser) &&
-    b.instrument === currentInstr.id &&
-    b.date >= today
-  ).length;
+  const res = await fetch(
+    `${URL}/bookings?select=id&name=eq.${encodeURIComponent(currentUser)}&instrument=eq.${currentInstr.id}&date=gte.${today}`,
+    { headers: HEADERS }
+  );
 
-  console.log("Booking count:", count);
+  const userBookings = await res.json();
 
-  if(count >= MAX_FUTURE_BOOKINGS){
+  if(userBookings.length >= MAX_FUTURE_BOOKINGS){
     alert("Booking limit reached");
-    return; // 🔴 HARD STOP
+    return;
   }
 
   await fetch(`${URL}/bookings`,{
@@ -189,22 +179,6 @@ async function book(hour,date){
       name: currentUser
     })
   });
-
-  // refresh AFTER booking
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function deleteBooking(b){
-  if(!confirm("Delete this booking?")) return;
-
-  await fetch(
-    `${URL}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
-    {
-      method:"DELETE",
-      headers:HEADERS
-    }
-  );
 
   bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   renderCalendar();
