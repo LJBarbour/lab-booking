@@ -9,8 +9,26 @@ body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid
 aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
 h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
 select { width:100%; padding:10px; margin-bottom:20px; }
-button { width:100%; padding:10px; margin-bottom:6px; border:none; background:none; text-align:left; cursor:pointer; }
+
+button {
+  width:100%;
+  padding:10px;
+  margin-bottom:6px;
+  border:none;
+  background:none;
+  text-align:left;
+  cursor:pointer;
+}
+
 button:hover { background:#f0f3ff; }
+
+/* ✅ NEW */
+button.active {
+  background:#e4ebff;
+  font-weight:600;
+  border-radius:6px;
+}
+
 main { padding:24px; }
 
 .calendar {
@@ -129,10 +147,11 @@ function renderUsers(){
   };
 }
 
+/* ✅ ONLY CHANGE */
 function renderInstr(){
   const el = document.getElementById("instr");
   el.innerHTML = instruments.map(i =>
-    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
+    `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
@@ -191,9 +210,7 @@ function renderCalendar(){
   }
 }
 
-// ✅ ONLY CHANGE HERE
 async function book(hour,date){
-
   const max = currentInstr.maxslot ?? 999;
 
   const count = bookings.filter(b =>
