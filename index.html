@@ -73,6 +73,11 @@ main { padding:24px; }
   color:#444;
 }
 
+/* ✅ ONLY NEW STYLE */
+.today {
+  background:#fff3cd;
+}
+
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
 .cell.clickable:hover {
@@ -214,7 +219,11 @@ function renderCalendar(){
 
   days.forEach((d,i)=>{
     const h=document.createElement("div");
-    h.className="cell header";
+
+    /* ✅ ONLY CHANGE */
+    const isToday = dates[i].toDateString() === now.toDateString();
+    h.className = "cell header" + (isToday ? " today" : "");
+
     h.innerHTML = `${d}<div class="date">${dates[i].toISOString().split("T")[0]}</div>`;
     cal.appendChild(h);
   });
@@ -260,16 +269,13 @@ function renderCalendar(){
   }
 }
 
-/* ✅ ONLY CHANGE: ignore past bookings */
 async function book(hour,date){
-
   const now = new Date();
 
   const count = bookings.filter(b => {
     const slotTime = new Date(
       b.date + "T" + b.hour.toString().padStart(2,'0') + ":00"
     );
-
     return (
       norm(b.name) === norm(currentUser) &&
       b.instrument === currentInstr.id &&
@@ -285,7 +291,7 @@ async function book(hour,date){
   }
 
   const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
-  if(slotTime < new Date()){
+  if(slotTime < now){
     alert("Cannot book in the past");
     return;
   }
