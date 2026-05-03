@@ -22,6 +22,7 @@ button {
 
 button:hover { background:#f0f3ff; }
 
+/* ✅ STRONGER HIGHLIGHT */
 button.active {
   background:#dbe7ff;
   font-weight:600;
@@ -31,18 +32,6 @@ button.active {
 }
 
 main { padding:24px; }
-
-#instr-name {
-  margin:0 0 6px 0;
-  font-size:20px;
-  font-weight:600;
-}
-
-#instr-desc {
-  margin:0 0 20px 0;
-  color:#666;
-  font-size:14px;
-}
 
 .calendar {
   display:grid;
@@ -98,16 +87,12 @@ main { padding:24px; }
 </aside>
 
 <main>
-  <h2 id="instr-name"></h2>
-  <p id="instr-desc"></p>
-
+  <h2 id="title"></h2>
   <div id="calendar" class="calendar"></div>
 </main>
 
 <script>
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-
-/* ✅ YOUR REAL KEY (restored) */
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
@@ -148,7 +133,6 @@ async function load(){
 function render(){
   renderUsers();
   renderInstr();
-  renderInstrumentInfo();
   renderCalendar();
 }
 
@@ -175,11 +159,6 @@ function renderInstr(){
 function selectInstr(id){
   currentInstr = instruments.find(i=>i.id===id);
   render();
-}
-
-function renderInstrumentInfo(){
-  document.getElementById("instr-name").textContent = currentInstr?.name || "";
-  document.getElementById("instr-desc").textContent = currentInstr?.description || "";
 }
 
 function renderCalendar(){
@@ -233,6 +212,18 @@ function renderCalendar(){
 }
 
 async function book(hour,date){
+  const max = currentInstr.maxslot ?? 999;
+
+  const count = bookings.filter(b =>
+    norm(b.name) === norm(currentUser) &&
+    b.instrument === currentInstr.id
+  ).length;
+
+  if(count >= max){
+    alert("Booking limit reached for this instrument");
+    return;
+  }
+
   await fetch(`${URL}/bookings`,{
     method:"POST",
     headers:HEADERS,
