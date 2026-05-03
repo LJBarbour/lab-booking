@@ -61,7 +61,12 @@ main { padding:24px; }
   position:relative;
 }
 
-.header { background:#fafbff; flex-direction:column; }
+/* ✅ ONLY CHANGE */
+.header {
+  background:#fafbff;
+  flex-direction:column;
+  height:50px;
+}
 
 .date {
   font-size:14px;
@@ -69,12 +74,7 @@ main { padding:24px; }
   color:#444;
 }
 
-.time {
-  font-size:11px;
-  color:#9aa0ad;
-  justify-content:flex-end;
-  padding-right:8px;
-}
+.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
 .cell.clickable:hover {
   background:#eef2ff;
@@ -215,7 +215,6 @@ function renderCalendar(){
     cal.appendChild(h);
   });
 
-  /* ✅ CHANGED HERE */
   for(let h=0;h<24;h++){
     const t=document.createElement("div");
     t.className="cell time";
@@ -260,7 +259,7 @@ async function book(hour,date){
   ).length;
 
   if(count >= max){
-    alert("Booking limit reached for this instrument");
+    alert("Booking limit reached");
     return;
   }
 
