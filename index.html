@@ -127,7 +127,7 @@ main { padding:24px; overflow-y:auto; }
 .modal-submit {
   width:100%; padding:11px; background:#4a6cf7; color:#fff;
   border:none; border-radius:8px; font-size:15px; font-weight:600;
-  cursor:pointer; margin-bottom:0;
+  cursor:pointer; margin-bottom:0; text-align:center;
 }
 .modal-submit:hover { background:#3a5ce0; }
 .modal-submit:disabled { background:#a0aef7; cursor:not-allowed; }
@@ -334,7 +334,6 @@ async function doChangePassword(){
     document.getElementById(f).classList.remove("error-field")
   );
 
-  // Validate
   if(!current){
     errEl.textContent = "Please enter your current password.";
     document.getElementById("pw-current").classList.add("error-field");
@@ -356,10 +355,9 @@ async function doChangePassword(){
     return;
   }
 
-  submitBtn.disabled     = true;
-  submitBtn.textContent  = "Updating…";
+  submitBtn.disabled    = true;
+  submitBtn.textContent = "Updating…";
 
-  // Verify current password by re-authenticating
   const { error: authErr } = await sb.auth.signInWithPassword({
     email: currentUserEmail, password: current
   });
@@ -371,7 +369,6 @@ async function doChangePassword(){
     return;
   }
 
-  // Apply the new password
   const { error: updateErr } = await sb.auth.updateUser({ password: newPw });
   submitBtn.disabled    = false;
   submitBtn.textContent = "Update Password";
@@ -380,8 +377,8 @@ async function doChangePassword(){
 
   okEl.textContent = "✓ Password updated successfully.";
   ["pw-current","pw-new","pw-confirm"].forEach(f => document.getElementById(f).value = "");
-  document.getElementById("pw-strength-bar").style.width    = "0%";
-  document.getElementById("pw-strength-label").textContent  = "";
+  document.getElementById("pw-strength-bar").style.width   = "0%";
+  document.getElementById("pw-strength-label").textContent = "";
   setTimeout(()=>closeModal("pw-modal"), 2000);
 }
 
@@ -435,9 +432,19 @@ function renderUserArea(){
 
 function renderInstr(){
   const el = document.getElementById("instr");
-  const visible = currentUser
+
+  const visible = (currentUser
     ? instruments.filter(i => permissions.some(p => p.user_id===currentUser && p.instrument_id===i.id))
-    : instruments;
+    : instruments
+  ).slice().sort((a, b) => {
+    // Sort by sortorder column if present, fall back to alphabetical by name
+    const aHas = a.sortorder != null;
+    const bHas = b.sortorder != null;
+    if(aHas && bHas) return a.sortorder - b.sortorder;
+    if(aHas) return -1;
+    if(bHas) return  1;
+    return a.name.localeCompare(b.name);
+  });
 
   if(!visible.find(i => currentInstr && i.id===currentInstr.id))
     currentInstr = visible[0] || null;
