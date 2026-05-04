@@ -90,20 +90,12 @@ main { padding:24px; }
   cursor:pointer;
 }
 
-.booking-box.past {
-  background:#e0e0e0;
-  color:#888;
-}
-
 .past-cell {
   background:#f0f0f0;
   color:#999;
 }
 
-#auth {
-  margin-bottom:20px;
-  font-size:12px;
-}
+#auth { margin-bottom:20px; font-size:12px; }
 </style>
 </head>
 
@@ -118,7 +110,7 @@ main { padding:24px; }
 </div>
 
 <h3>Researcher</h3>
-<select id="user"></select>
+<select id="user" disabled></select>
 
 <h3>Instruments</h3>
 <div id="instr"></div>
@@ -186,6 +178,7 @@ async function load(){
   render();
 }
 
+// 🔥 FIX IS HERE
 async function login(){
   const email = prompt("Email:");
   const password = prompt("Password:");
@@ -199,7 +192,7 @@ async function login(){
 
   document.getElementById("user-email").textContent = email;
 
-  const res = await fetch(`${REST}/users?auth_id=eq.${data.user.id}`, {headers:HEADERS});
+  const res = await fetch(`${REST}/users?id=eq.${data.user.id}`, {headers:HEADERS});
   const row = await res.json();
 
   if(!row.length){
@@ -210,7 +203,6 @@ async function login(){
   currentUser = row[0].name;
   loggedIn = true;
 
-  // disable dropdown
   document.getElementById("user").disabled = true;
 
   render();
@@ -237,13 +229,6 @@ function renderUsers(){
   el.innerHTML = users.map(u =>
     `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
-
-  el.onchange = e => {
-    if(!loggedIn){
-      currentUser = e.target.value;
-      render();
-    }
-  };
 }
 
 function renderInstr(){
@@ -275,22 +260,19 @@ function renderTitle(){
 }
 
 function renderCalendar(){
-
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
   const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const dates=weekDates();
   const now = new Date();
-  const todayStr = now.toISOString().split("T")[0];
 
   cal.appendChild(document.createElement("div"));
 
   days.forEach((d,i)=>{
     const h=document.createElement("div");
     const dateStr = dates[i].toISOString().split("T")[0];
-    const isToday = dateStr === todayStr;
-    h.className = "cell header" + (isToday ? " today-col" : "");
+    h.className="cell header";
     h.innerHTML = `${d}<div class="date">${dateStr}</div>`;
     cal.appendChild(h);
   });
@@ -305,11 +287,6 @@ function renderCalendar(){
       const dateStr = dates[i].toISOString().split("T")[0];
       const c=document.createElement("div");
 
-      const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,'0') + ":00");
-      const isPast = slotTime < now;
-
-      c.className="cell" + (isPast ? " past-cell" : "");
-
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
         x.hour===h &&
@@ -318,48 +295,12 @@ function renderCalendar(){
 
       if(b){
         const mine = norm(b.name) === norm(currentUser);
-        const pastClass = isPast ? "past" : "";
-        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''} ${pastClass}">${b.name}</div>`;
-
-        if(mine && !isPast){
-          c.onclick = () => deleteBooking(b);
-        }
-
-      } else if(loggedIn && !isPast){
-        c.classList.add("clickable");
-        c.onclick = () => book(h, dateStr);
+        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
       }
 
       cal.appendChild(c);
     }
   }
-}
-
-async function deleteBooking(b){
-  await fetch(`${REST}/bookings?id=eq.${b.id}`,{
-    method:"DELETE",
-    headers:HEADERS
-  });
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function book(hour,date){
-  await fetch(`${REST}/bookings`,{
-    method:"POST",
-    headers:HEADERS,
-    body:JSON.stringify({
-      id: Date.now().toString(),
-      instrument: currentInstr.id,
-      date,
-      hour,
-      name: currentUser
-    })
-  });
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
 }
 
 load();
