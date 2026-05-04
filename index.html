@@ -49,7 +49,7 @@ button.active { background:#dbe7ff; font-weight:bold; }
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-console.log("VERSION 1.3.0");
+console.log("VERSION 1.3.1");
 
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 
@@ -71,21 +71,23 @@ let instruments = [];
 let bookings = [];
 let permissions = [];
 
+let currentInstr = null;
+
 function norm(s){ return (s||"").toLowerCase(); }
 
 async function init(){
   sb = createClient(URL, KEY);
+  await resolveUser();
   await load();
 }
 
 async function login(){
-
   if(!sb){ alert("Init first"); return; }
 
   const email = prompt("Email:");
   const password = prompt("Password:");
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  const { error } = await sb.auth.signInWithPassword({ email, password });
 
   if(error){
     alert(error.message);
@@ -99,10 +101,13 @@ async function login(){
 async function logout(){
   if(!sb) return;
   await sb.auth.signOut();
+
   currentUser = null;
   currentUserName = null;
+
   document.getElementById("user-email").textContent = "Not logged in";
   document.getElementById("user-name").textContent = "";
+
   render();
 }
 
@@ -112,11 +117,11 @@ async function resolveUser(){
 
   if(!data.user){
     currentUser = null;
+    currentUserName = null;
     return;
   }
 
   currentUser = data.user;
-
   document.getElementById("user-email").textContent = currentUser.email;
 
   const res = await fetch(`${REST}/users?auth_id=eq.${currentUser.id}`, {headers:HEADERS});
@@ -138,6 +143,10 @@ async function load(){
   bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
 
+  if(!currentInstr && instruments.length){
+    currentInstr = instruments[0];
+  }
+
   render();
 }
 
@@ -151,7 +160,9 @@ function renderInstr(){
   const el = document.getElementById("instr");
 
   if(!currentUserName){
-    el.innerHTML = instruments.map(i=>`<button>${i.name}</button>`).join("");
+    el.innerHTML = instruments.map(i =>
+      `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
+    ).join("");
     return;
   }
 
@@ -164,11 +175,9 @@ function renderInstr(){
   ).join("");
 }
 
-let currentInstr = null;
-
-function selectInstr(id){
+window.selectInstr = function(id){
   currentInstr = instruments.find(i=>i.id===id);
-  document.getElementById("title").textContent = currentInstr.description;
+  document.getElementById("title").textContent = currentInstr?.description || "";
   renderCalendar();
 }
 
@@ -176,6 +185,11 @@ function renderCalendar(){
 
   const cal = document.getElementById("calendar");
   cal.innerHTML = "";
+
+  if(!currentInstr){
+    cal.innerHTML = "<div>No instrument selected</div>";
+    return;
+  }
 
   for(let h=0; h<24; h++){
 
@@ -190,7 +204,7 @@ function renderCalendar(){
       c.className="cell";
 
       const b = bookings.find(x =>
-        x.instrument === currentInstr?.id &&
+        x.instrument === currentInstr.id &&
         x.hour === h
       );
 
@@ -213,7 +227,10 @@ function renderCalendar(){
 
 async function book(hour){
 
-  if(!currentUserName){ alert("Login required"); return; }
+  if(!currentUserName){
+    alert("Login required");
+    return;
+  }
 
   await fetch(`${REST}/bookings`,{
     method:"POST",
@@ -242,6 +259,5 @@ async function deleteBooking(b){
 }
 
 </script>
-
 </body>
 </html>
