@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Lab Booking</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
 aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
@@ -111,7 +113,7 @@ main { padding:24px; }
 </div>
 
 <h3>Researcher</h3>
-<select id="user"></select>
+<select id="user" disabled></select>
 
 <h3>Instruments</h3>
 <div id="instr"></div>
@@ -132,9 +134,10 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.4.5 (stable)");
+// ---------------- CONFIG ----------------
 
-const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
+const BASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
+const REST = BASE_URL + "/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
@@ -143,10 +146,14 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
+// ---------------- STATE ----------------
+
 let users=[], instruments=[], bookings=[], permissions=[];
 let currentUser=null, currentInstr=null;
 let weekOffset = 0;
 let loggedIn = false;
+
+// ---------------- CORE APP (UNCHANGED) ----------------
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -167,10 +174,10 @@ function weekDates(){
 }
 
 async function load(){
-  users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  permissions = await fetch(`${URL}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
+  users = await fetch(`${REST}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
+  instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
 
   currentUser = users[0]?.name;
   currentInstr = instruments[0];
@@ -178,42 +185,68 @@ async function load(){
   render();
 }
 
-// ⚠️ TEMP LOGIN (no Supabase client)
-function login(){
-  const name = prompt("Enter your name exactly as in system:");
-  if(!users.find(u => norm(u.name) === norm(name))){
-    alert("User not found");
+// ---------------- AUTH (SAFE) ----------------
+
+let sb = null;
+
+setTimeout(() => {
+  try {
+    sb = window.supabase.createClient(BASE_URL, KEY);
+    console.log("Auth ready");
+  } catch(e) {
+    console.warn("Auth init failed");
+  }
+}, 0);
+
+async function login(){
+  if(!sb){ alert("Auth not ready"); return; }
+
+  const email = prompt("Email:");
+  const password = prompt("Password:");
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if(error){
+    alert(error.message);
     return;
   }
 
-  currentUser = name;
+  document.getElementById("user-email").textContent = email;
+
+  const res = await fetch(`${REST}/users?auth_id=eq.${data.user.id}`, {headers:HEADERS});
+  const row = await res.json();
+
+  if(!row.length){
+    alert("No matching user record");
+    return;
+  }
+
+  currentUser = row[0].name;
   loggedIn = true;
-  document.getElementById("user-email").textContent = name;
+
   render();
 }
 
-function logout(){
+async function logout(){
+  if(sb){ await sb.auth.signOut(); }
   loggedIn = false;
-  currentUser = users[0]?.name;
   document.getElementById("user-email").textContent = "Not logged in";
+  currentUser = users[0]?.name;
   render();
 }
+
+// ---------------- RENDER (UNCHANGED) ----------------
 
 function render(){
-  renderUsers();
+  renderUserDisplay();
   renderInstr();
   renderTitle();
   renderCalendar();
 }
 
-function renderUsers(){
+function renderUserDisplay(){
   const el = document.getElementById("user");
-
-  el.innerHTML = users.map(u =>
-    `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
-  ).join("");
-
-  el.disabled = loggedIn;
+  el.innerHTML = `<option>${loggedIn ? currentUser : "Not logged in"}</option>`;
 }
 
 function renderInstr(){
@@ -245,7 +278,6 @@ function renderTitle(){
 }
 
 function renderCalendar(){
-
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
@@ -291,6 +323,8 @@ function renderCalendar(){
     }
   }
 }
+
+// ---------------- START ----------------
 
 load();
 
