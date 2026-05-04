@@ -100,33 +100,26 @@ main { padding:24px; }
   color:#999;
 }
 
-#auth {
-  margin-bottom:20px;
-  font-size:12px;
-}
-
-#auth-status {
-  margin-top:6px;
-  color:#666;
-}
+#auth { margin-bottom:20px; font-size:12px; }
 </style>
 </head>
 
 <body>
 
 <aside>
-  <div id="auth">
-    <button onclick="login()">Login</button>
-    <button onclick="logout()">Logout</button>
-    <div id="user-email">Not logged in</div>
-    <div id="auth-status">Auth not initialized</div>
-  </div>
 
-  <h3>Researcher</h3>
-  <select id="user"></select>
+<div id="auth">
+  <button onclick="login()">Login</button>
+  <button onclick="logout()">Logout</button>
+  <div id="user-email">Not logged in</div>
+</div>
 
-  <h3>Instruments</h3>
-  <div id="instr"></div>
+<h3>Researcher</h3>
+<select id="user" disabled></select>
+
+<h3>Instruments</h3>
+<div id="instr"></div>
+
 </aside>
 
 <main>
@@ -143,7 +136,7 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.4.1");
+console.log("VERSION: 1.4.2");
 
 const SUPABASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 const REST = SUPABASE_URL + "/rest/v1";
@@ -155,8 +148,7 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let sb = null;
-let authReady = false;
+const sb = window.supabase.createClient(SUPABASE_URL, KEY);
 
 let users = [];
 let instruments = [];
@@ -180,7 +172,7 @@ function weekDates(){
   monday.setDate(today.getDate() + diff + weekOffset*7);
 
   return Array.from({length:7},(_,i)=>{
-    const d = new Date(monday);
+    const d=new Date(monday);
     d.setDate(monday.getDate()+i);
     return d;
   });
@@ -192,30 +184,14 @@ async function load(){
   bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
 
-  currentUser = users[0]?.name || null;
   currentInstr = instruments[0] || null;
 
   render();
 }
 
-function initAuth(){
-  try {
-    sb = window.supabase.createClient(SUPABASE_URL, KEY);
-    authReady = true;
-    document.getElementById("auth-status").textContent = "Auth ready";
-  } catch (e) {
-    authReady = false;
-    document.getElementById("auth-status").textContent = "Auth unavailable";
-    console.warn("Auth init failed:", e);
-  }
-}
+// ---------------- AUTH ----------------
 
 async function login(){
-  if(!authReady || !sb){
-    alert("Login is not available right now.");
-    return;
-  }
-
   const email = prompt("Email:");
   const password = prompt("Password:");
 
@@ -226,12 +202,9 @@ async function login(){
     return;
   }
 
-  const userId = data?.user?.id;
-  const userEmail = data?.user?.email || email;
+  document.getElementById("user-email").textContent = email;
 
-  document.getElementById("user-email").textContent = userEmail;
-
-  const res = await fetch(`${REST}/users?auth_id=eq.${userId}`, {headers:HEADERS});
+  const res = await fetch(`${REST}/users?auth_id=eq.${data.user.id}`, {headers:HEADERS});
   const row = await res.json();
 
   if(!row.length){
@@ -242,47 +215,35 @@ async function login(){
 
   currentUser = row[0].name;
   loggedIn = true;
+
   render();
 }
 
 async function logout(){
-  if(sb){
-    await sb.auth.signOut();
-  }
-
+  await sb.auth.signOut();
   loggedIn = false;
-  currentUser = users[0]?.name || null;
+  currentUser = null;
   document.getElementById("user-email").textContent = "Not logged in";
   render();
 }
 
+// ---------------- RENDER ----------------
+
 function render(){
-  renderUsers();
+  renderUserDisplay();
   renderInstr();
   renderTitle();
   renderCalendar();
 }
 
-function renderUsers(){
+function renderUserDisplay(){
   const el = document.getElementById("user");
 
-  if(loggedIn){
-    const match = users.find(u => u.name === currentUser);
-    el.innerHTML = match ? `<option value="${match.name}" selected>${match.name}</option>` : "";
-    el.disabled = true;
-    return;
+  if(loggedIn && currentUser){
+    el.innerHTML = `<option>${currentUser}</option>`;
+  } else {
+    el.innerHTML = `<option>Not logged in</option>`;
   }
-
-  el.innerHTML = users.map(u =>
-    `<option value="${u.name}" ${u.name===currentUser ? "selected" : ""}>${u.name}</option>`
-  ).join("");
-
-  el.disabled = false;
-
-  el.onchange = e => {
-    currentUser = e.target.value;
-    render();
-  };
 }
 
 function renderInstr(){
@@ -295,9 +256,9 @@ function renderInstr(){
           p.instrument_id === i.id
         )
       )
-    : instruments;
+    : [];
 
-  if(!allowed.find(i => currentInstr && i.id === currentInstr.id)){
+  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
     currentInstr = allowed[0] || null;
   }
 
@@ -316,62 +277,46 @@ function renderTitle(){
 }
 
 function renderCalendar(){
+
   const cal = document.getElementById("calendar");
   cal.innerHTML = "";
-
-  if(!currentInstr){
-    cal.innerHTML = "<div style='padding:12px;'>No instrument selected</div>";
-    return;
-  }
 
   const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const dates = weekDates();
   const now = new Date();
-  const todayStr = now.toISOString().split("T")[0];
 
   cal.appendChild(document.createElement("div"));
 
   days.forEach((d,i)=>{
-    const h = document.createElement("div");
+    const h=document.createElement("div");
     const dateStr = dates[i].toISOString().split("T")[0];
-    const isToday = dateStr === todayStr;
-    h.className = "cell header" + (isToday ? " today-col" : "");
+    h.className="cell header";
     h.innerHTML = `${d}<div class="date">${dateStr}</div>`;
     cal.appendChild(h);
   });
 
   for(let h=0; h<24; h++){
-    const t = document.createElement("div");
-    t.className = "cell time";
-    t.textContent = h.toString().padStart(2,"0") + ":00";
+    const t=document.createElement("div");
+    t.className="cell time";
+    t.textContent=h.toString().padStart(2,'0')+":00";
     cal.appendChild(t);
 
-    for(let i=0; i<7; i++){
+    for(let i=0;i<7;i++){
       const dateStr = dates[i].toISOString().split("T")[0];
-      const c = document.createElement("div");
+      const c=document.createElement("div");
 
-      const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,"0") + ":00");
+      const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,'0') + ":00");
       const isPast = slotTime < now;
 
-      c.className = "cell" + (isPast ? " past-cell" : "");
-
       const b = bookings.find(x =>
-        x.instrument===currentInstr.id &&
+        x.instrument===currentInstr?.id &&
         x.hour===h &&
         x.date===dateStr
       );
 
       if(b){
         const mine = norm(b.name) === norm(currentUser);
-        const pastClass = isPast ? "past" : "";
-        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''} ${pastClass}">${b.name}</div>`;
-
-        if(mine && !isPast){
-          c.onclick = () => deleteBooking(b);
-        }
-      } else if(!isPast){
-        c.classList.add("clickable");
-        c.onclick = () => book(h, dateStr);
+        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
       }
 
       cal.appendChild(c);
@@ -379,71 +324,7 @@ function renderCalendar(){
   }
 }
 
-async function deleteBooking(b){
-  await fetch(
-    `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
-    {
-      method:"DELETE",
-      headers:HEADERS
-    }
-  );
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function book(hour, date){
-  const now = new Date();
-  const slotTime = new Date(date + "T" + hour.toString().padStart(2,"0") + ":00");
-
-  if(slotTime < now){
-    alert("Cannot book in the past");
-    return;
-  }
-
-  const maxDays = currentInstr.advancedays ?? 999;
-  const maxDate = new Date();
-  maxDate.setDate(now.getDate() + maxDays);
-
-  if(slotTime > maxDate){
-    alert("Booking too far in advance");
-    return;
-  }
-
-  const count = bookings.filter(b => {
-    const t = new Date(b.date + "T" + b.hour.toString().padStart(2,"0") + ":00");
-    return (
-      norm(b.name) === norm(currentUser) &&
-      b.instrument === currentInstr.id &&
-      t >= now
-    );
-  }).length;
-
-  const maxSlots = currentInstr.maxslot ?? 999;
-
-  if(count >= maxSlots){
-    alert("Booking limit reached");
-    return;
-  }
-
-  await fetch(`${REST}/bookings`, {
-    method:"POST",
-    headers:HEADERS,
-    body:JSON.stringify({
-      id: Date.now().toString(),
-      instrument: currentInstr.id,
-      date,
-      hour,
-      name: currentUser
-    })
-  });
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
 load();
-initAuth();
 
 </script>
 </body>
