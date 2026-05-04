@@ -78,7 +78,7 @@ main { padding:24px; overflow-y:auto; }
   background:#f0f3ff; border-radius:8px; padding:10px 12px;
   font-size:14px; font-weight:600; color:#1a1d2e;
   display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:6px;
+  margin-bottom:4px;
 }
 #logout-btn {
   width:auto; padding:4px 10px; font-size:12px;
@@ -86,6 +86,13 @@ main { padding:24px; overflow-y:auto; }
   color:#555; cursor:pointer; margin-bottom:0;
 }
 #logout-btn:hover { background:#ffeaea; color:#d32f2f; border-color:#f5b8b8; }
+
+#change-pw-link {
+  display:inline-block; font-size:12px; color:#4a6cf7;
+  cursor:pointer; margin-bottom:16px; padding:2px 2px;
+  background:none; border:none; text-align:left; width:auto;
+}
+#change-pw-link:hover { text-decoration:underline; background:none; }
 
 #login-btn-sidebar {
   width:100%; padding:11px; background:#4a6cf7; color:#fff;
@@ -96,33 +103,49 @@ main { padding:24px; overflow-y:auto; }
 
 #readonly-notice { font-size:12px; color:#9aa0ad; line-height:1.5; margin-bottom:16px; }
 
-/* Login modal */
-#login-modal {
+/* Shared modal styles */
+.modal {
   display:none; position:fixed; inset:0;
   background:rgba(0,0,0,0.45); z-index:100;
   align-items:center; justify-content:center;
 }
-#login-modal.visible { display:flex; }
-#login-box {
+.modal.visible { display:flex; }
+
+.modal-box {
   background:#fff; border-radius:14px; padding:36px 40px;
   width:340px; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;
+  box-sizing:border-box;
 }
-#login-box h2 { margin:0 0 24px; font-size:20px; color:#1a1d2e; }
-#login-box input {
+.modal-box h2 { margin:0 0 24px; font-size:20px; color:#1a1d2e; }
+
+.modal-box input {
   width:100%; padding:10px 12px; margin-bottom:14px;
   border:1px solid #d0d4e0; border-radius:8px; font-size:14px; box-sizing:border-box;
 }
-#login-submit {
+.modal-box input.error-field { border-color:#e57373; }
+
+.modal-submit {
   width:100%; padding:11px; background:#4a6cf7; color:#fff;
-  border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; margin-bottom:0;
+  border:none; border-radius:8px; font-size:15px; font-weight:600;
+  cursor:pointer; margin-bottom:0;
 }
-#login-submit:hover { background:#3a5ce0; }
-#login-error { color:#d32f2f; font-size:13px; margin-top:10px; min-height:18px; }
-#modal-close {
+.modal-submit:hover { background:#3a5ce0; }
+.modal-submit:disabled { background:#a0aef7; cursor:not-allowed; }
+
+.modal-error   { color:#d32f2f; font-size:13px; margin-top:10px; min-height:18px; }
+.modal-success { color:#2e7d32; font-size:13px; margin-top:10px; min-height:18px; }
+
+.modal-close {
   position:absolute; top:14px; right:16px; background:none; border:none;
   font-size:20px; color:#aaa; cursor:pointer; width:auto; padding:0; margin:0; line-height:1;
 }
-#modal-close:hover { color:#555; background:none; }
+.modal-close:hover { color:#555; background:none; }
+
+/* Password strength */
+#pw-strength-wrap { margin:-6px 0 14px; }
+#pw-strength-bar-bg { height:4px; background:#e0e0e0; border-radius:2px; }
+#pw-strength-bar    { height:100%; border-radius:2px; width:0%; transition:width .2s,background .2s; }
+#pw-strength-label  { font-size:11px; color:#9aa0ad; margin-top:4px; }
 
 /* Error banner */
 #error-banner {
@@ -135,24 +158,43 @@ main { padding:24px; overflow-y:auto; }
 
 <body>
 
-<div id="login-modal">
-  <div id="login-box">
-    <button id="modal-close" onclick="closeModal()">✕</button>
+<!-- Login modal -->
+<div id="login-modal" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('login-modal')">✕</button>
     <h2>🔬 Lab Booking Login</h2>
-    <input id="login-email" type="email" placeholder="Email address" />
+    <input id="login-email"    type="email"    placeholder="Email address" />
     <input id="login-password" type="password" placeholder="Password"
            onkeydown="if(event.key==='Enter') doLogin()" />
-    <button id="login-submit" onclick="doLogin()">Sign In</button>
-    <div id="login-error"></div>
+    <button class="modal-submit" onclick="doLogin()">Sign In</button>
+    <div class="modal-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- Change password modal -->
+<div id="pw-modal" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('pw-modal')">✕</button>
+    <h2>🔑 Change Password</h2>
+    <input id="pw-current" type="password" placeholder="Current password" />
+    <input id="pw-new"     type="password" placeholder="New password (min 8 characters)"
+           oninput="updateStrength()" />
+    <div id="pw-strength-wrap">
+      <div id="pw-strength-bar-bg"><div id="pw-strength-bar"></div></div>
+      <div id="pw-strength-label"></div>
+    </div>
+    <input id="pw-confirm" type="password" placeholder="Confirm new password"
+           onkeydown="if(event.key==='Enter') doChangePassword()" />
+    <button class="modal-submit" id="pw-submit" onclick="doChangePassword()">Update Password</button>
+    <div class="modal-error"   id="pw-error"></div>
+    <div class="modal-success" id="pw-success"></div>
   </div>
 </div>
 
 <aside>
   <h3>Researcher</h3>
   <div id="user-area"></div>
-
   <div id="error-banner"></div>
-
   <h3>Instruments</h3>
   <div id="instr"></div>
   <img id="instr-image" src="" alt="" style="display:none">
@@ -182,27 +224,69 @@ const HEADERS = {
 };
 
 let instruments=[], bookings=[], permissions=[];
-let currentUser=null, currentInstr=null, weekOffset=0;
+let currentUser=null, currentUserEmail=null, currentInstr=null, weekOffset=0;
 
-// ── Error display ─────────────────────────────────────────────
+// ── Modals ────────────────────────────────────────────────────
 
-function showError(msg){
-  const el = document.getElementById("error-banner");
-  el.textContent = msg;
-  el.style.display = msg ? "block" : "none";
+function openModal(id){
+  document.getElementById(id).classList.add("visible");
+  if(id === "login-modal"){
+    document.getElementById("login-error").textContent = "";
+    document.getElementById("login-password").value = "";
+    setTimeout(()=>document.getElementById("login-email").focus(), 50);
+  }
+  if(id === "pw-modal"){
+    ["pw-current","pw-new","pw-confirm"].forEach(f=>{
+      document.getElementById(f).value = "";
+      document.getElementById(f).classList.remove("error-field");
+    });
+    document.getElementById("pw-error").textContent   = "";
+    document.getElementById("pw-success").textContent = "";
+    document.getElementById("pw-strength-bar").style.width = "0%";
+    document.getElementById("pw-strength-label").textContent = "";
+    setTimeout(()=>document.getElementById("pw-current").focus(), 50);
+  }
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove("visible");
+}
+
+// ── Password strength ─────────────────────────────────────────
+
+function updateStrength(){
+  const val  = document.getElementById("pw-new").value;
+  const bar  = document.getElementById("pw-strength-bar");
+  const lbl  = document.getElementById("pw-strength-label");
+
+  let score = 0;
+  if(val.length >= 8)           score++;
+  if(val.length >= 12)          score++;
+  if(/[A-Z]/.test(val))         score++;
+  if(/[0-9]/.test(val))         score++;
+  if(/[^A-Za-z0-9]/.test(val)) score++;
+
+  const levels = [
+    { pct:"0%",   color:"#e0e0e0", label:"" },
+    { pct:"20%",  color:"#e53935", label:"Very weak" },
+    { pct:"40%",  color:"#fb8c00", label:"Weak" },
+    { pct:"60%",  color:"#fdd835", label:"Fair" },
+    { pct:"80%",  color:"#43a047", label:"Strong" },
+    { pct:"100%", color:"#2e7d32", label:"Very strong" },
+  ];
+
+  const lvl = levels[Math.min(score, 5)];
+  bar.style.width      = val.length ? lvl.pct : "0%";
+  bar.style.background = lvl.color;
+  lbl.textContent      = val.length ? lvl.label : "";
 }
 
 // ── Auth ──────────────────────────────────────────────────────
 
-function openModal(){
-  document.getElementById("login-error").textContent = "";
-  document.getElementById("login-password").value = "";
-  document.getElementById("login-modal").classList.add("visible");
-  setTimeout(()=>document.getElementById("login-email").focus(), 50);
-}
-
-function closeModal(){
-  document.getElementById("login-modal").classList.remove("visible");
+function showError(msg){
+  const el = document.getElementById("error-banner");
+  el.textContent   = msg;
+  el.style.display = msg ? "block" : "none";
 }
 
 async function doLogin(){
@@ -216,23 +300,89 @@ async function doLogin(){
 
   const res  = await fetch(`${REST}/users?id=eq.${data.user.id}&select=*`, { headers: HEADERS });
   const rows = await res.json();
-
   if(!rows.length){
     errEl.textContent = "No researcher account linked to this login.";
     await sb.auth.signOut();
     return;
   }
 
-  currentUser = rows[0].name;
-  closeModal();
+  currentUser      = rows[0].name;
+  currentUserEmail = data.user.email;
+  closeModal("login-modal");
   render();
 }
 
 async function doLogout(){
   await sb.auth.signOut();
-  currentUser  = null;
-  currentInstr = instruments[0] || null;
+  currentUser      = null;
+  currentUserEmail = null;
+  currentInstr     = instruments[0] || null;
   render();
+}
+
+async function doChangePassword(){
+  const current   = document.getElementById("pw-current").value;
+  const newPw     = document.getElementById("pw-new").value;
+  const confirm   = document.getElementById("pw-confirm").value;
+  const errEl     = document.getElementById("pw-error");
+  const okEl      = document.getElementById("pw-success");
+  const submitBtn = document.getElementById("pw-submit");
+
+  errEl.textContent = "";
+  okEl.textContent  = "";
+  ["pw-current","pw-new","pw-confirm"].forEach(f =>
+    document.getElementById(f).classList.remove("error-field")
+  );
+
+  // Validate
+  if(!current){
+    errEl.textContent = "Please enter your current password.";
+    document.getElementById("pw-current").classList.add("error-field");
+    return;
+  }
+  if(newPw.length < 8){
+    errEl.textContent = "New password must be at least 8 characters.";
+    document.getElementById("pw-new").classList.add("error-field");
+    return;
+  }
+  if(newPw !== confirm){
+    errEl.textContent = "Passwords do not match.";
+    document.getElementById("pw-confirm").classList.add("error-field");
+    return;
+  }
+  if(current === newPw){
+    errEl.textContent = "New password must differ from your current password.";
+    document.getElementById("pw-new").classList.add("error-field");
+    return;
+  }
+
+  submitBtn.disabled     = true;
+  submitBtn.textContent  = "Updating…";
+
+  // Verify current password by re-authenticating
+  const { error: authErr } = await sb.auth.signInWithPassword({
+    email: currentUserEmail, password: current
+  });
+  if(authErr){
+    errEl.textContent = "Current password is incorrect.";
+    document.getElementById("pw-current").classList.add("error-field");
+    submitBtn.disabled    = false;
+    submitBtn.textContent = "Update Password";
+    return;
+  }
+
+  // Apply the new password
+  const { error: updateErr } = await sb.auth.updateUser({ password: newPw });
+  submitBtn.disabled    = false;
+  submitBtn.textContent = "Update Password";
+
+  if(updateErr){ errEl.textContent = updateErr.message; return; }
+
+  okEl.textContent = "✓ Password updated successfully.";
+  ["pw-current","pw-new","pw-confirm"].forEach(f => document.getElementById(f).value = "");
+  document.getElementById("pw-strength-bar").style.width    = "0%";
+  document.getElementById("pw-strength-label").textContent  = "";
+  setTimeout(()=>closeModal("pw-modal"), 2000);
 }
 
 // ── Data ──────────────────────────────────────────────────────
@@ -245,17 +395,13 @@ async function load(){
       fetch(`${REST}/bookings?select=*`,    {headers:HEADERS}).then(r=>r.json()),
       fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json()),
     ]);
+    if(i.code || b.code || p.code)
+      throw new Error(i.message || b.message || p.message || "Database error");
 
-    // Check for Supabase error objects (it returns {code,message} on failure)
-    if(i.code || b.code || p.code){
-      throw new Error((i.message || b.message || p.message) ?? "Database error");
-    }
-
-    instruments = i;
-    bookings    = b;
-    permissions = p;
+    instruments  = i;
+    bookings     = b;
+    permissions  = p;
     currentInstr = instruments[0] || null;
-
   } catch(err){
     showError("Could not load data: " + err.message);
   }
@@ -278,24 +424,23 @@ function renderUserArea(){
       <div id="user-badge">
         <span>${currentUser}</span>
         <button id="logout-btn" onclick="doLogout()">Logout</button>
-      </div>`;
+      </div>
+      <button id="change-pw-link" onclick="openModal('pw-modal')">🔑 Change password</button>`;
   } else {
     el.innerHTML = `
-      <button id="login-btn-sidebar" onclick="openModal()">Login</button>
+      <button id="login-btn-sidebar" onclick="openModal('login-modal')">Login</button>
       <p id="readonly-notice">Browse the calendar without logging in, or log in to make and edit bookings.</p>`;
   }
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
-
   const visible = currentUser
-    ? instruments.filter(i => permissions.some(p => p.user_id === currentUser && p.instrument_id === i.id))
+    ? instruments.filter(i => permissions.some(p => p.user_id===currentUser && p.instrument_id===i.id))
     : instruments;
 
-  if(!visible.find(i => currentInstr && i.id === currentInstr.id)){
+  if(!visible.find(i => currentInstr && i.id===currentInstr.id))
     currentInstr = visible[0] || null;
-  }
 
   el.innerHTML = visible.length
     ? visible.map(i =>
@@ -305,23 +450,12 @@ function renderInstr(){
     : `<p style="font-size:13px;color:#9aa0ad">No instruments available.</p>`;
 }
 
-function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
-  render();
-}
-
-function renderTitle(){
-  document.getElementById("title").textContent = currentInstr?.description || "";
-}
-
+function selectInstr(id){ currentInstr = instruments.find(i=>i.id===id); render(); }
+function renderTitle(){ document.getElementById("title").textContent = currentInstr?.description || ""; }
 function renderImage(){
   const img = document.getElementById("instr-image");
-  if(currentInstr){
-    img.src = currentInstr.id + ".jpg";
-    img.style.display = "block";
-  } else {
-    img.style.display = "none";
-  }
+  if(currentInstr){ img.src = currentInstr.id+".jpg"; img.style.display="block"; }
+  else             { img.style.display="none"; }
 }
 
 function norm(s){ return (s||"").trim().toLowerCase(); }
@@ -339,10 +473,9 @@ function weekDates(){
 }
 
 function renderCalendar(){
-  const cal = document.getElementById("calendar");
-  const msg = document.getElementById("cal-message");
-  cal.innerHTML = "";
-  msg.textContent = "";
+  const cal=document.getElementById("calendar");
+  const msg=document.getElementById("cal-message");
+  cal.innerHTML=""; msg.textContent="";
 
   if(!currentInstr){
     msg.textContent = instruments.length
@@ -376,27 +509,17 @@ function renderCalendar(){
       const c=document.createElement("div");
       const slotTime=new Date(dateStr+"T"+h.toString().padStart(2,'0')+":00");
       const isPast=slotTime<now;
-
       c.className="cell"+(isPast?" past-cell":"");
 
-      const b=bookings.find(x=>
-        x.instrument===currentInstr.id && x.hour===h && x.date===dateStr
-      );
-
+      const b=bookings.find(x=>x.instrument===currentInstr.id&&x.hour===h&&x.date===dateStr);
       if(b){
-        const mine=currentUser && norm(b.name)===norm(currentUser);
+        const mine=currentUser&&norm(b.name)===norm(currentUser);
         c.innerHTML=`<div class="booking-box ${mine?'mine':''} ${isPast?'past':''}">${b.name}</div>`;
-        if(mine && !isPast) c.onclick=()=>deleteBooking(b);
+        if(mine&&!isPast) c.onclick=()=>deleteBooking(b);
       } else if(!isPast){
-        if(currentUser){
-          c.classList.add("clickable");
-          c.onclick=()=>book(h,dateStr);
-        } else {
-          c.classList.add("needs-login");
-          c.onclick=()=>openModal();
-        }
+        if(currentUser){ c.classList.add("clickable"); c.onclick=()=>book(h,dateStr); }
+        else            { c.classList.add("needs-login"); c.onclick=()=>openModal("login-modal"); }
       }
-
       cal.appendChild(c);
     }
   }
@@ -405,41 +528,34 @@ function renderCalendar(){
 // ── Booking actions ───────────────────────────────────────────
 
 async function book(hour,date){
-  if(!currentUser){ openModal(); return; }
-
+  if(!currentUser){ openModal("login-modal"); return; }
   const now=new Date();
   const slotTime=new Date(date+"T"+hour.toString().padStart(2,'0')+":00");
   if(slotTime<now){ alert("Cannot book in the past"); return; }
-
   const maxDays=currentInstr.advancedays??999;
   const maxDate=new Date(); maxDate.setDate(now.getDate()+maxDays);
   if(slotTime>maxDate){ alert("Booking too far in advance"); return; }
-
   const count=bookings.filter(b=>{
     const t=new Date(b.date+"T"+b.hour.toString().padStart(2,'0')+":00");
-    return norm(b.name)===norm(currentUser) && b.instrument===currentInstr.id && t>=now;
+    return norm(b.name)===norm(currentUser)&&b.instrument===currentInstr.id&&t>=now;
   }).length;
-
   if(count>=(currentInstr.maxslot??999)){ alert("Booking limit reached"); return; }
 
   await fetch(`${REST}/bookings`,{
     method:"POST", headers:HEADERS,
     body:JSON.stringify({ id:Date.now().toString(), instrument:currentInstr.id, date, hour, name:currentUser })
   });
-
   bookings=await fetch(`${REST}/bookings?select=*`,{headers:HEADERS}).then(r=>r.json());
   renderCalendar();
 }
 
 async function deleteBooking(b){
-  if(!currentUser){ openModal(); return; }
+  if(!currentUser){ openModal("login-modal"); return; }
   if(!confirm("Delete this booking?")) return;
-
   await fetch(
     `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
     { method:"DELETE", headers:HEADERS }
   );
-
   bookings=await fetch(`${REST}/bookings?select=*`,{headers:HEADERS}).then(r=>r.json());
   renderCalendar();
 }
@@ -447,22 +563,17 @@ async function deleteBooking(b){
 // ── Boot ─────────────────────────────────────────────────────
 
 (async()=>{
-  // Render login button immediately — before any network calls
   renderUserArea();
-
-  // Load data and check for existing session in parallel
-  const [, sessionResult] = await Promise.all([
-    load(),
-    sb.auth.getSession()
-  ]);
-
+  const [, sessionResult] = await Promise.all([load(), sb.auth.getSession()]);
   const session = sessionResult?.data?.session;
   if(session?.user){
     const res  = await fetch(`${REST}/users?id=eq.${session.user.id}&select=*`, { headers: HEADERS });
     const rows = await res.json();
-    if(rows.length) currentUser = rows[0].name;
+    if(rows.length){
+      currentUser      = rows[0].name;
+      currentUserEmail = session.user.email;
+    }
   }
-
   render();
 })();
 </script>
