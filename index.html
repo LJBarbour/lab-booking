@@ -10,6 +10,7 @@
 body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
 aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
 h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
+select { width:100%; padding:10px; margin-bottom:20px; }
 
 button {
   width:100%;
@@ -103,22 +104,29 @@ main { padding:24px; }
   margin-bottom:20px;
   font-size:12px;
 }
+
+#auth-status {
+  margin-top:6px;
+  color:#666;
+}
 </style>
 </head>
 
 <body>
 
 <aside>
+  <div id="auth">
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
+    <div id="user-email">Not logged in</div>
+    <div id="auth-status">Auth not initialized</div>
+  </div>
 
-<div id="auth">
-  <button onclick="login()">Login</button>
-  <button onclick="logout()">Logout</button>
-  <div id="user-email">Not logged in</div>
-</div>
+  <h3>Researcher</h3>
+  <select id="user"></select>
 
-<h3>Instruments</h3>
-<div id="instr"></div>
-
+  <h3>Instruments</h3>
+  <div id="instr"></div>
 </aside>
 
 <main>
@@ -135,31 +143,79 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.4.0");
+console.log("VERSION: 1.4.1");
 
-// 🔐 Supabase client (SAFE — does not affect rendering)
-const sb = window.supabase.createClient(
-  "https://mqpvnisphntdwhqoiqlt.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg"
-);
-
-const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
+const SUPABASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
+const REST = SUPABASE_URL + "/rest/v1";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
-  "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "Authorization": `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}`,
+  "apikey": KEY,
+  "Authorization": `Bearer ${KEY}`,
   "Content-Type": "application/json"
 };
 
-let users=[], instruments=[], bookings=[], permissions=[];
-let currentUser=null, currentInstr=null;
+let sb = null;
+let authReady = false;
+
+let users = [];
+let instruments = [];
+let bookings = [];
+let permissions = [];
+
+let currentUser = null;
+let currentInstr = null;
 let weekOffset = 0;
+let loggedIn = false;
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
 
-// ---------------- AUTH ----------------
+function goToday(){ weekOffset = 0; renderCalendar(); }
+function changeWeek(delta){ weekOffset += delta; renderCalendar(); }
+
+function weekDates(){
+  const today = new Date();
+  const monday = new Date(today);
+  const diff = (today.getDay()===0 ? -6 : 1 - today.getDay());
+  monday.setDate(today.getDate() + diff + weekOffset*7);
+
+  return Array.from({length:7},(_,i)=>{
+    const d = new Date(monday);
+    d.setDate(monday.getDate()+i);
+    return d;
+  });
+}
+
+async function load(){
+  users = await fetch(`${REST}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
+  instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
+
+  currentUser = users[0]?.name || null;
+  currentInstr = instruments[0] || null;
+
+  render();
+}
+
+function initAuth(){
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, KEY);
+    authReady = true;
+    document.getElementById("auth-status").textContent = "Auth ready";
+  } catch (e) {
+    authReady = false;
+    document.getElementById("auth-status").textContent = "Auth unavailable";
+    console.warn("Auth init failed:", e);
+  }
+}
 
 async function login(){
+  if(!authReady || !sb){
+    alert("Login is not available right now.");
+    return;
+  }
+
   const email = prompt("Email:");
   const password = prompt("Password:");
 
@@ -170,68 +226,69 @@ async function login(){
     return;
   }
 
-  document.getElementById("user-email").textContent = email;
+  const userId = data?.user?.id;
+  const userEmail = data?.user?.email || email;
 
-  // 🔗 map auth user → users table
-  const res = await fetch(`${URL}/users?auth_id=eq.${data.user.id}`, {headers:HEADERS});
+  document.getElementById("user-email").textContent = userEmail;
+
+  const res = await fetch(`${REST}/users?auth_id=eq.${userId}`, {headers:HEADERS});
   const row = await res.json();
 
   if(!row.length){
     alert("No matching user record");
+    await logout();
     return;
   }
 
   currentUser = row[0].name;
-
+  loggedIn = true;
   render();
 }
 
 async function logout(){
-  await sb.auth.signOut();
-  currentUser = null;
+  if(sb){
+    await sb.auth.signOut();
+  }
+
+  loggedIn = false;
+  currentUser = users[0]?.name || null;
   document.getElementById("user-email").textContent = "Not logged in";
   render();
 }
 
-// ---------------- ORIGINAL LOGIC (UNCHANGED) ----------------
-
-function goToday(){ weekOffset = 0; renderCalendar(); }
-function changeWeek(delta){ weekOffset += delta; renderCalendar(); }
-
-function weekDates(){
-  const today = new Date();
-  const monday = new Date(today);
-  const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff + weekOffset*7);
-
-  return Array.from({length:7},(_,i)=>{
-    const d=new Date(monday);
-    d.setDate(monday.getDate()+i);
-    return d;
-  });
-}
-
-async function load(){
-  users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  permissions = await fetch(`${URL}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
-
-  currentInstr = instruments[0];
-
-  render();
-}
-
 function render(){
+  renderUsers();
   renderInstr();
   renderTitle();
   renderCalendar();
 }
 
+function renderUsers(){
+  const el = document.getElementById("user");
+
+  if(loggedIn){
+    const match = users.find(u => u.name === currentUser);
+    el.innerHTML = match ? `<option value="${match.name}" selected>${match.name}</option>` : "";
+    el.disabled = true;
+    return;
+  }
+
+  el.innerHTML = users.map(u =>
+    `<option value="${u.name}" ${u.name===currentUser ? "selected" : ""}>${u.name}</option>`
+  ).join("");
+
+  el.disabled = false;
+
+  el.onchange = e => {
+    currentUser = e.target.value;
+    render();
+  };
+}
+
 function renderInstr(){
   const el = document.getElementById("instr");
 
-  const allowed = currentUser
+  const allowed = loggedIn
     ? instruments.filter(i =>
         permissions.some(p =>
           p.user_id === currentUser &&
@@ -240,7 +297,7 @@ function renderInstr(){
       )
     : instruments;
 
-  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
+  if(!allowed.find(i => currentInstr && i.id === currentInstr.id)){
     currentInstr = allowed[0] || null;
   }
 
@@ -259,36 +316,44 @@ function renderTitle(){
 }
 
 function renderCalendar(){
-
   const cal = document.getElementById("calendar");
-  cal.innerHTML="";
+  cal.innerHTML = "";
 
-  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  const dates=weekDates();
+  if(!currentInstr){
+    cal.innerHTML = "<div style='padding:12px;'>No instrument selected</div>";
+    return;
+  }
+
+  const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const dates = weekDates();
   const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
 
   cal.appendChild(document.createElement("div"));
 
   days.forEach((d,i)=>{
-    const h=document.createElement("div");
+    const h = document.createElement("div");
     const dateStr = dates[i].toISOString().split("T")[0];
-    h.className="cell header";
+    const isToday = dateStr === todayStr;
+    h.className = "cell header" + (isToday ? " today-col" : "");
     h.innerHTML = `${d}<div class="date">${dateStr}</div>`;
     cal.appendChild(h);
   });
 
-  for(let h=0;h<24;h++){
-    const t=document.createElement("div");
-    t.className="cell time";
-    t.textContent=h.toString().padStart(2,'0')+":00";
+  for(let h=0; h<24; h++){
+    const t = document.createElement("div");
+    t.className = "cell time";
+    t.textContent = h.toString().padStart(2,"0") + ":00";
     cal.appendChild(t);
 
-    for(let i=0;i<7;i++){
+    for(let i=0; i<7; i++){
       const dateStr = dates[i].toISOString().split("T")[0];
-      const c=document.createElement("div");
+      const c = document.createElement("div");
 
-      const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,'0') + ":00");
+      const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,"0") + ":00");
       const isPast = slotTime < now;
+
+      c.className = "cell" + (isPast ? " past-cell" : "");
 
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
@@ -298,7 +363,15 @@ function renderCalendar(){
 
       if(b){
         const mine = norm(b.name) === norm(currentUser);
-        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
+        const pastClass = isPast ? "past" : "";
+        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''} ${pastClass}">${b.name}</div>`;
+
+        if(mine && !isPast){
+          c.onclick = () => deleteBooking(b);
+        }
+      } else if(!isPast){
+        c.classList.add("clickable");
+        c.onclick = () => book(h, dateStr);
       }
 
       cal.appendChild(c);
@@ -306,7 +379,71 @@ function renderCalendar(){
   }
 }
 
+async function deleteBooking(b){
+  await fetch(
+    `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
+    {
+      method:"DELETE",
+      headers:HEADERS
+    }
+  );
+
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+async function book(hour, date){
+  const now = new Date();
+  const slotTime = new Date(date + "T" + hour.toString().padStart(2,"0") + ":00");
+
+  if(slotTime < now){
+    alert("Cannot book in the past");
+    return;
+  }
+
+  const maxDays = currentInstr.advancedays ?? 999;
+  const maxDate = new Date();
+  maxDate.setDate(now.getDate() + maxDays);
+
+  if(slotTime > maxDate){
+    alert("Booking too far in advance");
+    return;
+  }
+
+  const count = bookings.filter(b => {
+    const t = new Date(b.date + "T" + b.hour.toString().padStart(2,"0") + ":00");
+    return (
+      norm(b.name) === norm(currentUser) &&
+      b.instrument === currentInstr.id &&
+      t >= now
+    );
+  }).length;
+
+  const maxSlots = currentInstr.maxslot ?? 999;
+
+  if(count >= maxSlots){
+    alert("Booking limit reached");
+    return;
+  }
+
+  await fetch(`${REST}/bookings`, {
+    method:"POST",
+    headers:HEADERS,
+    body:JSON.stringify({
+      id: Date.now().toString(),
+      instrument: currentInstr.id,
+      date,
+      hour,
+      name: currentUser
+    })
+  });
+
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
 load();
+initAuth();
 
 </script>
 </body>
