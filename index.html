@@ -2,98 +2,58 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Lab Booking</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Lab Booking Debug</title>
 
 <style>
-body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
-aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
-h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
+body { margin:0; font-family: system-ui; display:grid; grid-template-columns:260px 1fr; height:100vh; }
+aside { padding:20px; border-right:1px solid #ddd; }
+main { padding:20px; }
 
-button {
-  width:100%;
-  padding:10px;
-  margin-bottom:6px;
-  border:none;
-  background:none;
-  text-align:left;
-  cursor:pointer;
-}
-
-main { padding:24px; }
+button { width:100%; margin-bottom:10px; padding:8px; }
 
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(7,1fr);
-  border:1px solid #e6e8ef;
-  border-radius:12px;
-  overflow:hidden;
-  background:#fff;
+  border:1px solid #ccc;
 }
 
 .cell {
-  border:1px solid #e6e8ef;
-  height:26px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-}
-
-.header {
-  background:#fafbff;
-  flex-direction:column;
-  height:50px;
-}
-
-.date {
-  font-size:14px;
-  font-weight:600;
-  color:#444;
-}
-
-.time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
-
-.booking-box {
-  position:absolute;
-  inset:1px;
-  background:#dbe7ff;
-  border-radius:6px;
+  border:1px solid #ccc;
+  height:24px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
-#auth { margin-bottom:20px; font-size:12px; }
+.header { height:40px; font-weight:bold; }
+.time { font-size:11px; color:#666; justify-content:flex-end; padding-right:6px; }
+
+pre { font-size:11px; background:#f0f0f0; padding:10px; }
 </style>
 </head>
 
 <body>
 
 <aside>
-
-<div id="auth">
-<button onclick="login()">Login</button>
-<button onclick="logout()">Logout</button>
-<div id="user-email">Not logged in</div>
-</div>
-
-<h3>Instruments</h3>
-<div id="instr"></div>
-
+<h3>Debug</h3>
+<pre id="log"></pre>
 </aside>
 
 <main>
-<h2 id="title"></h2>
+<h2>Calendar</h2>
 <div id="calendar" class="calendar"></div>
 </main>
 
 <script>
 
-console.log("VERSION 1.3.11");
+function log(msg){
+  console.log(msg);
+  document.getElementById("log").textContent += msg + "\n";
+}
 
-// 🔹 ORIGINAL WORKING API
+log("VERSION 1.3.12");
+
+// 🔹 REST ONLY (NO SUPABASE CLIENT)
 const REST = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
@@ -103,10 +63,8 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let instruments=[], bookings=[];
-let currentInstr=null;
-
-// ---------------- CORE APP (RUNS FIRST, NEVER BREAKS) ----------------
+let instruments = [];
+let bookings = [];
 
 function weekDates(){
   const today = new Date();
@@ -123,38 +81,42 @@ function weekDates(){
 
 async function load(){
 
-  instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  log("Loading instruments...");
 
-  currentInstr = instruments[0];
+  try {
+    instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
+    log("Instruments: " + instruments.length);
+  } catch(e){
+    log("ERROR instruments: " + e.message);
+  }
 
-  render();
-}
+  log("Loading bookings...");
 
-function render(){
-  renderInstr();
+  try {
+    bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+    log("Bookings: " + bookings.length);
+  } catch(e){
+    log("ERROR bookings: " + e.message);
+  }
+
   renderCalendar();
-}
-
-function renderInstr(){
-  const el = document.getElementById("instr");
-
-  el.innerHTML = instruments.map(i =>
-    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
-  ).join("");
-}
-
-function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
-  render();
 }
 
 function renderCalendar(){
 
+  log("Rendering calendar...");
+
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
-  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  if(!instruments.length){
+    log("No instruments — cannot render");
+    return;
+  }
+
+  const currentInstr = instruments[0];
+
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   const dates=weekDates();
 
   cal.appendChild(document.createElement("div"));
@@ -162,7 +124,7 @@ function renderCalendar(){
   days.forEach((d,i)=>{
     const h=document.createElement("div");
     h.className="cell header";
-    h.innerHTML = `${d}<div class="date">${dates[i].toISOString().split("T")[0]}</div>`;
+    h.innerHTML = d + "<br>" + dates[i].toISOString().split("T")[0];
     cal.appendChild(h);
   });
 
@@ -183,50 +145,18 @@ function renderCalendar(){
       );
 
       if(b){
-        c.innerHTML = `<div class="booking-box">${b.name}</div>`;
+        c.textContent = b.name;
       }
 
       cal.appendChild(c);
     }
   }
+
+  log("Calendar rendered");
 }
 
-// 🔥 LOAD FIRST (THIS IS CRITICAL)
+// 🔥 RUN
 load();
-
-// ---------------- AUTH (ISOLATED — CANNOT BREAK APP) ----------------
-
-let sb = null;
-
-setTimeout(() => {
-  try {
-    sb = window.supabase.createClient(
-      "https://mqpvnisphntdwhqoiqlt.supabase.co",
-      KEY
-    );
-    console.log("Auth ready");
-  } catch(e) {
-    console.warn("Auth disabled");
-  }
-}, 0);
-
-async function login(){
-  if(!sb){ alert("Auth not ready"); return; }
-
-  const email = prompt("Email:");
-  const password = prompt("Password:");
-
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-
-  if(error){ alert(error.message); return; }
-
-  document.getElementById("user-email").textContent = email;
-}
-
-async function logout(){
-  if(sb){ await sb.auth.signOut(); }
-  document.getElementById("user-email").textContent = "Not logged in";
-}
 
 </script>
 </body>
