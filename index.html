@@ -7,31 +7,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
-aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
-h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
-select { width:100%; padding:10px; margin-bottom:20px; }
-
-button {
-  width:100%;
-  padding:10px;
-  margin-bottom:6px;
-  border:none;
-  background:none;
-  text-align:left;
-  cursor:pointer;
-}
-
-button:hover { background:#f0f3ff; }
-
-button.active {
-  background:#dbe7ff;
-  font-weight:600;
-  border-left:4px solid #4a6cf7;
-  padding-left:6px;
-  border-radius:4px;
-}
-
+body { margin:0; font-family: system-ui; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
+aside { background:#fff; border-right:1px solid #e6e8ef; padding:24px; }
 main { padding:24px; }
 
 .calendar {
@@ -49,132 +26,69 @@ main { padding:24px; }
   display:flex;
   align-items:center;
   justify-content:center;
-  position:relative;
 }
 
-.header {
-  background:#fafbff;
-  flex-direction:column;
-  height:50px;
-}
-
-.date {
-  font-size:14px;
-  font-weight:600;
-  color:#444;
-}
-
-.header.today-col {
-  background:#ffe082;
-}
+.header { height:50px; background:#fafbff; flex-direction:column; }
 
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
-.cell.clickable:hover {
-  background:#eef2ff;
-  cursor:pointer;
-}
-
-.booking-box {
-  position:absolute;
-  inset:1px;
-  background:#dbe7ff;
-  border-radius:6px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.booking-box.mine {
-  background:#d7f5e3;
-  cursor:pointer;
-}
-
-.booking-box.past {
-  background:#e0e0e0;
-  color:#888;
-}
-
-.past-cell {
-  background:#f0f0f0;
-  color:#999;
-}
-
-#auth { margin-bottom:20px; font-size:12px; }
+.booking { background:#dbe7ff; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
 </style>
 </head>
 
 <body>
 
 <aside>
-
 <div id="auth">
   <button onclick="login()">Login</button>
   <button onclick="logout()">Logout</button>
-  <div id="user-email">Not logged in</div>
+  <div id="status">Not logged in</div>
 </div>
-
-<h3>Researcher</h3>
-<select id="user"></select>
 
 <h3>Instruments</h3>
 <div id="instr"></div>
-
 </aside>
 
 <main>
-  <h2 id="title"></h2>
-
-  <div class="week-nav">
-    <button onclick="changeWeek(-1)">← Previous</button>
-    <button onclick="goToday()">Today</button>
-    <button onclick="changeWeek(1)">Next →</button>
-  </div>
-
-  <div id="calendar" class="calendar"></div>
+<h2 id="title"></h2>
+<div id="calendar" class="calendar"></div>
 </main>
 
 <script>
 
-const BASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
-const REST = BASE_URL + "/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+// ---------- DATA ----------
+const REST = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
+const BASE = "https://mqpvnisphntdwhqoiqlt.supabase.co";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // full key
 
 const HEADERS = {
-  "apikey": KEY,
-  "Authorization": `Bearer ${KEY}`,
+  apikey: KEY,
+  Authorization: `Bearer ${KEY}`,
   "Content-Type": "application/json"
 };
 
-const sb = window.supabase.createClient(BASE_URL, KEY);
+let users=[], instruments=[], bookings=[];
+let currentUser=null;
+let currentInstr=null;
 
-let users=[], instruments=[], bookings=[], permissions=[];
-let currentUser=null, currentInstr=null;
-let weekOffset = 0;
+// ---------- SAFE AUTH ----------
+let sb = null;
 
-function norm(s){ return (s || "").trim().toLowerCase(); }
-
-function goToday(){ weekOffset = 0; renderCalendar(); }
-function changeWeek(delta){ weekOffset += delta; renderCalendar(); }
-
-function weekDates(){
-  const today = new Date();
-  const monday = new Date(today);
-  const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff + weekOffset*7);
-
-  return Array.from({length:7},(_,i)=>{
-    const d=new Date(monday);
-    d.setDate(monday.getDate()+i);
-    return d;
-  });
+function initAuth(){
+  try {
+    sb = window.supabase.createClient(BASE, KEY);
+    console.log("Auth ready");
+  } catch(e){
+    console.warn("Auth disabled:", e.message);
+    sb = null;
+  }
 }
 
+// ---------- LOAD ----------
 async function load(){
   users = await fetch(`${REST}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
   instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
   bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
 
   currentUser = users[0]?.name;
   currentInstr = instruments[0];
@@ -182,69 +96,16 @@ async function load(){
   render();
 }
 
-// 🔥 ONLY FIX IS HERE
-async function login(){
-  const email = prompt("Email:");
-  const password = prompt("Password:");
-
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
-  if(error){
-    alert(error.message);
-    return;
-  }
-
-  document.getElementById("user-email").textContent = email;
-
-  const res = await fetch(`${REST}/users?id=eq.${data.user.id}`, {headers:HEADERS});
-  const row = await res.json();
-
-  if(!row.length){
-    alert("No matching user record");
-    return;
-  }
-
-  currentUser = row[0].name;
-  render();
-}
-
-async function logout(){
-  await sb.auth.signOut();
-  currentUser = users[0]?.name;
-  document.getElementById("user-email").textContent = "Not logged in";
-  render();
-}
-
+// ---------- RENDER ----------
 function render(){
-  renderUsers();
   renderInstr();
-  renderTitle();
   renderCalendar();
-}
-
-function renderUsers(){
-  const el = document.getElementById("user");
-  el.innerHTML = users.map(u =>
-    `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
-  ).join("");
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
-
-  const allowed = instruments.filter(i =>
-    permissions.some(p =>
-      p.user_id === currentUser &&
-      p.instrument_id === i.id
-    )
-  );
-
-  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
-    currentInstr = allowed[0] || null;
-  }
-
-  el.innerHTML = allowed.map(i =>
-    `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
+  el.innerHTML = instruments.map(i =>
+    `<button onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
 
@@ -253,33 +114,39 @@ function selectInstr(id){
   render();
 }
 
-function renderTitle(){
-  document.getElementById("title").textContent = currentInstr?.description || "";
+function weekDates(){
+  const today = new Date();
+  const monday = new Date(today);
+  const diff = (today.getDay()===0?-6:1-today.getDay());
+  monday.setDate(today.getDate()+diff);
+
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(monday);
+    d.setDate(monday.getDate()+i);
+    return d;
+  });
 }
 
 function renderCalendar(){
-
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
-  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   const dates=weekDates();
-  const now = new Date();
 
   cal.appendChild(document.createElement("div"));
 
   days.forEach((d,i)=>{
     const h=document.createElement("div");
-    const dateStr = dates[i].toISOString().split("T")[0];
     h.className="cell header";
-    h.innerHTML = `${d}<div class="date">${dateStr}</div>`;
+    h.innerHTML = d + "<div>" + dates[i].toISOString().split("T")[0] + "</div>";
     cal.appendChild(h);
   });
 
   for(let h=0;h<24;h++){
     const t=document.createElement("div");
     t.className="cell time";
-    t.textContent=h.toString().padStart(2,'0')+":00";
+    t.textContent=h+":00";
     cal.appendChild(t);
 
     for(let i=0;i<7;i++){
@@ -293,8 +160,7 @@ function renderCalendar(){
       );
 
       if(b){
-        const mine = norm(b.name) === norm(currentUser);
-        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
+        c.innerHTML = `<div class="booking">${b.name}</div>`;
       }
 
       cal.appendChild(c);
@@ -302,7 +168,36 @@ function renderCalendar(){
   }
 }
 
+// ---------- AUTH ACTIONS ----------
+async function login(){
+  if(!sb){
+    alert("Auth not available");
+    return;
+  }
+
+  const email = prompt("Email:");
+  const password = prompt("Password:");
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  document.getElementById("status").textContent = data.user.email;
+}
+
+async function logout(){
+  if(sb){
+    await sb.auth.signOut();
+  }
+  document.getElementById("status").textContent = "Not logged in";
+}
+
+// ---------- START ----------
 load();
+setTimeout(initAuth, 0);
 
 </script>
 </body>
