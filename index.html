@@ -21,14 +21,6 @@ button {
   cursor:pointer;
 }
 
-button:hover { background:#f0f3ff; }
-
-button.active {
-  background:#dbe7ff;
-  font-weight:600;
-  border-left:4px solid #4a6cf7;
-}
-
 main { padding:24px; }
 
 .calendar {
@@ -73,10 +65,6 @@ main { padding:24px; }
   justify-content:center;
 }
 
-.booking-box.mine {
-  background:#d7f5e3;
-}
-
 #auth { margin-bottom:20px; font-size:12px; }
 </style>
 </head>
@@ -103,9 +91,9 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION 1.3.10");
+console.log("VERSION 1.3.11");
 
-// 🔹 ORIGINAL WORKING CONFIG
+// 🔹 ORIGINAL WORKING API
 const REST = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
@@ -115,23 +103,10 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-// 🔹 AUTH (SAFE — CANNOT BREAK APP)
-let sb = null;
-try {
-  sb = window.supabase.createClient(
-    "https://mqpvnisphntdwhqoiqlt.supabase.co",
-    KEY
-  );
-} catch(e) {
-  console.warn("Auth disabled");
-}
-
-// 🔹 ORIGINAL STATE
 let instruments=[], bookings=[];
 let currentInstr=null;
-let currentUserName=null;
 
-// 🔹 ORIGINAL LOGIC (UNCHANGED)
+// ---------------- CORE APP (RUNS FIRST, NEVER BREAKS) ----------------
 
 function weekDates(){
   const today = new Date();
@@ -216,10 +191,27 @@ function renderCalendar(){
   }
 }
 
-// 🔹 AUTH ACTIONS (DO NOT INTERFERE)
+// 🔥 LOAD FIRST (THIS IS CRITICAL)
+load();
+
+// ---------------- AUTH (ISOLATED — CANNOT BREAK APP) ----------------
+
+let sb = null;
+
+setTimeout(() => {
+  try {
+    sb = window.supabase.createClient(
+      "https://mqpvnisphntdwhqoiqlt.supabase.co",
+      KEY
+    );
+    console.log("Auth ready");
+  } catch(e) {
+    console.warn("Auth disabled");
+  }
+}, 0);
 
 async function login(){
-  if(!sb){ alert("Auth unavailable"); return; }
+  if(!sb){ alert("Auth not ready"); return; }
 
   const email = prompt("Email:");
   const password = prompt("Password:");
@@ -235,9 +227,6 @@ async function logout(){
   if(sb){ await sb.auth.signOut(); }
   document.getElementById("user-email").textContent = "Not logged in";
 }
-
-// 🔥 ORIGINAL BEHAVIOUR RESTORED
-load();
 
 </script>
 </body>
