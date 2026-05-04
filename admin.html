@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0f1117;
+  --surface:   #171b25;
+  --surface2:  #1e2333;
+  --border:    #2a3050;
+  --accent:    #4f8ef7;
+  --accent2:   #7c5cfc;
+  --danger:    #e05c5c;
+  --success:   #4caf82;
+  --warning:   #f0a04b;
+  --text:      #e8ecf5;
+  --muted:     #6b7594;
+  --mono:      'DM Mono', monospace;
+  --sans:      'DM Sans', sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: 56px 1fr;
+}
+
+/* ── Top bar ── */
+#topbar {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+}
+
+#topbar .logo {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+#topbar .logo span { color: var(--muted); }
+
+#topbar-user {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+#topbar-user strong { color: var(--text); }
+
+#btn-logout {
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s;
+}
+#btn-logout:hover { border-color: var(--danger); color: var(--danger); background: rgba(224,92,92,.08); }
+
+/* ── Sidebar ── */
+nav {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-section {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 14px 10px 6px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all .15s;
+}
+.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn.active { background: rgba(79,142,247,.12); color: var(--accent); }
+.nav-btn .icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+
+/* ── Main ── */
+main {
+  padding: 32px;
+  overflow-y: auto;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.page-header p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── Buttons ── */
+.btn {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary  { background: var(--accent); color: #fff; }
+.btn-primary:hover  { background: #3a7ae0; }
+.btn-danger   { background: rgba(224,92,92,.15); color: var(--danger); border: 1px solid rgba(224,92,92,.3); }
+.btn-danger:hover   { background: rgba(224,92,92,.25); }
+.btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover    { border-color: var(--accent); color: var(--accent); }
+.btn-success  { background: rgba(76,175,130,.15); color: var(--success); border: 1px solid rgba(76,175,130,.3); }
+.btn-success:hover  { background: rgba(76,175,130,.25); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+
+/* ── Cards / Table ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+}
+td {
+  padding: 14px 20px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(79,142,247,.12);
+  color: var(--accent);
+  margin: 2px;
+}
+
+.tag-none {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.color-dot {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 1px solid rgba(255,255,255,.15);
+}
+
+/* ── Modal ── */
+.modal-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.modal-backdrop.visible { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 520px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+}
+
+.modal-header {
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h2 { font-size: 17px; font-weight: 600; }
+.modal-close {
+  background: none; border: none; color: var(--muted);
+  font-size: 20px; cursor: pointer; line-height: 1; padding: 4px;
+}
+.modal-close:hover { color: var(--text); }
+
+.modal-body { padding: 24px 28px; }
+.modal-footer {
+  padding: 16px 28px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ── Form ── */
+.form-group { margin-bottom: 18px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 7px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+.form-group input[type=text],
+.form-group input[type=email],
+.form-group input[type=password],
+.form-group input[type=number],
+.form-group input[type=color],
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 10px 14px;
+  transition: border-color .15s;
+  outline: none;
+}
+.form-group input[type=color] {
+  padding: 4px 8px;
+  height: 40px;
+  cursor: pointer;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus { border-color: var(--accent); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.perm-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all .15s;
+  user-select: none;
+  background: var(--bg);
+}
+.perm-chip input { display: none; }
+.perm-chip:hover { border-color: var(--accent); }
+.perm-chip.checked {
+  background: rgba(79,142,247,.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.form-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+
+/* ── Login screen ── */
+#login-screen {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.login-box {
+  width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.5);
+}
+
+.login-box .login-logo {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.login-box h1 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 28px;
+  letter-spacing: -.02em;
+}
+
+.login-box .form-group { margin-bottom: 14px; }
+.login-box .form-group label { font-size: 11px; }
+
+.login-box input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color .15s;
+}
+.login-box input:focus { border-color: var(--accent); }
+
+#login-submit {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  text-align: center;
+}
+#login-submit:hover { background: #3a7ae0; }
+#login-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+.login-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 12px;
+  min-height: 18px;
+  text-align: center;
+}
+
+/* ── Misc ── */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.badge-admin {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(124,92,252,.2);
+  color: var(--accent2);
+  border: 1px solid rgba(124,92,252,.3);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+.alert-error   { background: rgba(224,92,92,.12); border: 1px solid rgba(224,92,92,.3); color: #f08080; }
+.alert-success { background: rgba(76,175,130,.12); border: 1px solid rgba(76,175,130,.3); color: var(--success); }
+
+#toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-size: 13px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  z-index: 500;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all .25s;
+  max-width: 320px;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.ok   { border-color: rgba(76,175,130,.4); color: var(--success); }
+#toast.err  { border-color: rgba(224,92,92,.4);  color: var(--danger);  }
+</style>
+</head>
+<body>
+
+<!-- ── Login ─────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Lab System</div>
+    <h1>Admin Console</h1>
+    <div class="form-group">
+      <label>Email</label>
+      <input id="login-email" type="email" placeholder="admin@example.com" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') doLogin()" />
+    </div>
+    <button id="login-submit" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── Shell ─────────────────────────────────── -->
+<div id="topbar">
+  <div class="logo">Lab System <span>/ Admin</span></div>
+  <span id="topbar-user"></span>
+  <button id="btn-logout" onclick="doLogout()">Logout</button>
+</div>
+
+<nav>
+  <div class="nav-section">Manage</div>
+  <button class="nav-btn active" data-page="users" onclick="switchPage('users')">
+    <span class="icon">👤</span> Users
+  </button>
+  <button class="nav-btn" data-page="instruments" onclick="switchPage('instruments')">
+    <span class="icon">🔬</span> Instruments
+  </button>
+</nav>
+
+<main>
+
+  <!-- ── Users page ── -->
+  <div id="page-users" class="page active">
+    <div class="page-header">
+      <div>
+        <h1>Users</h1>
+        <p>Manage researcher accounts, permissions and passwords</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddUser()">＋ Add User</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Auth Email</th>
+            <th>Role</th>
+            <th>Instrument Permissions</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="5" class="empty-state">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Instruments page ── -->
+  <div id="page-instruments" class="page">
+    <div class="page-header">
+      <div>
+        <h1>Instruments</h1>
+        <p>Add, edit or remove lab instruments</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddInstrument()">＋ Add Instrument</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Max Slots</th>
+            <th>Advance Days</th>
+            <th>Color</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="instruments-tbody">
+          <tr><td colspan="7" class="empty-state">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<!-- ── Modal: Add/Edit User ── -->
+<div id="modal-user" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-user-title">Add User</h2>
+      <button class="modal-close" onclick="closeModal('modal-user')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-user-alert"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Display Name</label>
+          <input id="u-name" type="text" placeholder="Dr. Smith" />
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input id="u-email" type="email" placeholder="smith@lab.ac.uk" />
+          <div class="form-hint" id="u-email-hint">Used for login</div>
+        </div>
+      </div>
+
+      <div class="form-group" id="u-password-group">
+        <label>Password <span id="u-password-label-extra" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(leave blank to keep current)</span></label>
+        <input id="u-password" type="password" placeholder="Min 8 characters" />
+      </div>
+
+      <div class="form-group">
+        <label>Admin Access</label>
+        <select id="u-admin">
+          <option value="false">No — standard researcher</option>
+          <option value="true">Yes — can access admin console</option>
+        </select>
+      </div>
+
+      <hr class="form-divider">
+
+      <div class="form-group">
+        <label>Instrument Permissions</label>
+        <div class="checkbox-group" id="u-permissions"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-user')">Cancel</button>
+      <button class="btn btn-primary" id="u-save-btn" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Add/Edit Instrument ── -->
+<div id="modal-instrument" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-instr-title">Add Instrument</h2>
+      <button class="modal-close" onclick="closeModal('modal-instrument')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-instr-alert"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Instrument ID</label>
+          <input id="i-id" type="text" placeholder="sem-1" />
+          <div class="form-hint">Unique slug, no spaces. Cannot be changed after creation.</div>
+        </div>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input id="i-name" type="text" placeholder="SEM 1" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="i-description" placeholder="Brief description shown in the booking system…"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Terms & Conditions / Notes (tc)</label>
+        <textarea id="i-tc" placeholder="Any usage rules or safety notes…"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Max Bookable Slots</label>
+          <input id="i-maxslot" type="number" min="1" placeholder="e.g. 5" />
+          <div class="form-hint">Max future slots per user at once</div>
+        </div>
+        <div class="form-group">
+          <label>Advance Booking (days)</label>
+          <input id="i-advancedays" type="number" min="1" placeholder="e.g. 30" />
+          <div class="form-hint">How far ahead users can book</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Sort Order</label>
+          <input id="i-sortorder" type="number" min="1" placeholder="e.g. 1" />
+          <div class="form-hint">Lower numbers appear first</div>
+        </div>
+        <div class="form-group">
+          <label>Colour</label>
+          <input id="i-color" type="color" value="#4f8ef7" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-instrument')">Cancel</button>
+      <button class="btn btn-primary" id="i-save-btn" onclick="saveInstrument()">Save Instrument</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Confirm Delete ── -->
+<div id="modal-confirm" class="modal-backdrop">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <h2 id="confirm-title">Confirm Delete</h2>
+      <button class="modal-close" onclick="closeModal('modal-confirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-message" style="font-size:14px;line-height:1.6;color:var(--muted)"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const REST = SUPABASE_URL + "/rest/v1";
+const HEADERS = {
+  "apikey": SUPABASE_KEY,
+  "Authorization": `Bearer ${SUPABASE_KEY}`,
+  "Content-Type": "application/json",
+  "Prefer": "return=representation"
+};
+
+let currentAdminUser = null;
+let allUsers = [], allInstruments = [], allPermissions = [];
+
+// ── Editing state ──
+let editingUserId   = null;  // null = new user
+let editingInstrId  = null;  // null = new instrument
+
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
+
+async function doLogin() {
+  const email    = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+  const errEl    = document.getElementById("login-error");
+  const btn      = document.getElementById("login-submit");
+  errEl.textContent = "";
+  btn.disabled = true;
+  btn.textContent = "Signing in…";
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    errEl.textContent = error.message;
+    btn.disabled = false;
+    btn.textContent = "Sign In";
+    return;
+  }
+
+  // Check admin flag in users table
+  const res  = await fetch(`${REST}/users?id=eq.${data.user.id}&select=*`, { headers: HEADERS });
+  const rows = await res.json();
+
+  if (!rows.length || !rows[0].admin) {
+    errEl.textContent = "Access denied — admin privileges required.";
+    await sb.auth.signOut();
+    btn.disabled = false;
+    btn.textContent = "Sign In";
+    return;
+  }
+
+  currentAdminUser = { ...rows[0], email: data.user.email };
+  document.getElementById("topbar-user").innerHTML =
+    `Logged in as <strong>${currentAdminUser.name}</strong>`;
+  document.getElementById("login-screen").style.display = "none";
+
+  btn.disabled = false;
+  btn.textContent = "Sign In";
+
+  await loadAll();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  currentAdminUser = null;
+  document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("login-password").value = "";
+  document.getElementById("login-error").textContent = "";
+}
+
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+
+async function api(path) {
+  const r = await fetch(`${REST}/${path}`, { headers: HEADERS });
+  return r.json();
+}
+
+async function loadAll() {
+  [allUsers, allInstruments, allPermissions] = await Promise.all([
+    api("users?select=*"),
+    api("instruments?select=*&order=sortorder.asc.nullslast,name.asc"),
+    api("permissions?select=*"),
+  ]);
+  renderUsers();
+  renderInstruments();
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+
+function switchPage(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById(`page-${page}`).classList.add("active");
+  document.querySelector(`[data-page="${page}"]`).classList.add("active");
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+
+let toastTimer;
+function toast(msg, type = "ok") {
+  const el = document.getElementById("toast");
+  el.textContent = (type === "ok" ? "✓  " : "✕  ") + msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = "", 3200);
+}
+
+// ═══════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════
+
+function openModal(id)  { document.getElementById(id).classList.add("visible"); }
+function closeModal(id) { document.getElementById(id).classList.remove("visible"); }
+
+function setModalAlert(containerId, msg, type = "error") {
+  const el = document.getElementById(containerId);
+  if (!msg) { el.innerHTML = ""; return; }
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+// ═══════════════════════════════════════════
+// USERS — RENDER
+// ═══════════════════════════════════════════
+
+function renderUsers() {
+  const tbody = document.getElementById("users-tbody");
+  if (!allUsers.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No users found.</td></tr>`;
+    return;
+  }
+
+  // Sort: admins first, then alphabetical
+  const sorted = [...allUsers].sort((a, b) => {
+    if (a.admin && !b.admin) return -1;
+    if (!a.admin && b.admin) return  1;
+    return a.name.localeCompare(b.name);
+  });
+
+  tbody.innerHTML = sorted.map(u => {
+    const perms = allPermissions.filter(p => p.user_id === u.id);
+    const instrNames = perms.map(p => {
+      const ins = allInstruments.find(i => i.id === p.instrument_id);
+      return ins ? `<span class="tag">${ins.name}</span>` : "";
+    }).join("");
+
+    return `<tr>
+      <td>
+        <strong>${esc(u.name)}</strong>
+        ${u.admin ? '<span class="badge-admin" style="margin-left:8px">Admin</span>' : ""}
+      </td>
+      <td style="color:var(--muted);font-family:var(--mono);font-size:12px" id="email-${u.id}">—</td>
+      <td>${u.admin ? "Administrator" : "Researcher"}</td>
+      <td>${instrNames || '<span class="tag-none">No permissions</span>'}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="openEditUser('${u.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="confirmDeleteUser('${u.id}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  // Fetch emails from auth — best effort, may not work with anon key without service role
+  // We skip silently if not available
+}
+
+// ═══════════════════════════════════════════
+// USERS — ADD
+// ═══════════════════════════════════════════
+
+function openAddUser() {
+  editingUserId = null;
+  document.getElementById("modal-user-title").textContent = "Add User";
+  document.getElementById("u-save-btn").textContent = "Create User";
+  document.getElementById("u-name").value    = "";
+  document.getElementById("u-email").value   = "";
+  document.getElementById("u-email").disabled = false;
+  document.getElementById("u-email-hint").textContent = "Used for login";
+  document.getElementById("u-password").value  = "";
+  document.getElementById("u-password-label-extra").style.display = "none";
+  document.getElementById("u-admin").value = "false";
+  setModalAlert("modal-user-alert", "");
+  buildPermChips(null);
+  openModal("modal-user");
+  setTimeout(() => document.getElementById("u-name").focus(), 60);
+}
+
+// ═══════════════════════════════════════════
+// USERS — EDIT
+// ═══════════════════════════════════════════
+
+function openEditUser(userId) {
+  const u = allUsers.find(x => x.id === userId);
+  if (!u) return;
+
+  editingUserId = userId;
+  document.getElementById("modal-user-title").textContent = "Edit User";
+  document.getElementById("u-save-btn").textContent = "Save Changes";
+  document.getElementById("u-name").value   = u.name || "";
+  document.getElementById("u-email").value  = "";          // we don't expose email in REST read
+  document.getElementById("u-email").disabled = true;
+  document.getElementById("u-email-hint").textContent = "Email cannot be changed here — use Supabase Auth dashboard";
+  document.getElementById("u-password").value = "";
+  document.getElementById("u-password-label-extra").style.display = "inline";
+  document.getElementById("u-admin").value = u.admin ? "true" : "false";
+  setModalAlert("modal-user-alert", "");
+  buildPermChips(userId);
+  openModal("modal-user");
+  setTimeout(() => document.getElementById("u-name").focus(), 60);
+}
+
+function buildPermChips(userId) {
+  const container = document.getElementById("u-permissions");
+  const userPerms = userId
+    ? new Set(allPermissions.filter(p => p.user_id === userId).map(p => p.instrument_id))
+    : new Set();
+
+  container.innerHTML = allInstruments.map(i => {
+    const checked = userPerms.has(i.id);
+    return `<label class="perm-chip ${checked ? 'checked' : ''}" id="chip-${i.id}">
+      <input type="checkbox" value="${i.id}" ${checked ? "checked" : ""}
+             onchange="toggleChip(this)">
+      ${esc(i.name)}
+    </label>`;
+  }).join("");
+}
+
+function toggleChip(input) {
+  input.closest(".perm-chip").classList.toggle("checked", input.checked);
+}
+
+// ═══════════════════════════════════════════
+// USERS — SAVE
+// ═══════════════════════════════════════════
+
+async function saveUser() {
+  const name     = document.getElementById("u-name").value.trim();
+  const email    = document.getElementById("u-email").value.trim();
+  const password = document.getElementById("u-password").value;
+  const isAdmin  = document.getElementById("u-admin").value === "true";
+  const btn      = document.getElementById("u-save-btn");
+
+  setModalAlert("modal-user-alert", "");
+
+  if (!name) { setModalAlert("modal-user-alert", "Display name is required."); return; }
+
+  if (!editingUserId) {
+    // ── CREATE ──
+    if (!email) { setModalAlert("modal-user-alert", "Email is required for new users."); return; }
+    if (password.length < 8) { setModalAlert("modal-user-alert", "Password must be at least 8 characters."); return; }
+
+    btn.disabled = true; btn.textContent = "Creating…";
+
+    // 1. Create auth user via Supabase Admin API — requires service role key.
+    //    With anon key we use signUp instead (user will get a confirmation email).
+    const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password });
+
+    if (signUpErr) {
+      setModalAlert("modal-user-alert", signUpErr.message);
+      btn.disabled = false; btn.textContent = "Create User";
+      return;
+    }
+
+    const authId = signUpData.user?.id;
+    if (!authId) {
+      setModalAlert("modal-user-alert", "Failed to create auth user.");
+      btn.disabled = false; btn.textContent = "Create User";
+      return;
+    }
+
+    // 2. Insert into users table
+    const insertRes = await fetch(`${REST}/users`, {
+      method: "POST", headers: HEADERS,
+      body: JSON.stringify({ id: authId, name, admin: isAdmin })
+    });
+
+    if (!insertRes.ok) {
+      setModalAlert("modal-user-alert", "Auth user created but failed to save to users table. Check Supabase.");
+      btn.disabled = false; btn.textContent = "Create User";
+      return;
+    }
+
+    // 3. Set permissions
+    await syncPermissions(authId);
+
+    toast(`User "${name}" created`);
+
+  } else {
+    // ── UPDATE ──
+    btn.disabled = true; btn.textContent = "Saving…";
+
+    // 1. Update users table
+    const updateRes = await fetch(`${REST}/users?id=eq.${editingUserId}`, {
+      method: "PATCH", headers: HEADERS,
+      body: JSON.stringify({ name, admin: isAdmin })
+    });
+    if (!updateRes.ok) {
+      setModalAlert("modal-user-alert", "Failed to update user record.");
+      btn.disabled = false; btn.textContent = "Save Changes";
+      return;
+    }
+
+    // 2. Update password if provided
+    if (password) {
+      if (password.length < 8) {
+        setModalAlert("modal-user-alert", "Password must be at least 8 characters.");
+        btn.disabled = false; btn.textContent = "Save Changes";
+        return;
+      }
+      // Note: updating another user's password requires service role key.
+      // With anon key this only works for the currently signed-in user.
+      const { error: pwErr } = await sb.auth.updateUser({ password });
+      if (pwErr) {
+        setModalAlert("modal-user-alert",
+          `Details saved, but password update failed: ${pwErr.message}. ` +
+          `To reset another user's password, use Supabase Auth dashboard or add a service role key.`
+        );
+        btn.disabled = false; btn.textContent = "Save Changes";
+        await loadAll();
+        return;
+      }
+    }
+
+    // 3. Sync permissions
+    await syncPermissions(editingUserId);
+
+    toast(`User "${name}" updated`);
+  }
+
+  btn.disabled = false;
+  btn.textContent = editingUserId ? "Save Changes" : "Create User";
+  closeModal("modal-user");
+  await loadAll();
+}
+
+async function syncPermissions(userId) {
+  // Get selected instruments from UI
+  const selected = [...document.querySelectorAll("#u-permissions input:checked")].map(el => el.value);
+
+  // Get existing permissions
+  const existing = allPermissions.filter(p => p.user_id === userId).map(p => p.instrument_id);
+
+  const toAdd    = selected.filter(id => !existing.includes(id));
+  const toRemove = existing.filter(id => !selected.includes(id));
+
+  await Promise.all([
+    ...toAdd.map(instrId =>
+      fetch(`${REST}/permissions`, {
+        method: "POST", headers: HEADERS,
+        body: JSON.stringify({ id: `${userId}_${instrId}`, user_id: userId, instrument_id: instrId })
+      })
+    ),
+    ...toRemove.map(instrId =>
+      fetch(`${REST}/permissions?user_id=eq.${userId}&instrument_id=eq.${instrId}`, {
+        method: "DELETE", headers: HEADERS
+      })
+    )
+  ]);
+}
+
+// ═══════════════════════════════════════════
+// USERS — DELETE
+// ═══════════════════════════════════════════
+
+function confirmDeleteUser(userId) {
+  const u = allUsers.find(x => x.id === userId);
+  if (!u) return;
+
+  document.getElementById("confirm-title").textContent   = "Delete User";
+  document.getElementById("confirm-message").textContent =
+    `Are you sure you want to delete "${u.name}"? This will remove their record and all permissions. Their bookings will remain in the system. This cannot be undone.`;
+
+  const btn = document.getElementById("confirm-ok-btn");
+  btn.onclick = () => deleteUser(userId);
+  openModal("modal-confirm");
+}
+
+async function deleteUser(userId) {
+  const u = allUsers.find(x => x.id === userId);
+
+  // Delete permissions first
+  await fetch(`${REST}/permissions?user_id=eq.${userId}`, { method: "DELETE", headers: HEADERS });
+
+  // Delete from users table
+  await fetch(`${REST}/users?id=eq.${userId}`, { method: "DELETE", headers: HEADERS });
+
+  // Note: deleting from auth.users requires service role key — we skip silently
+  toast(`User "${u?.name}" removed`);
+  closeModal("modal-confirm");
+  await loadAll();
+}
+
+// ═══════════════════════════════════════════
+// INSTRUMENTS — RENDER
+// ═══════════════════════════════════════════
+
+function renderInstruments() {
+  const tbody = document.getElementById("instruments-tbody");
+  if (!allInstruments.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No instruments found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = allInstruments.map(i => `
+    <tr>
+      <td style="color:var(--muted);font-family:var(--mono);font-size:12px">${i.sortorder ?? "—"}</td>
+      <td><strong>${esc(i.name)}</strong><br>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(i.id)}</span></td>
+      <td style="color:var(--muted);font-size:12px;max-width:200px">${esc(i.description || "—")}</td>
+      <td style="font-family:var(--mono);font-size:12px">${i.maxslot ?? "—"}</td>
+      <td style="font-family:var(--mono);font-size:12px">${i.advancedays ?? "—"}</td>
+      <td>
+        ${i.color
+          ? `<span class="color-dot" style="background:${esc(i.color)}"></span>
+             <span style="font-family:var(--mono);font-size:12px">${esc(i.color)}</span>`
+          : '<span style="color:var(--muted);font-size:12px">—</span>'}
+      </td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="openEditInstrument('${i.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="confirmDeleteInstrument('${i.id}')">Delete</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+// ═══════════════════════════════════════════
+// INSTRUMENTS — ADD
+// ═══════════════════════════════════════════
+
+function openAddInstrument() {
+  editingInstrId = null;
+  document.getElementById("modal-instr-title").textContent = "Add Instrument";
+  document.getElementById("i-save-btn").textContent = "Create Instrument";
+  document.getElementById("i-id").disabled   = false;
+  document.getElementById("i-id").value        = "";
+  document.getElementById("i-name").value      = "";
+  document.getElementById("i-description").value = "";
+  document.getElementById("i-tc").value        = "";
+  document.getElementById("i-maxslot").value   = "";
+  document.getElementById("i-advancedays").value = "";
+  document.getElementById("i-sortorder").value  = "";
+  document.getElementById("i-color").value      = "#4f8ef7";
+  setModalAlert("modal-instr-alert", "");
+  openModal("modal-instrument");
+  setTimeout(() => document.getElementById("i-id").focus(), 60);
+}
+
+// ═══════════════════════════════════════════
+// INSTRUMENTS — EDIT
+// ═══════════════════════════════════════════
+
+function openEditInstrument(instrId) {
+  const i = allInstruments.find(x => x.id === instrId);
+  if (!i) return;
+
+  editingInstrId = instrId;
+  document.getElementById("modal-instr-title").textContent = "Edit Instrument";
+  document.getElementById("i-save-btn").textContent = "Save Changes";
+  document.getElementById("i-id").value       = i.id;
+  document.getElementById("i-id").disabled    = true;   // ID cannot change
+  document.getElementById("i-name").value     = i.name || "";
+  document.getElementById("i-description").value = i.description || "";
+  document.getElementById("i-tc").value       = i.tc || "";
+  document.getElementById("i-maxslot").value  = i.maxslot ?? "";
+  document.getElementById("i-advancedays").value = i.advancedays ?? "";
+  document.getElementById("i-sortorder").value = i.sortorder ?? "";
+  document.getElementById("i-color").value    = i.color || "#4f8ef7";
+  setModalAlert("modal-instr-alert", "");
+  openModal("modal-instrument");
+  setTimeout(() => document.getElementById("i-name").focus(), 60);
+}
+
+// ═══════════════════════════════════════════
+// INSTRUMENTS — SAVE
+// ═══════════════════════════════════════════
+
+async function saveInstrument() {
+  const id          = document.getElementById("i-id").value.trim();
+  const name        = document.getElementById("i-name").value.trim();
+  const description = document.getElementById("i-description").value.trim();
+  const tc          = document.getElementById("i-tc").value.trim();
+  const maxslot     = document.getElementById("i-maxslot").value;
+  const advancedays = document.getElementById("i-advancedays").value;
+  const sortorder   = document.getElementById("i-sortorder").value;
+  const color       = document.getElementById("i-color").value;
+  const btn         = document.getElementById("i-save-btn");
+
+  setModalAlert("modal-instr-alert", "");
+
+  if (!id)   { setModalAlert("modal-instr-alert", "Instrument ID is required."); return; }
+  if (!name) { setModalAlert("modal-instr-alert", "Display name is required."); return; }
+  if (/\s/.test(id)) { setModalAlert("modal-instr-alert", "Instrument ID cannot contain spaces."); return; }
+
+  const payload = {
+    name,
+    description: description || null,
+    tc: tc || null,
+    maxslot:     maxslot     ? parseInt(maxslot)     : null,
+    advancedays: advancedays ? parseInt(advancedays) : null,
+    sortorder:   sortorder   ? parseInt(sortorder)   : null,
+    color:       color || null,
+  };
+
+  btn.disabled = true; btn.textContent = "Saving…";
+
+  if (!editingInstrId) {
+    // CREATE
+    payload.id = id;
+    const res = await fetch(`${REST}/instruments`, {
+      method: "POST", headers: HEADERS, body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setModalAlert("modal-instr-alert", err.message || "Failed to create instrument.");
+      btn.disabled = false; btn.textContent = "Create Instrument";
+      return;
+    }
+    toast(`Instrument "${name}" created`);
+  } else {
+    // UPDATE
+    const res = await fetch(`${REST}/instruments?id=eq.${editingInstrId}`, {
+      method: "PATCH", headers: HEADERS, body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setModalAlert("modal-instr-alert", err.message || "Failed to update instrument.");
+      btn.disabled = false; btn.textContent = "Save Changes";
+      return;
+    }
+    toast(`Instrument "${name}" updated`);
+  }
+
+  btn.disabled = false;
+  btn.textContent = editingInstrId ? "Save Changes" : "Create Instrument";
+  closeModal("modal-instrument");
+  await loadAll();
+}
+
+// ═══════════════════════════════════════════
+// INSTRUMENTS — DELETE
+// ═══════════════════════════════════════════
+
+function confirmDeleteInstrument(instrId) {
+  const i = allInstruments.find(x => x.id === instrId);
+  if (!i) return;
+
+  document.getElementById("confirm-title").textContent   = "Delete Instrument";
+  document.getElementById("confirm-message").textContent =
+    `Are you sure you want to delete "${i.name}"? All permissions for this instrument will also be removed. Existing bookings will remain in the system. This cannot be undone.`;
+
+  const btn = document.getElementById("confirm-ok-btn");
+  btn.onclick = () => deleteInstrument(instrId);
+  openModal("modal-confirm");
+}
+
+async function deleteInstrument(instrId) {
+  const i = allInstruments.find(x => x.id === instrId);
+
+  // Remove permissions first
+  await fetch(`${REST}/permissions?instrument_id=eq.${instrId}`, { method: "DELETE", headers: HEADERS });
+  // Remove instrument
+  await fetch(`${REST}/instruments?id=eq.${instrId}`, { method: "DELETE", headers: HEADERS });
+
+  toast(`Instrument "${i?.name}" deleted`);
+  closeModal("modal-confirm");
+  await loadAll();
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+
+function esc(str) {
+  return String(str ?? "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+// ── Boot ─────────────────────────────────────
+
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    const res  = await fetch(`${REST}/users?id=eq.${session.user.id}&select=*`, { headers: HEADERS });
+    const rows = await res.json();
+    if (rows.length && rows[0].admin) {
+      currentAdminUser = { ...rows[0], email: session.user.email };
+      document.getElementById("topbar-user").innerHTML =
+        `Logged in as <strong>${currentAdminUser.name}</strong>`;
+      document.getElementById("login-screen").style.display = "none";
+      await loadAll();
+    }
+  }
+})();
+</script>
+</body>
+</html>
