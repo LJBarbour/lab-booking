@@ -81,16 +81,12 @@ main { padding:24px; }
   color:#444;
 }
 
-.header.today-col {
-  background:#ffe082;
-}
+.header.today-col { background:#ffe082; }
 
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
-.cell.clickable:hover {
-  background:#eef2ff;
-  cursor:pointer;
-}
+.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
+.cell.needs-login:hover { background:#fff8e1; cursor:pointer; }
 
 .booking-box {
   position:absolute;
@@ -100,89 +96,21 @@ main { padding:24px; }
   display:flex;
   align-items:center;
   justify-content:center;
+  font-size:12px;
 }
 
-.booking-box.mine {
-  background:#d7f5e3;
-  cursor:pointer;
-}
+.booking-box.mine { background:#d7f5e3; cursor:pointer; }
+.booking-box.past { background:#e0e0e0; color:#888; }
 
-.booking-box.past {
-  background:#e0e0e0;
-  color:#888;
-}
+.past-cell { background:#f0f0f0; color:#999; }
 
-.past-cell {
-  background:#f0f0f0;
-  color:#999;
-}
+/* ── User area in sidebar ── */
+#user-area { margin-bottom:20px; }
 
-/* ── Login overlay ── */
-#login-overlay {
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.45);
-  z-index:100;
-  align-items:center;
-  justify-content:center;
-}
-
-#login-overlay.visible {
-  display:flex;
-}
-
-#login-box {
-  background:#fff;
-  border-radius:14px;
-  padding:36px 40px;
-  width:340px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.18);
-}
-
-#login-box h2 {
-  margin:0 0 24px;
-  font-size:20px;
-  color:#1a1d2e;
-}
-
-#login-box input {
-  width:100%;
-  padding:10px 12px;
-  margin-bottom:14px;
-  border:1px solid #d0d4e0;
-  border-radius:8px;
-  font-size:14px;
-  box-sizing:border-box;
-}
-
-#login-btn {
-  width:100%;
-  padding:11px;
-  background:#4a6cf7;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  font-size:15px;
-  font-weight:600;
-  cursor:pointer;
-}
-
-#login-btn:hover { background:#3a5ce0; }
-
-#login-error {
-  color:#d32f2f;
-  font-size:13px;
-  margin-top:10px;
-  min-height:18px;
-}
-
-/* ── User badge in sidebar ── */
 #user-badge {
   background:#f0f3ff;
   border-radius:8px;
   padding:10px 12px;
-  margin-bottom:20px;
   font-size:14px;
   font-weight:600;
   color:#1a1d2e;
@@ -204,27 +132,120 @@ main { padding:24px; }
 }
 
 #logout-btn:hover { background:#ffeaea; color:#d32f2f; border-color:#f5b8b8; }
+
+#login-btn-sidebar {
+  width:100%;
+  padding:10px;
+  background:#4a6cf7;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  text-align:center;
+  margin-bottom:0;
+}
+
+#login-btn-sidebar:hover { background:#3a5ce0; }
+
+/* ── Login modal ── */
+#login-modal {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+}
+
+#login-modal.visible { display:flex; }
+
+#login-box {
+  background:#fff;
+  border-radius:14px;
+  padding:36px 40px;
+  width:340px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+  position:relative;
+}
+
+#login-box h2 { margin:0 0 24px; font-size:20px; color:#1a1d2e; }
+
+#login-box input {
+  width:100%;
+  padding:10px 12px;
+  margin-bottom:14px;
+  border:1px solid #d0d4e0;
+  border-radius:8px;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+#login-submit {
+  width:100%;
+  padding:11px;
+  background:#4a6cf7;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  margin-bottom:0;
+}
+
+#login-submit:hover { background:#3a5ce0; }
+
+#login-error { color:#d32f2f; font-size:13px; margin-top:10px; min-height:18px; }
+
+#modal-close {
+  position:absolute;
+  top:14px; right:16px;
+  background:none;
+  border:none;
+  font-size:20px;
+  color:#aaa;
+  cursor:pointer;
+  width:auto;
+  padding:0;
+  margin:0;
+  line-height:1;
+}
+
+#modal-close:hover { color:#555; background:none; }
+
+/* ── Read-only notice ── */
+#readonly-notice {
+  font-size:12px;
+  color:#9aa0ad;
+  margin-top:12px;
+  line-height:1.5;
+  display:none;
+}
 </style>
 </head>
 
 <body>
 
-<!-- Login overlay -->
-<div id="login-overlay" class="visible">
+<!-- Login modal -->
+<div id="login-modal">
   <div id="login-box">
+    <button id="modal-close" onclick="closeModal()">✕</button>
     <h2>🔬 Lab Booking Login</h2>
     <input id="login-email" type="email" placeholder="Email address" />
-    <input id="login-password" type="password" placeholder="Password" />
-    <button id="login-btn" onclick="doLogin()">Sign In</button>
+    <input id="login-password" type="password" placeholder="Password"
+           onkeydown="if(event.key==='Enter') doLogin()" />
+    <button id="login-submit" onclick="doLogin()">Sign In</button>
     <div id="login-error"></div>
   </div>
 </div>
 
 <aside>
   <h3>Researcher</h3>
-  <div id="user-badge">
-    <span id="user-name">—</span>
-    <button id="logout-btn" onclick="doLogout()">Logout</button>
+  <div id="user-area">
+    <!-- Filled by renderUserArea() -->
   </div>
 
   <h3>Instruments</h3>
@@ -260,11 +281,22 @@ const HEADERS = {
 };
 
 let instruments=[], bookings=[], permissions=[];
-let currentUser=null;   // display name from users table
-let currentInstr=null;
-let weekOffset = 0;
+let currentUser = null;   // null = logged out (read-only)
+let currentInstr = null;
+let weekOffset   = 0;
 
 // ── Auth ──────────────────────────────────────────────────────
+
+function openModal(){
+  document.getElementById("login-error").textContent = "";
+  document.getElementById("login-password").value = "";
+  document.getElementById("login-modal").classList.add("visible");
+  setTimeout(()=>document.getElementById("login-email").focus(), 50);
+}
+
+function closeModal(){
+  document.getElementById("login-modal").classList.remove("visible");
+}
 
 async function doLogin(){
   const email    = document.getElementById("login-email").value.trim();
@@ -274,34 +306,23 @@ async function doLogin(){
 
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
-  if(error){
-    errEl.textContent = error.message;
-    return;
-  }
+  if(error){ errEl.textContent = error.message; return; }
 
   await initAfterAuth(data.user);
+  closeModal();
 }
 
 async function doLogout(){
   await sb.auth.signOut();
   currentUser  = null;
   currentInstr = null;
-  document.getElementById("user-name").textContent = "—";
-  document.getElementById("calendar").innerHTML = "";
-  document.getElementById("instr").innerHTML = "";
-  document.getElementById("title").textContent = "";
-  document.getElementById("instr-image").src = "";
-  document.getElementById("login-overlay").classList.add("visible");
-  document.getElementById("login-error").textContent = "";
-  document.getElementById("login-password").value = "";
+  // Re-render sidebar and calendar in read-only mode;
+  // keep instruments visible so people can browse
+  render();
 }
 
 async function initAfterAuth(authUser){
-  // Look up the researcher record whose id matches the auth user's UUID
-  const res = await fetch(
-    `${REST}/users?id=eq.${authUser.id}&select=*`,
-    { headers: HEADERS }
-  );
+  const res  = await fetch(`${REST}/users?id=eq.${authUser.id}&select=*`, { headers: HEADERS });
   const rows = await res.json();
 
   if(!rows.length){
@@ -312,10 +333,7 @@ async function initAfterAuth(authUser){
   }
 
   currentUser = rows[0].name;
-  document.getElementById("user-name").textContent = currentUser;
-  document.getElementById("login-overlay").classList.remove("visible");
-
-  await load();
+  render();
 }
 
 // ── Data ──────────────────────────────────────────────────────
@@ -327,181 +345,43 @@ async function load(){
     fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json()),
   ]);
 
-  currentInstr = null;
+  // Default to showing the first instrument regardless of login state
+  if(!currentInstr && instruments.length) currentInstr = instruments[0];
+
   render();
 }
 
 // ── Render ────────────────────────────────────────────────────
 
 function render(){
+  renderUserArea();
   renderInstr();
   renderTitle();
   renderImage();
   renderCalendar();
 }
 
+function renderUserArea(){
+  const el = document.getElementById("user-area");
+  if(currentUser){
+    el.innerHTML = `
+      <div id="user-badge">
+        <span>${currentUser}</span>
+        <button id="logout-btn" onclick="doLogout()">Logout</button>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <button id="login-btn-sidebar" onclick="openModal()">Login</button>
+      <div id="readonly-notice" style="display:block">
+        You can browse the calendar without logging in.<br>Log in to make or edit bookings.
+      </div>`;
+  }
+}
+
 function renderInstr(){
   const el = document.getElementById("instr");
 
-  const allowed = instruments.filter(i =>
-    permissions.some(p =>
-      p.user_id === currentUser &&
-      p.instrument_id === i.id
-    )
-  );
-
-  if(!allowed.find(i => currentInstr && i.id === currentInstr.id)){
-    currentInstr = allowed[0] || null;
-  }
-
-  el.innerHTML = allowed.map(i =>
-    `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
-  ).join("");
-}
-
-function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
-  render();
-}
-
-function renderTitle(){
-  document.getElementById("title").textContent = currentInstr?.description || "";
-}
-
-function renderImage(){
-  const img = document.getElementById("instr-image");
-  img.src = currentInstr ? currentInstr.id + ".jpg" : "";
-}
-
-function norm(s){ return (s||"").trim().toLowerCase(); }
-function goToday(){ weekOffset=0; renderCalendar(); }
-function changeWeek(delta){ weekOffset+=delta; renderCalendar(); }
-
-function weekDates(){
-  const today=new Date();
-  const diff=(today.getDay()===0?-6:1-today.getDay());
-  const monday=new Date(today);
-  monday.setDate(today.getDate()+diff+weekOffset*7);
-  return Array.from({length:7},(_,i)=>{
-    const d=new Date(monday);
-    d.setDate(monday.getDate()+i);
-    return d;
-  });
-}
-
-function renderCalendar(){
-  const cal=document.getElementById("calendar");
-  cal.innerHTML="";
-  if(!currentInstr) return;
-
-  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  const dates=weekDates();
-  const now=new Date();
-  const todayStr=now.toISOString().split("T")[0];
-
-  cal.appendChild(document.createElement("div"));
-
-  days.forEach((d,i)=>{
-    const h=document.createElement("div");
-    const dateStr=dates[i].toISOString().split("T")[0];
-    const isToday=dateStr===todayStr;
-    h.className="cell header"+(isToday?" today-col":"");
-    h.innerHTML=`${d}<div class="date">${dateStr}</div>`;
-    cal.appendChild(h);
-  });
-
-  for(let h=0;h<24;h++){
-    const t=document.createElement("div");
-    t.className="cell time";
-    t.textContent=h.toString().padStart(2,'0')+":00";
-    cal.appendChild(t);
-
-    for(let i=0;i<7;i++){
-      const dateStr=dates[i].toISOString().split("T")[0];
-      const c=document.createElement("div");
-      const slotTime=new Date(dateStr+"T"+h.toString().padStart(2,'0')+":00");
-      const isPast=slotTime<now;
-
-      c.className="cell"+(isPast?" past-cell":"");
-
-      const b=bookings.find(x=>
-        x.instrument===currentInstr.id &&
-        x.hour===h &&
-        x.date===dateStr
-      );
-
-      if(b){
-        const mine=norm(b.name)===norm(currentUser);
-        const pastClass=isPast?"past":"";
-        c.innerHTML=`<div class="booking-box ${mine?'mine':''} ${pastClass}">${b.name}</div>`;
-        if(mine&&!isPast) c.onclick=()=>deleteBooking(b);
-      } else if(!isPast){
-        c.classList.add("clickable");
-        c.onclick=()=>book(h,dateStr);
-      }
-
-      cal.appendChild(c);
-    }
-  }
-}
-
-// ── Booking actions ───────────────────────────────────────────
-
-async function book(hour,date){
-  const now=new Date();
-  const slotTime=new Date(date+"T"+hour.toString().padStart(2,'0')+":00");
-  if(slotTime<now){ alert("Cannot book in the past"); return; }
-
-  const maxDays=currentInstr.advancedays??999;
-  const maxDate=new Date();
-  maxDate.setDate(now.getDate()+maxDays);
-  if(slotTime>maxDate){ alert("Booking too far in advance"); return; }
-
-  const count=bookings.filter(b=>{
-    const t=new Date(b.date+"T"+b.hour.toString().padStart(2,'0')+":00");
-    return norm(b.name)===norm(currentUser) && b.instrument===currentInstr.id && t>=now;
-  }).length;
-
-  if(count>=(currentInstr.maxslot??999)){ alert("Booking limit reached"); return; }
-
-  await fetch(`${REST}/bookings`,{
-    method:"POST",
-    headers:HEADERS,
-    body:JSON.stringify({
-      id:Date.now().toString(),
-      instrument:currentInstr.id,
-      date,
-      hour,
-      name:currentUser
-    })
-  });
-
-  bookings=await fetch(`${REST}/bookings?select=*`,{headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function deleteBooking(b){
-  if(!confirm("Delete this booking?")) return;
-
-  await fetch(
-    `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
-    { method:"DELETE", headers:HEADERS }
-  );
-
-  bookings=await fetch(`${REST}/bookings?select=*`,{headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-// ── Boot: check for existing session ─────────────────────────
-
-(async()=>{
-  const { data:{ session } } = await sb.auth.getSession();
-  if(session?.user){
-    await initAfterAuth(session.user);
-  }
-  // otherwise the overlay stays visible
-})();
-
-</script>
-</body>
-</html>
+  // When logged in: show only permitted instruments.
+  // When logged out: show all instruments (read-only browsing).
+  const visible = currentUser
+    ? instrume
