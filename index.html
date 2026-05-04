@@ -13,10 +13,14 @@ button { width:100%; margin-bottom:6px; padding:8px; border:none; cursor:pointer
 button.active { background:#dbe7ff; font-weight:bold; }
 
 .calendar { display:grid; grid-template-columns:60px repeat(7,1fr); }
-.cell { border:1px solid #ddd; height:26px; display:flex; align-items:center; justify-content:center; }
+.cell { border:1px solid #ddd; height:26px; display:flex; align-items:center; justify-content:center; position:relative; }
+.header { background:#fafbff; flex-direction:column; height:50px; }
+.date { font-size:12px; }
+.today { background:#ffe082; }
+
 .time { font-size:11px; color:#888; justify-content:flex-end; padding-right:6px; }
 
-.booking { background:#dbe7ff; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.booking { position:absolute; inset:1px; background:#dbe7ff; display:flex; align-items:center; justify-content:center; }
 .mine { background:#d7f5e3; }
 
 #auth { margin-bottom:20px; }
@@ -49,10 +53,9 @@ button.active { background:#dbe7ff; font-weight:bold; }
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-console.log("VERSION 1.3.3");
+console.log("VERSION 1.3.4");
 
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
-
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const REST = URL + "/rest/v1";
@@ -72,9 +75,10 @@ let bookings = [];
 let permissions = [];
 let currentInstr = null;
 
+let weekOffset = 0;
+
 function norm(s){ return (s||"").toLowerCase(); }
 
-// ✅ EXPOSE FUNCTIONS TO GLOBAL
 window.init = async function(){
   sb = createClient(URL, KEY);
   await resolveUser();
@@ -99,20 +103,15 @@ window.login = async function(){
 };
 
 window.logout = async function(){
-  if(!sb) return;
   await sb.auth.signOut();
-
   currentUser = null;
   currentUserName = null;
-
   document.getElementById("user-email").textContent = "Not logged in";
   document.getElementById("user-name").textContent = "";
-
   render();
 };
 
 async function resolveUser(){
-
   const { data } = await sb.auth.getUser();
 
   if(!data.user){
@@ -128,7 +127,7 @@ async function resolveUser(){
   const rows = await res.json();
 
   if(!rows.length){
-    alert("Access denied: no matching user record");
+    alert("Access denied");
     await window.logout();
     return;
   }
@@ -138,7 +137,6 @@ async function resolveUser(){
 }
 
 async function load(){
-
   instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
   bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
@@ -150,13 +148,25 @@ async function load(){
   render();
 }
 
+function weekDates(){
+  const today = new Date();
+  const monday = new Date(today);
+  const diff = (today.getDay()===0?-6:1-today.getDay());
+  monday.setDate(today.getDate()+diff + weekOffset*7);
+
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(monday);
+    d.setDate(monday.getDate()+i);
+    return d;
+  });
+}
+
 function render(){
   renderInstr();
   renderCalendar();
 }
 
 function renderInstr(){
-
   const el = document.getElementById("instr");
 
   if(!currentUserName){
@@ -184,28 +194,36 @@ window.selectInstr = function(id){
 function renderCalendar(){
 
   const cal = document.getElementById("calendar");
-  cal.innerHTML = "";
+  cal.innerHTML="";
 
-  if(!currentInstr){
-    cal.innerHTML = "<div>No instrument selected</div>";
-    return;
-  }
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const dates=weekDates();
+  const todayStr = new Date().toISOString().split("T")[0];
 
-  for(let h=0; h<24; h++){
+  cal.appendChild(document.createElement("div"));
 
-    const t = document.createElement("div");
+  days.forEach((d,i)=>{
+    const h=document.createElement("div");
+    const dateStr = dates[i].toISOString().split("T")[0];
+    h.className="cell header" + (dateStr===todayStr?" today":"");
+    h.innerHTML=`${d}<div class="date">${dateStr}</div>`;
+    cal.appendChild(h);
+  });
+
+  for(let h=0;h<24;h++){
+    const t=document.createElement("div");
     t.className="cell time";
-    t.textContent = h+":00";
+    t.textContent=h+":00";
     cal.appendChild(t);
 
-    for(let d=0; d<7; d++){
-
-      const c = document.createElement("div");
-      c.className="cell";
+    for(let i=0;i<7;i++){
+      const dateStr = dates[i].toISOString().split("T")[0];
+      const c=document.createElement("div");
 
       const b = bookings.find(x =>
-        x.instrument === currentInstr.id &&
-        x.hour === h
+        x.instrument===currentInstr?.id &&
+        x.hour===h &&
+        x.date===dateStr
       );
 
       if(b){
@@ -217,7 +235,7 @@ function renderCalendar(){
         }
 
       } else if(currentUserName){
-        c.onclick = ()=>book(h);
+        c.onclick = ()=>book(h, dateStr);
       }
 
       cal.appendChild(c);
@@ -225,7 +243,7 @@ function renderCalendar(){
   }
 }
 
-async function book(hour){
+async function book(hour,date){
 
   if(!currentUserName){
     alert("Login required");
@@ -238,8 +256,8 @@ async function book(hour){
     body:JSON.stringify({
       id: Date.now().toString(),
       instrument: currentInstr.id,
+      date,
       hour,
-      date: new Date().toISOString().split("T")[0],
       name: currentUserName,
       user_id: currentUser.id
     })
@@ -249,12 +267,10 @@ async function book(hour){
 }
 
 async function deleteBooking(b){
-
   await fetch(`${REST}/bookings?id=eq.${b.id}`,{
     method:"DELETE",
     headers:HEADERS
   });
-
   await load();
 }
 
