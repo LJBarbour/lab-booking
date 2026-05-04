@@ -8,7 +8,7 @@
 
 <style>
 body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
-aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
+aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; overflow-y:auto; }
 h3 { font-size:11px; text-transform:uppercase; color:#8a8f9c; margin-bottom:10px; }
 
 button {
@@ -19,6 +19,7 @@ button {
   background:none;
   text-align:left;
   cursor:pointer;
+  border-radius:6px;
 }
 
 button:hover { background:#f0f3ff; }
@@ -28,28 +29,14 @@ button.active {
   font-weight:600;
   border-left:4px solid #4a6cf7;
   padding-left:6px;
-  border-radius:4px;
 }
 
-#instr-image {
-  width:100%;
-  max-width:140px;
-  margin-top:10px;
-  border-radius:6px;
-}
+#instr-image { width:100%; max-width:140px; margin-top:10px; border-radius:6px; }
 
-main { padding:24px; }
+main { padding:24px; overflow-y:auto; }
 
-.week-nav {
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.week-nav button {
-  width:auto;
-  padding:6px 10px;
-}
+.week-nav { display:flex; gap:10px; margin-bottom:10px; }
+.week-nav button { width:auto; padding:6px 10px; }
 
 .calendar {
   display:grid;
@@ -69,167 +56,85 @@ main { padding:24px; }
   position:relative;
 }
 
-.header {
-  background:#fafbff;
-  flex-direction:column;
-  height:50px;
-}
-
-.date {
-  font-size:14px;
-  font-weight:600;
-  color:#444;
-}
-
+.header { background:#fafbff; flex-direction:column; height:50px; }
+.date { font-size:14px; font-weight:600; color:#444; }
 .header.today-col { background:#ffe082; }
-
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
-
 .cell.clickable:hover { background:#eef2ff; cursor:pointer; }
 .cell.needs-login:hover { background:#fff8e1; cursor:pointer; }
 
 .booking-box {
-  position:absolute;
-  inset:1px;
-  background:#dbe7ff;
-  border-radius:6px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
+  position:absolute; inset:1px;
+  background:#dbe7ff; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; font-size:11px;
+  overflow:hidden; padding:0 3px; text-align:center;
 }
-
 .booking-box.mine { background:#d7f5e3; cursor:pointer; }
 .booking-box.past { background:#e0e0e0; color:#888; }
-
 .past-cell { background:#f0f0f0; color:#999; }
 
-/* ── User area in sidebar ── */
-#user-area { margin-bottom:20px; }
-
+/* User area */
 #user-badge {
-  background:#f0f3ff;
-  border-radius:8px;
-  padding:10px 12px;
-  font-size:14px;
-  font-weight:600;
-  color:#1a1d2e;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+  background:#f0f3ff; border-radius:8px; padding:10px 12px;
+  font-size:14px; font-weight:600; color:#1a1d2e;
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:6px;
 }
-
 #logout-btn {
-  width:auto;
-  padding:4px 10px;
-  font-size:12px;
-  background:#fff;
-  border:1px solid #d0d4e0;
-  border-radius:6px;
-  color:#555;
-  cursor:pointer;
-  margin-bottom:0;
+  width:auto; padding:4px 10px; font-size:12px;
+  background:#fff; border:1px solid #d0d4e0; border-radius:6px;
+  color:#555; cursor:pointer; margin-bottom:0;
 }
-
 #logout-btn:hover { background:#ffeaea; color:#d32f2f; border-color:#f5b8b8; }
 
 #login-btn-sidebar {
-  width:100%;
-  padding:10px;
-  background:#4a6cf7;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  font-size:14px;
-  font-weight:600;
-  cursor:pointer;
-  text-align:center;
-  margin-bottom:0;
+  width:100%; padding:11px; background:#4a6cf7; color:#fff;
+  border:none; border-radius:8px; font-size:14px; font-weight:600;
+  cursor:pointer; text-align:center; margin-bottom:8px;
 }
-
 #login-btn-sidebar:hover { background:#3a5ce0; }
 
-/* ── Login modal ── */
+#readonly-notice { font-size:12px; color:#9aa0ad; line-height:1.5; margin-bottom:16px; }
+
+/* Login modal */
 #login-modal {
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.45);
-  z-index:100;
-  align-items:center;
-  justify-content:center;
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.45); z-index:100;
+  align-items:center; justify-content:center;
 }
-
 #login-modal.visible { display:flex; }
-
 #login-box {
-  background:#fff;
-  border-radius:14px;
-  padding:36px 40px;
-  width:340px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.18);
-  position:relative;
+  background:#fff; border-radius:14px; padding:36px 40px;
+  width:340px; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;
 }
-
 #login-box h2 { margin:0 0 24px; font-size:20px; color:#1a1d2e; }
-
 #login-box input {
-  width:100%;
-  padding:10px 12px;
-  margin-bottom:14px;
-  border:1px solid #d0d4e0;
-  border-radius:8px;
-  font-size:14px;
-  box-sizing:border-box;
+  width:100%; padding:10px 12px; margin-bottom:14px;
+  border:1px solid #d0d4e0; border-radius:8px; font-size:14px; box-sizing:border-box;
 }
-
 #login-submit {
-  width:100%;
-  padding:11px;
-  background:#4a6cf7;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  font-size:15px;
-  font-weight:600;
-  cursor:pointer;
-  margin-bottom:0;
+  width:100%; padding:11px; background:#4a6cf7; color:#fff;
+  border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; margin-bottom:0;
 }
-
 #login-submit:hover { background:#3a5ce0; }
-
 #login-error { color:#d32f2f; font-size:13px; margin-top:10px; min-height:18px; }
-
 #modal-close {
-  position:absolute;
-  top:14px; right:16px;
-  background:none;
-  border:none;
-  font-size:20px;
-  color:#aaa;
-  cursor:pointer;
-  width:auto;
-  padding:0;
-  margin:0;
-  line-height:1;
+  position:absolute; top:14px; right:16px; background:none; border:none;
+  font-size:20px; color:#aaa; cursor:pointer; width:auto; padding:0; margin:0; line-height:1;
 }
-
 #modal-close:hover { color:#555; background:none; }
 
-/* ── Read-only notice ── */
-#readonly-notice {
-  font-size:12px;
-  color:#9aa0ad;
-  margin-top:12px;
-  line-height:1.5;
-  display:none;
+/* Error banner */
+#error-banner {
+  display:none; background:#fdecea; border:1px solid #f5b8b8;
+  color:#c62828; padding:10px 14px; border-radius:8px;
+  font-size:13px; margin-bottom:14px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- Login modal -->
 <div id="login-modal">
   <div id="login-box">
     <button id="modal-close" onclick="closeModal()">✕</button>
@@ -244,35 +149,31 @@ main { padding:24px; }
 
 <aside>
   <h3>Researcher</h3>
-  <div id="user-area">
-    <!-- Filled by renderUserArea() -->
-  </div>
+  <div id="user-area"></div>
+
+  <div id="error-banner"></div>
 
   <h3>Instruments</h3>
   <div id="instr"></div>
-
-  <img id="instr-image" src="" alt="">
+  <img id="instr-image" src="" alt="" style="display:none">
 </aside>
 
 <main>
   <h2 id="title"></h2>
-
   <div class="week-nav">
     <button onclick="changeWeek(-1)">← Previous</button>
     <button onclick="goToday()">Today</button>
     <button onclick="changeWeek(1)">Next →</button>
   </div>
-
   <div id="calendar" class="calendar"></div>
+  <div id="cal-message" style="color:#9aa0ad; font-size:14px; margin-top:20px;"></div>
 </main>
 
 <script>
-
 const SUPABASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 const REST = SUPABASE_URL + "/rest/v1";
 const HEADERS = {
   "apikey": SUPABASE_KEY,
@@ -281,9 +182,15 @@ const HEADERS = {
 };
 
 let instruments=[], bookings=[], permissions=[];
-let currentUser = null;   // null = logged out (read-only)
-let currentInstr = null;
-let weekOffset   = 0;
+let currentUser=null, currentInstr=null, weekOffset=0;
+
+// ── Error display ─────────────────────────────────────────────
+
+function showError(msg){
+  const el = document.getElementById("error-banner");
+  el.textContent = msg;
+  el.style.display = msg ? "block" : "none";
+}
 
 // ── Auth ──────────────────────────────────────────────────────
 
@@ -305,50 +212,53 @@ async function doLogin(){
   errEl.textContent = "";
 
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
   if(error){ errEl.textContent = error.message; return; }
 
-  await initAfterAuth(data.user);
-  closeModal();
-}
-
-async function doLogout(){
-  await sb.auth.signOut();
-  currentUser  = null;
-  currentInstr = null;
-  // Re-render sidebar and calendar in read-only mode;
-  // keep instruments visible so people can browse
-  render();
-}
-
-async function initAfterAuth(authUser){
-  const res  = await fetch(`${REST}/users?id=eq.${authUser.id}&select=*`, { headers: HEADERS });
+  const res  = await fetch(`${REST}/users?id=eq.${data.user.id}&select=*`, { headers: HEADERS });
   const rows = await res.json();
 
   if(!rows.length){
-    document.getElementById("login-error").textContent =
-      "No researcher account linked to this login.";
+    errEl.textContent = "No researcher account linked to this login.";
     await sb.auth.signOut();
     return;
   }
 
   currentUser = rows[0].name;
+  closeModal();
+  render();
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser  = null;
+  currentInstr = instruments[0] || null;
   render();
 }
 
 // ── Data ──────────────────────────────────────────────────────
 
 async function load(){
-  [instruments, bookings, permissions] = await Promise.all([
-    fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json()),
-    fetch(`${REST}/bookings?select=*`,    {headers:HEADERS}).then(r=>r.json()),
-    fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json()),
-  ]);
+  showError("");
+  try {
+    const [i, b, p] = await Promise.all([
+      fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/bookings?select=*`,    {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json()),
+    ]);
 
-  // Default to showing the first instrument regardless of login state
-  if(!currentInstr && instruments.length) currentInstr = instruments[0];
+    // Check for Supabase error objects (it returns {code,message} on failure)
+    if(i.code || b.code || p.code){
+      throw new Error((i.message || b.message || p.message) ?? "Database error");
+    }
 
-  render();
+    instruments = i;
+    bookings    = b;
+    permissions = p;
+    currentInstr = instruments[0] || null;
+
+  } catch(err){
+    showError("Could not load data: " + err.message);
+  }
 }
 
 // ── Render ────────────────────────────────────────────────────
@@ -372,16 +282,189 @@ function renderUserArea(){
   } else {
     el.innerHTML = `
       <button id="login-btn-sidebar" onclick="openModal()">Login</button>
-      <div id="readonly-notice" style="display:block">
-        You can browse the calendar without logging in.<br>Log in to make or edit bookings.
-      </div>`;
+      <p id="readonly-notice">Browse the calendar without logging in, or log in to make and edit bookings.</p>`;
   }
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
 
-  // When logged in: show only permitted instruments.
-  // When logged out: show all instruments (read-only browsing).
   const visible = currentUser
-    ? instrume
+    ? instruments.filter(i => permissions.some(p => p.user_id === currentUser && p.instrument_id === i.id))
+    : instruments;
+
+  if(!visible.find(i => currentInstr && i.id === currentInstr.id)){
+    currentInstr = visible[0] || null;
+  }
+
+  el.innerHTML = visible.length
+    ? visible.map(i =>
+        `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}"
+                 onclick="selectInstr('${i.id}')">${i.name}</button>`
+      ).join("")
+    : `<p style="font-size:13px;color:#9aa0ad">No instruments available.</p>`;
+}
+
+function selectInstr(id){
+  currentInstr = instruments.find(i=>i.id===id);
+  render();
+}
+
+function renderTitle(){
+  document.getElementById("title").textContent = currentInstr?.description || "";
+}
+
+function renderImage(){
+  const img = document.getElementById("instr-image");
+  if(currentInstr){
+    img.src = currentInstr.id + ".jpg";
+    img.style.display = "block";
+  } else {
+    img.style.display = "none";
+  }
+}
+
+function norm(s){ return (s||"").trim().toLowerCase(); }
+function goToday(){ weekOffset=0; renderCalendar(); }
+function changeWeek(delta){ weekOffset+=delta; renderCalendar(); }
+
+function weekDates(){
+  const today=new Date();
+  const diff=(today.getDay()===0?-6:1-today.getDay());
+  const monday=new Date(today);
+  monday.setDate(today.getDate()+diff+weekOffset*7);
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(monday); d.setDate(monday.getDate()+i); return d;
+  });
+}
+
+function renderCalendar(){
+  const cal = document.getElementById("calendar");
+  const msg = document.getElementById("cal-message");
+  cal.innerHTML = "";
+  msg.textContent = "";
+
+  if(!currentInstr){
+    msg.textContent = instruments.length
+      ? "Select an instrument to view the calendar."
+      : "No instruments loaded — check your connection.";
+    return;
+  }
+
+  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const dates=weekDates();
+  const now=new Date();
+  const todayStr=now.toISOString().split("T")[0];
+
+  cal.appendChild(document.createElement("div"));
+  days.forEach((d,i)=>{
+    const h=document.createElement("div");
+    const dateStr=dates[i].toISOString().split("T")[0];
+    h.className="cell header"+(dateStr===todayStr?" today-col":"");
+    h.innerHTML=`${d}<div class="date">${dateStr}</div>`;
+    cal.appendChild(h);
+  });
+
+  for(let h=0;h<24;h++){
+    const t=document.createElement("div");
+    t.className="cell time";
+    t.textContent=h.toString().padStart(2,'0')+":00";
+    cal.appendChild(t);
+
+    for(let i=0;i<7;i++){
+      const dateStr=dates[i].toISOString().split("T")[0];
+      const c=document.createElement("div");
+      const slotTime=new Date(dateStr+"T"+h.toString().padStart(2,'0')+":00");
+      const isPast=slotTime<now;
+
+      c.className="cell"+(isPast?" past-cell":"");
+
+      const b=bookings.find(x=>
+        x.instrument===currentInstr.id && x.hour===h && x.date===dateStr
+      );
+
+      if(b){
+        const mine=currentUser && norm(b.name)===norm(currentUser);
+        c.innerHTML=`<div class="booking-box ${mine?'mine':''} ${isPast?'past':''}">${b.name}</div>`;
+        if(mine && !isPast) c.onclick=()=>deleteBooking(b);
+      } else if(!isPast){
+        if(currentUser){
+          c.classList.add("clickable");
+          c.onclick=()=>book(h,dateStr);
+        } else {
+          c.classList.add("needs-login");
+          c.onclick=()=>openModal();
+        }
+      }
+
+      cal.appendChild(c);
+    }
+  }
+}
+
+// ── Booking actions ───────────────────────────────────────────
+
+async function book(hour,date){
+  if(!currentUser){ openModal(); return; }
+
+  const now=new Date();
+  const slotTime=new Date(date+"T"+hour.toString().padStart(2,'0')+":00");
+  if(slotTime<now){ alert("Cannot book in the past"); return; }
+
+  const maxDays=currentInstr.advancedays??999;
+  const maxDate=new Date(); maxDate.setDate(now.getDate()+maxDays);
+  if(slotTime>maxDate){ alert("Booking too far in advance"); return; }
+
+  const count=bookings.filter(b=>{
+    const t=new Date(b.date+"T"+b.hour.toString().padStart(2,'0')+":00");
+    return norm(b.name)===norm(currentUser) && b.instrument===currentInstr.id && t>=now;
+  }).length;
+
+  if(count>=(currentInstr.maxslot??999)){ alert("Booking limit reached"); return; }
+
+  await fetch(`${REST}/bookings`,{
+    method:"POST", headers:HEADERS,
+    body:JSON.stringify({ id:Date.now().toString(), instrument:currentInstr.id, date, hour, name:currentUser })
+  });
+
+  bookings=await fetch(`${REST}/bookings?select=*`,{headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+async function deleteBooking(b){
+  if(!currentUser){ openModal(); return; }
+  if(!confirm("Delete this booking?")) return;
+
+  await fetch(
+    `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
+    { method:"DELETE", headers:HEADERS }
+  );
+
+  bookings=await fetch(`${REST}/bookings?select=*`,{headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+// ── Boot ─────────────────────────────────────────────────────
+
+(async()=>{
+  // Render login button immediately — before any network calls
+  renderUserArea();
+
+  // Load data and check for existing session in parallel
+  const [, sessionResult] = await Promise.all([
+    load(),
+    sb.auth.getSession()
+  ]);
+
+  const session = sessionResult?.data?.session;
+  if(session?.user){
+    const res  = await fetch(`${REST}/users?id=eq.${session.user.id}&select=*`, { headers: HEADERS });
+    const rows = await res.json();
+    if(rows.length) currentUser = rows[0].name;
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
