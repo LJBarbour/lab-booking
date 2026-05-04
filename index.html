@@ -5,30 +5,70 @@
 <title>Lab Booking Debug</title>
 
 <style>
-body { margin:0; font-family: system-ui; display:grid; grid-template-columns:260px 1fr; height:100vh; }
-aside { padding:20px; border-right:1px solid #ddd; }
-main { padding:20px; }
+body {
+  margin:0;
+  font-family: system-ui;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  height:100vh;
+}
 
-button { width:100%; margin-bottom:10px; padding:8px; }
+aside {
+  padding:20px;
+  border-right:1px solid #ddd;
+  background:#fafafa;
+}
+
+main {
+  padding:20px;
+}
 
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(7,1fr);
-  border:1px solid #ccc;
+  border:2px solid #333;
+  background:white;
 }
 
 .cell {
-  border:1px solid #ccc;
-  height:24px;
+  border:1px solid #999;
+  height:28px;
   display:flex;
   align-items:center;
   justify-content:center;
+  font-size:12px;
 }
 
-.header { height:40px; font-weight:bold; }
-.time { font-size:11px; color:#666; justify-content:flex-end; padding-right:6px; }
+.header {
+  background:#e9ecff;
+  height:50px;
+  font-weight:bold;
+  flex-direction:column;
+}
 
-pre { font-size:11px; background:#f0f0f0; padding:10px; }
+.time {
+  font-size:11px;
+  color:#444;
+  justify-content:flex-end;
+  padding-right:6px;
+  background:#f7f7f7;
+}
+
+.booking {
+  background:#cfe3ff;
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+}
+
+pre {
+  font-size:11px;
+  background:#f0f0f0;
+  padding:10px;
+}
 </style>
 </head>
 
@@ -51,9 +91,8 @@ function log(msg){
   document.getElementById("log").textContent += msg + "\n";
 }
 
-log("VERSION 1.3.12");
+log("VERSION 1.3.13");
 
-// 🔹 REST ONLY (NO SUPABASE CLIENT)
 const REST = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
@@ -82,22 +121,12 @@ function weekDates(){
 async function load(){
 
   log("Loading instruments...");
-
-  try {
-    instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-    log("Instruments: " + instruments.length);
-  } catch(e){
-    log("ERROR instruments: " + e.message);
-  }
+  instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
+  log("Instruments: " + instruments.length);
 
   log("Loading bookings...");
-
-  try {
-    bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-    log("Bookings: " + bookings.length);
-  } catch(e){
-    log("ERROR bookings: " + e.message);
-  }
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  log("Bookings: " + bookings.length);
 
   renderCalendar();
 }
@@ -109,11 +138,6 @@ function renderCalendar(){
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
-  if(!instruments.length){
-    log("No instruments — cannot render");
-    return;
-  }
-
   const currentInstr = instruments[0];
 
   const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -124,7 +148,7 @@ function renderCalendar(){
   days.forEach((d,i)=>{
     const h=document.createElement("div");
     h.className="cell header";
-    h.innerHTML = d + "<br>" + dates[i].toISOString().split("T")[0];
+    h.innerHTML = d + "<div>" + dates[i].toISOString().split("T")[0] + "</div>";
     cal.appendChild(h);
   });
 
@@ -137,6 +161,7 @@ function renderCalendar(){
     for(let i=0;i<7;i++){
       const dateStr = dates[i].toISOString().split("T")[0];
       const c=document.createElement("div");
+      c.className="cell";
 
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
@@ -145,7 +170,7 @@ function renderCalendar(){
       );
 
       if(b){
-        c.textContent = b.name;
+        c.innerHTML = `<div class="booking">${b.name}</div>`;
       }
 
       cal.appendChild(c);
@@ -155,7 +180,7 @@ function renderCalendar(){
   log("Calendar rendered");
 }
 
-// 🔥 RUN
+// RUN
 load();
 
 </script>
