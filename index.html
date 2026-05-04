@@ -2,215 +2,30 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Lab Booking</title>
+<title>Layout Test</title>
 
 <style>
-body { 
-  margin:0; 
-  font-family: system-ui, -apple-system, sans-serif; 
-  display:grid; 
-  grid-template-columns:260px 1fr; 
-  height:100vh; 
-  background:#f6f7fb; 
-}
-
-aside { 
-  background:#ffffff; 
-  border-right:1px solid #e6e8ef; 
-  padding:24px; 
-}
-
-h3 { 
-  font-size:11px; 
-  text-transform:uppercase; 
-  color:#8a8f9c; 
-  margin-bottom:10px; 
-}
-
-button {
-  width:100%;
-  padding:10px;
-  margin-bottom:6px;
-  border:none;
-  background:none;
-  text-align:left;
-  cursor:pointer;
-}
-
-button:hover { background:#f0f3ff; }
-
-button.active {
-  background:#dbe7ff;
-  font-weight:600;
-  border-left:4px solid #4a6cf7;
-  padding-left:6px;
-  border-radius:4px;
-}
-
-main { padding:24px; }
-
-.calendar {
+body {
+  margin:0;
   display:grid;
-  grid-template-columns:60px repeat(7,1fr);
-  border:1px solid #e6e8ef;
-  border-radius:12px;
-  overflow:hidden;
-  background:#fff;
+  grid-template-columns:260px 1fr;
+  height:100vh;
 }
 
-.cell {
-  border:1px solid #e6e8ef;
-  height:26px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
+aside {
+  background:red;
 }
 
-.header {
-  background:#fafbff;
-  flex-direction:column;
-  height:50px;
-}
-
-.date {
-  font-size:14px;
-  font-weight:600;
-  color:#444;
-}
-
-.time { 
-  font-size:11px; 
-  color:#9aa0ad; 
-  justify-content:flex-end; 
-  padding-right:8px; 
-}
-
-.booking-box {
-  position:absolute;
-  inset:1px;
-  background:#dbe7ff;
-  border-radius:6px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+main {
+  background:blue;
 }
 </style>
 </head>
 
 <body>
 
-<aside>
-  <h3>Instruments</h3>
-  <div id="instr"></div>
-</aside>
+<aside>LEFT PANEL</aside>
+<main>RIGHT PANEL</main>
 
-<main>
-  <h2 id="title"></h2>
-  <div id="calendar" class="calendar"></div>
-</main>
-
-<script>
-
-// EXACT ORIGINAL DATA ACCESS
-const REST = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
-
-const HEADERS = {
-  "apikey": KEY,
-  "Authorization": `Bearer ${KEY}`,
-  "Content-Type": "application/json"
-};
-
-let instruments = [];
-let bookings = [];
-let currentInstr = null;
-
-function weekDates(){
-  const today = new Date();
-  const monday = new Date(today);
-  const diff = (today.getDay()===0?-6:1-today.getDay());
-  monday.setDate(today.getDate()+diff);
-
-  return Array.from({length:7},(_,i)=>{
-    const d=new Date(monday);
-    d.setDate(monday.getDate()+i);
-    return d;
-  });
-}
-
-async function load(){
-
-  instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-
-  currentInstr = instruments[0];
-
-  render();
-}
-
-function render(){
-  renderInstr();
-  renderCalendar();
-}
-
-function renderInstr(){
-  const el = document.getElementById("instr");
-
-  el.innerHTML = instruments.map(i =>
-    `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
-  ).join("");
-}
-
-function selectInstr(id){
-  currentInstr = instruments.find(i=>i.id===id);
-  render();
-}
-
-function renderCalendar(){
-
-  const cal = document.getElementById("calendar");
-  cal.innerHTML="";
-
-  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  const dates=weekDates();
-
-  cal.appendChild(document.createElement("div"));
-
-  days.forEach((d,i)=>{
-    const h=document.createElement("div");
-    h.className="cell header";
-    h.innerHTML = `${d}<div class="date">${dates[i].toISOString().split("T")[0]}</div>`;
-    cal.appendChild(h);
-  });
-
-  for(let h=0;h<24;h++){
-    const t=document.createElement("div");
-    t.className="cell time";
-    t.textContent=h.toString().padStart(2,'0')+":00";
-    cal.appendChild(t);
-
-    for(let i=0;i<7;i++){
-      const dateStr = dates[i].toISOString().split("T")[0];
-      const c=document.createElement("div");
-
-      const b = bookings.find(x =>
-        x.instrument===currentInstr.id &&
-        x.hour===h &&
-        x.date===dateStr
-      );
-
-      if(b){
-        c.innerHTML = `<div class="booking-box">${b.name}</div>`;
-      }
-
-      cal.appendChild(c);
-    }
-  }
-}
-
-load();
-
-</script>
 </body>
 </html>
