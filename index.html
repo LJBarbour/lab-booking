@@ -90,12 +90,20 @@ main { padding:24px; }
   cursor:pointer;
 }
 
+.booking-box.past {
+  background:#e0e0e0;
+  color:#888;
+}
+
 .past-cell {
   background:#f0f0f0;
   color:#999;
 }
 
-#auth { margin-bottom:20px; font-size:12px; }
+#auth {
+  margin-bottom:20px;
+  font-size:12px;
+}
 </style>
 </head>
 
@@ -110,7 +118,7 @@ main { padding:24px; }
 </div>
 
 <h3>Researcher</h3>
-<select id="user" disabled></select>
+<select id="user"></select>
 
 <h3>Instruments</h3>
 <div id="instr"></div>
@@ -130,8 +138,6 @@ main { padding:24px; }
 </main>
 
 <script>
-
-console.log("VERSION: 1.4.7");
 
 const BASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 const REST = BASE_URL + "/rest/v1";
@@ -180,8 +186,6 @@ async function load(){
   render();
 }
 
-// ---------------- AUTH ----------------
-
 async function login(){
   const email = prompt("Email:");
   const password = prompt("Password:");
@@ -206,49 +210,57 @@ async function login(){
   currentUser = row[0].name;
   loggedIn = true;
 
+  // disable dropdown
+  document.getElementById("user").disabled = true;
+
   render();
 }
 
 async function logout(){
   await sb.auth.signOut();
   loggedIn = false;
-  document.getElementById("user-email").textContent = "Not logged in";
   currentUser = users[0]?.name;
+  document.getElementById("user-email").textContent = "Not logged in";
+  document.getElementById("user").disabled = false;
   render();
 }
 
-// ---------------- RENDER ----------------
-
 function render(){
-  renderUserDisplay();
+  renderUsers();
   renderInstr();
   renderTitle();
   renderCalendar();
 }
 
-function renderUserDisplay(){
+function renderUsers(){
   const el = document.getElementById("user");
-  el.innerHTML = `<option>${loggedIn ? currentUser : "Not logged in"}</option>`;
+  el.innerHTML = users.map(u =>
+    `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
+  ).join("");
+
+  el.onchange = e => {
+    if(!loggedIn){
+      currentUser = e.target.value;
+      render();
+    }
+  };
 }
 
-// 🔥 KEY CHANGE: instruments depend on login
 function renderInstr(){
   const el = document.getElementById("instr");
 
-  const visible = loggedIn
-    ? instruments.filter(i =>
-        permissions.some(p =>
-          p.user_id === currentUser &&
-          p.instrument_id === i.id
-        )
-      )
-    : instruments;
+  const allowed = instruments.filter(i =>
+    permissions.some(p =>
+      p.user_id === currentUser &&
+      p.instrument_id === i.id
+    )
+  );
 
-  if (!visible.find(i => currentInstr && i.id === currentInstr.id)) {
-    currentInstr = visible[0] || null;
+  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
+    currentInstr = allowed[0] || null;
   }
 
-  el.innerHTML = visible.map(i =>
+  el.innerHTML = allowed.map(i =>
     `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
@@ -262,7 +274,6 @@ function renderTitle(){
   document.getElementById("title").textContent = currentInstr?.description || "";
 }
 
-// 🔥 KEY CHANGE: interaction depends on login
 function renderCalendar(){
 
   const cal = document.getElementById("calendar");
@@ -271,13 +282,15 @@ function renderCalendar(){
   const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const dates=weekDates();
   const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
 
   cal.appendChild(document.createElement("div"));
 
   days.forEach((d,i)=>{
     const h=document.createElement("div");
     const dateStr = dates[i].toISOString().split("T")[0];
-    h.className="cell header";
+    const isToday = dateStr === todayStr;
+    h.className = "cell header" + (isToday ? " today-col" : "");
     h.innerHTML = `${d}<div class="date">${dateStr}</div>`;
     cal.appendChild(h);
   });
@@ -295,6 +308,8 @@ function renderCalendar(){
       const slotTime = new Date(dateStr + "T" + h.toString().padStart(2,'0') + ":00");
       const isPast = slotTime < now;
 
+      c.className="cell" + (isPast ? " past-cell" : "");
+
       const b = bookings.find(x =>
         x.instrument===currentInstr.id &&
         x.hour===h &&
@@ -303,9 +318,10 @@ function renderCalendar(){
 
       if(b){
         const mine = norm(b.name) === norm(currentUser);
-        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
+        const pastClass = isPast ? "past" : "";
+        c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''} ${pastClass}">${b.name}</div>`;
 
-        if(loggedIn && mine && !isPast){
+        if(mine && !isPast){
           c.onclick = () => deleteBooking(b);
         }
 
