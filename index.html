@@ -100,7 +100,10 @@ main { padding:24px; }
   color:#999;
 }
 
-#auth { margin-bottom:20px; font-size:12px; }
+#auth {
+  margin-bottom:20px;
+  font-size:12px;
+}
 </style>
 </head>
 
@@ -136,7 +139,7 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.4.2");
+console.log("VERSION: 1.4.3");
 
 const SUPABASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 const REST = SUPABASE_URL + "/rest/v1";
@@ -184,8 +187,7 @@ async function load(){
   bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
   permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
 
-  currentInstr = instruments[0] || null;
-
+  currentInstr = instruments[0];
   render();
 }
 
@@ -238,31 +240,26 @@ function render(){
 
 function renderUserDisplay(){
   const el = document.getElementById("user");
-
-  if(loggedIn && currentUser){
-    el.innerHTML = `<option>${currentUser}</option>`;
-  } else {
-    el.innerHTML = `<option>Not logged in</option>`;
-  }
+  el.innerHTML = loggedIn && currentUser ? `<option>${currentUser}</option>` : `<option>Not logged in</option>`;
 }
 
 function renderInstr(){
   const el = document.getElementById("instr");
 
-  const allowed = loggedIn
+  const visible = loggedIn
     ? instruments.filter(i =>
         permissions.some(p =>
           p.user_id === currentUser &&
           p.instrument_id === i.id
         )
       )
-    : [];
+    : instruments;
 
-  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
-    currentInstr = allowed[0] || null;
+  if (!visible.find(i => currentInstr && i.id === currentInstr.id)) {
+    currentInstr = visible[0] || null;
   }
 
-  el.innerHTML = allowed.map(i =>
+  el.innerHTML = visible.map(i =>
     `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
@@ -279,10 +276,10 @@ function renderTitle(){
 function renderCalendar(){
 
   const cal = document.getElementById("calendar");
-  cal.innerHTML = "";
+  cal.innerHTML="";
 
-  const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-  const dates = weekDates();
+  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const dates=weekDates();
   const now = new Date();
 
   cal.appendChild(document.createElement("div"));
@@ -295,7 +292,7 @@ function renderCalendar(){
     cal.appendChild(h);
   });
 
-  for(let h=0; h<24; h++){
+  for(let h=0;h<24;h++){
     const t=document.createElement("div");
     t.className="cell time";
     t.textContent=h.toString().padStart(2,'0')+":00";
@@ -317,11 +314,47 @@ function renderCalendar(){
       if(b){
         const mine = norm(b.name) === norm(currentUser);
         c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
+
+        if(loggedIn && mine && !isPast){
+          c.onclick = () => deleteBooking(b);
+        }
+
+      } else if(loggedIn && !isPast){
+        c.classList.add("clickable");
+        c.onclick = () => book(h, dateStr);
       }
 
       cal.appendChild(c);
     }
   }
+}
+
+async function deleteBooking(b){
+  await fetch(`${REST}/bookings?id=eq.${b.id}`,{
+    method:"DELETE",
+    headers:HEADERS
+  });
+
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+async function book(hour,date){
+
+  await fetch(`${REST}/bookings`,{
+    method:"POST",
+    headers:HEADERS,
+    body:JSON.stringify({
+      id: Date.now().toString(),
+      instrument: currentInstr.id,
+      date,
+      hour,
+      name: currentUser
+    })
+  });
+
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
 }
 
 load();
