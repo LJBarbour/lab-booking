@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <title>Lab Booking</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
 aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
@@ -90,17 +88,15 @@ main { padding:24px; }
   cursor:pointer;
 }
 
-.booking-box.past {
-  background:#e0e0e0;
-  color:#888;
-}
-
 .past-cell {
   background:#f0f0f0;
   color:#999;
 }
 
-#auth { margin-bottom:20px; font-size:12px; }
+#auth {
+  margin-bottom:20px;
+  font-size:12px;
+}
 </style>
 </head>
 
@@ -136,10 +132,9 @@ main { padding:24px; }
 
 <script>
 
-console.log("VERSION: 1.4.4");
+console.log("VERSION: 1.4.5 (stable)");
 
-const SUPABASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
-const REST = SUPABASE_URL + "/rest/v1";
+const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co/rest/v1";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
 
 const HEADERS = {
@@ -147,8 +142,6 @@ const HEADERS = {
   "Authorization": `Bearer ${KEY}`,
   "Content-Type": "application/json"
 };
-
-const sb = window.supabase.createClient(SUPABASE_URL, KEY);
 
 let users=[], instruments=[], bookings=[], permissions=[];
 let currentUser=null, currentInstr=null;
@@ -174,14 +167,35 @@ function weekDates(){
 }
 
 async function load(){
-  users = await fetch(`${REST}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
-  instruments = await fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  permissions = await fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
+  users = await fetch(`${URL}/users?select=*`, {headers:HEADERS}).then(r=>r.json());
+  instruments = await fetch(`${URL}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json());
+  bookings = await fetch(`${URL}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  permissions = await fetch(`${URL}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json());
 
   currentUser = users[0]?.name;
   currentInstr = instruments[0];
 
+  render();
+}
+
+// ⚠️ TEMP LOGIN (no Supabase client)
+function login(){
+  const name = prompt("Enter your name exactly as in system:");
+  if(!users.find(u => norm(u.name) === norm(name))){
+    alert("User not found");
+    return;
+  }
+
+  currentUser = name;
+  loggedIn = true;
+  document.getElementById("user-email").textContent = name;
+  render();
+}
+
+function logout(){
+  loggedIn = false;
+  currentUser = users[0]?.name;
+  document.getElementById("user-email").textContent = "Not logged in";
   render();
 }
 
@@ -192,21 +206,14 @@ function render(){
   renderCalendar();
 }
 
-// 🔒 ONLY CHANGE: disable dropdown when logged in
 function renderUsers(){
   const el = document.getElementById("user");
+
   el.innerHTML = users.map(u =>
     `<option value="${u.name}" ${u.name===currentUser?"selected":""}>${u.name}</option>`
   ).join("");
 
   el.disabled = loggedIn;
-
-  el.onchange = e => {
-    if(!loggedIn){
-      currentUser = e.target.value;
-      render();
-    }
-  };
 }
 
 function renderInstr(){
@@ -278,83 +285,11 @@ function renderCalendar(){
       if(b){
         const mine = norm(b.name) === norm(currentUser);
         c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
-
-        if(mine && !isPast){
-          c.onclick = () => deleteBooking(b);
-        }
-
-      } else if(!isPast){
-        c.classList.add("clickable");
-        c.onclick = () => book(h, dateStr);
       }
 
       cal.appendChild(c);
     }
   }
-}
-
-// 🔐 AUTH ONLY SETS currentUser — NOTHING ELSE
-async function login(){
-  const email = prompt("Email:");
-  const password = prompt("Password:");
-
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
-  if(error){
-    alert(error.message);
-    return;
-  }
-
-  document.getElementById("user-email").textContent = email;
-
-  const res = await fetch(`${REST}/users?auth_id=eq.${data.user.id}`, {headers:HEADERS});
-  const row = await res.json();
-
-  if(!row.length){
-    alert("No matching user record");
-    return;
-  }
-
-  currentUser = row[0].name;
-  loggedIn = true;
-
-  render();
-}
-
-async function logout(){
-  await sb.auth.signOut();
-  loggedIn = false;
-  currentUser = users[0]?.name;
-  document.getElementById("user-email").textContent = "Not logged in";
-  render();
-}
-
-async function deleteBooking(b){
-  await fetch(`${REST}/bookings?id=eq.${b.id}`,{
-    method:"DELETE",
-    headers:HEADERS
-  });
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-async function book(hour,date){
-
-  await fetch(`${REST}/bookings`,{
-    method:"POST",
-    headers:HEADERS,
-    body:JSON.stringify({
-      id: Date.now().toString(),
-      instrument: currentInstr.id,
-      date,
-      hour,
-      name: currentUser
-    })
-  });
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
 }
 
 load();
