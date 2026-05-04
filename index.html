@@ -95,10 +95,7 @@ main { padding:24px; }
   color:#999;
 }
 
-#auth {
-  margin-bottom:20px;
-  font-size:12px;
-}
+#auth { margin-bottom:20px; font-size:12px; }
 </style>
 </head>
 
@@ -134,7 +131,7 @@ main { padding:24px; }
 
 <script>
 
-// ---------------- CONFIG ----------------
+console.log("VERSION: 1.4.7");
 
 const BASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 const REST = BASE_URL + "/rest/v1";
@@ -146,14 +143,12 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-// ---------------- STATE ----------------
+const sb = window.supabase.createClient(BASE_URL, KEY);
 
 let users=[], instruments=[], bookings=[], permissions=[];
 let currentUser=null, currentInstr=null;
 let weekOffset = 0;
 let loggedIn = false;
-
-// ---------------- CORE APP (UNCHANGED) ----------------
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -185,22 +180,9 @@ async function load(){
   render();
 }
 
-// ---------------- AUTH (SAFE) ----------------
-
-let sb = null;
-
-setTimeout(() => {
-  try {
-    sb = window.supabase.createClient(BASE_URL, KEY);
-    console.log("Auth ready");
-  } catch(e) {
-    console.warn("Auth init failed");
-  }
-}, 0);
+// ---------------- AUTH ----------------
 
 async function login(){
-  if(!sb){ alert("Auth not ready"); return; }
-
   const email = prompt("Email:");
   const password = prompt("Password:");
 
@@ -228,14 +210,14 @@ async function login(){
 }
 
 async function logout(){
-  if(sb){ await sb.auth.signOut(); }
+  await sb.auth.signOut();
   loggedIn = false;
   document.getElementById("user-email").textContent = "Not logged in";
   currentUser = users[0]?.name;
   render();
 }
 
-// ---------------- RENDER (UNCHANGED) ----------------
+// ---------------- RENDER ----------------
 
 function render(){
   renderUserDisplay();
@@ -249,21 +231,24 @@ function renderUserDisplay(){
   el.innerHTML = `<option>${loggedIn ? currentUser : "Not logged in"}</option>`;
 }
 
+// 🔥 KEY CHANGE: instruments depend on login
 function renderInstr(){
   const el = document.getElementById("instr");
 
-  const allowed = instruments.filter(i =>
-    permissions.some(p =>
-      p.user_id === currentUser &&
-      p.instrument_id === i.id
-    )
-  );
+  const visible = loggedIn
+    ? instruments.filter(i =>
+        permissions.some(p =>
+          p.user_id === currentUser &&
+          p.instrument_id === i.id
+        )
+      )
+    : instruments;
 
-  if (!allowed.find(i => currentInstr && i.id === currentInstr.id)) {
-    currentInstr = allowed[0] || null;
+  if (!visible.find(i => currentInstr && i.id === currentInstr.id)) {
+    currentInstr = visible[0] || null;
   }
 
-  el.innerHTML = allowed.map(i =>
+  el.innerHTML = visible.map(i =>
     `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}" onclick="selectInstr('${i.id}')">${i.name}</button>`
   ).join("");
 }
@@ -277,7 +262,9 @@ function renderTitle(){
   document.getElementById("title").textContent = currentInstr?.description || "";
 }
 
+// 🔥 KEY CHANGE: interaction depends on login
 function renderCalendar(){
+
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
@@ -317,6 +304,14 @@ function renderCalendar(){
       if(b){
         const mine = norm(b.name) === norm(currentUser);
         c.innerHTML = `<div class="booking-box ${mine ? 'mine' : ''}">${b.name}</div>`;
+
+        if(loggedIn && mine && !isPast){
+          c.onclick = () => deleteBooking(b);
+        }
+
+      } else if(loggedIn && !isPast){
+        c.classList.add("clickable");
+        c.onclick = () => book(h, dateStr);
       }
 
       cal.appendChild(c);
@@ -324,7 +319,32 @@ function renderCalendar(){
   }
 }
 
-// ---------------- START ----------------
+async function deleteBooking(b){
+  await fetch(`${REST}/bookings?id=eq.${b.id}`,{
+    method:"DELETE",
+    headers:HEADERS
+  });
+
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+async function book(hour,date){
+  await fetch(`${REST}/bookings`,{
+    method:"POST",
+    headers:HEADERS,
+    body:JSON.stringify({
+      id: Date.now().toString(),
+      instrument: currentInstr.id,
+      date,
+      hour,
+      name: currentUser
+    })
+  });
+
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
 
 load();
 
