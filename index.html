@@ -90,6 +90,11 @@ main { padding:24px; }
   cursor:pointer;
 }
 
+.booking-box.past {
+  background:#e0e0e0;
+  color:#888;
+}
+
 .past-cell {
   background:#f0f0f0;
   color:#999;
@@ -110,7 +115,7 @@ main { padding:24px; }
 </div>
 
 <h3>Researcher</h3>
-<select id="user" disabled></select>
+<select id="user"></select>
 
 <h3>Instruments</h3>
 <div id="instr"></div>
@@ -146,7 +151,6 @@ const sb = window.supabase.createClient(BASE_URL, KEY);
 let users=[], instruments=[], bookings=[], permissions=[];
 let currentUser=null, currentInstr=null;
 let weekOffset = 0;
-let loggedIn = false;
 
 function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -178,7 +182,7 @@ async function load(){
   render();
 }
 
-// 🔥 FIX IS HERE
+// 🔥 ONLY FIX IS HERE
 async function login(){
   const email = prompt("Email:");
   const password = prompt("Password:");
@@ -201,19 +205,13 @@ async function login(){
   }
 
   currentUser = row[0].name;
-  loggedIn = true;
-
-  document.getElementById("user").disabled = true;
-
   render();
 }
 
 async function logout(){
   await sb.auth.signOut();
-  loggedIn = false;
   currentUser = users[0]?.name;
   document.getElementById("user-email").textContent = "Not logged in";
-  document.getElementById("user").disabled = false;
   render();
 }
 
@@ -260,6 +258,7 @@ function renderTitle(){
 }
 
 function renderCalendar(){
+
   const cal = document.getElementById("calendar");
   cal.innerHTML="";
 
