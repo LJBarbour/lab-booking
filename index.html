@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Lab Booking</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 body { margin:0; font-family: system-ui, -apple-system, sans-serif; display:grid; grid-template-columns:260px 1fr; height:100vh; background:#f6f7fb; }
 aside { background:#ffffff; border-right:1px solid #e6e8ef; padding:24px; }
@@ -19,6 +21,8 @@ button {
   cursor:pointer;
 }
 
+button:hover { background:#f0f3ff; }
+
 button.active {
   background:#dbe7ff;
   font-weight:600;
@@ -31,6 +35,8 @@ main { padding:24px; }
   display:grid;
   grid-template-columns:60px repeat(7,1fr);
   border:1px solid #e6e8ef;
+  border-radius:12px;
+  overflow:hidden;
   background:#fff;
 }
 
@@ -49,7 +55,11 @@ main { padding:24px; }
   height:50px;
 }
 
-.date { font-size:14px; }
+.date {
+  font-size:14px;
+  font-weight:600;
+  color:#444;
+}
 
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
 
@@ -57,14 +67,17 @@ main { padding:24px; }
   position:absolute;
   inset:1px;
   background:#dbe7ff;
+  border-radius:6px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
-.mine { background:#d7f5e3; }
+.booking-box.mine {
+  background:#d7f5e3;
+}
 
-#auth { margin-bottom:20px; }
+#auth { margin-bottom:20px; font-size:12px; }
 </style>
 </head>
 
@@ -73,11 +86,9 @@ main { padding:24px; }
 <aside>
 
 <div id="auth">
-<button id="initBtn">Init</button>
-<button id="loginBtn">Login</button>
-<button id="logoutBtn">Logout</button>
+<button onclick="login()">Login</button>
+<button onclick="logout()">Logout</button>
 <div id="user-email">Not logged in</div>
-<div id="user-name"></div>
 </div>
 
 <h3>Instruments</h3>
@@ -90,11 +101,9 @@ main { padding:24px; }
 <div id="calendar" class="calendar"></div>
 </main>
 
-<script type="module">
+<script>
 
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-console.log("VERSION 1.3.6");
+console.log("VERSION 1.3.7");
 
 const URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
@@ -107,42 +116,35 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let sb;
-let currentUserName = null;
+const sb = window.supabase.createClient(URL, KEY);
 
 let instruments=[], bookings=[], permissions=[];
 let currentInstr=null;
+let currentUserName=null;
 
-function norm(s){ return (s || "").toLowerCase(); }
+function norm(s){ return (s || "").trim().toLowerCase(); }
 
-// INIT
-document.getElementById("initBtn").onclick = async () => {
-  sb = createClient(URL, KEY);
-  await resolveUser();
-  await load();
-};
-
-// LOGIN
-document.getElementById("loginBtn").onclick = async () => {
+async function login(){
   const email = prompt("Email:");
   const password = prompt("Password:");
 
   const { error } = await sb.auth.signInWithPassword({ email, password });
 
-  if(error){ alert(error.message); return; }
+  if(error){
+    alert(error.message);
+    return;
+  }
 
   await resolveUser();
-  await load();
-};
+  render();
+}
 
-// LOGOUT
-document.getElementById("logoutBtn").onclick = async () => {
+async function logout(){
   await sb.auth.signOut();
   currentUserName = null;
   document.getElementById("user-email").textContent = "Not logged in";
-  document.getElementById("user-name").textContent = "";
   render();
-};
+}
 
 async function resolveUser(){
   const { data } = await sb.auth.getUser();
@@ -159,7 +161,6 @@ async function resolveUser(){
 
   if(row.length){
     currentUserName = row[0].name;
-    document.getElementById("user-name").textContent = currentUserName;
   }
 }
 
@@ -185,10 +186,10 @@ function renderInstr(){
   ).join("");
 }
 
-window.selectInstr = function(id){
+function selectInstr(id){
   currentInstr = instruments.find(i=>i.id===id);
   render();
-};
+}
 
 function weekDates(){
   const today = new Date();
@@ -246,7 +247,9 @@ function renderCalendar(){
   }
 }
 
-</script>
+// 🔥 THIS LINE FIXES EVERYTHING
+load();
 
+</script>
 </body>
 </html>
