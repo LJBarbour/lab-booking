@@ -46,7 +46,6 @@ body {
   padding: 0 24px;
   gap: 16px;
 }
-
 #topbar .logo {
   font-family: var(--mono);
   font-size: 13px;
@@ -55,16 +54,9 @@ body {
   text-transform: uppercase;
   flex: 1;
 }
-
 #topbar .logo span { color: var(--muted); }
-
-#topbar-user {
-  font-size: 13px;
-  color: var(--muted);
-}
-
+#topbar-user { font-size: 13px; color: var(--muted); }
 #topbar-user strong { color: var(--text); }
-
 #btn-logout {
   font-family: var(--sans);
   font-size: 12px;
@@ -87,7 +79,6 @@ nav {
   flex-direction: column;
   gap: 4px;
 }
-
 .nav-section {
   font-family: var(--mono);
   font-size: 10px;
@@ -96,7 +87,6 @@ nav {
   text-transform: uppercase;
   padding: 14px 10px 6px;
 }
-
 .nav-btn {
   display: flex;
   align-items: center;
@@ -114,16 +104,12 @@ nav {
   width: 100%;
   transition: all .15s;
 }
-.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn:hover  { background: var(--surface2); color: var(--text); }
 .nav-btn.active { background: rgba(79,142,247,.12); color: var(--accent); }
-.nav-btn .icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-btn .icon  { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
 
 /* ── Main ── */
-main {
-  padding: 32px;
-  overflow-y: auto;
-}
-
+main { padding: 32px; overflow-y: auto; }
 .page { display: none; }
 .page.active { display: block; }
 
@@ -135,18 +121,8 @@ main {
   padding-bottom: 20px;
   border-bottom: 1px solid var(--border);
 }
-
-.page-header h1 {
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -.02em;
-}
-
-.page-header p {
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 4px;
-}
+.page-header h1 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
+.page-header p  { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
 /* ── Buttons ── */
 .btn {
@@ -162,39 +138,22 @@ main {
   align-items: center;
   gap: 6px;
 }
-.btn-primary  { background: var(--accent); color: #fff; }
-.btn-primary:hover  { background: #3a7ae0; }
-.btn-danger   { background: rgba(224,92,92,.15); color: var(--danger); border: 1px solid rgba(224,92,92,.3); }
-.btn-danger:hover   { background: rgba(224,92,92,.25); }
-.btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-.btn-ghost:hover    { border-color: var(--accent); color: var(--accent); }
-.btn-success  { background: rgba(76,175,130,.15); color: var(--success); border: 1px solid rgba(76,175,130,.3); }
-.btn-success:hover  { background: rgba(76,175,130,.25); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #3a7ae0; }
+.btn-danger  { background: rgba(224,92,92,.15); color: var(--danger); border: 1px solid rgba(224,92,92,.3); }
+.btn-danger:hover  { background: rgba(224,92,92,.25); }
+.btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover   { border-color: var(--accent); color: var(--accent); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
 
-/* ── Cards / Table ── */
+/* ── Card / Table ── */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
 }
-
-.card-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  font-family: var(--mono);
-}
-
 table { width: 100%; border-collapse: collapse; }
 th {
   text-align: left;
@@ -226,12 +185,7 @@ tr:hover td { background: var(--surface2); }
   color: var(--accent);
   margin: 2px;
 }
-
-.tag-none {
-  color: var(--muted);
-  font-style: italic;
-  font-size: 12px;
-}
+.tag-none { color: var(--muted); font-style: italic; font-size: 12px; }
 
 .color-dot {
   display: inline-block;
@@ -257,13 +211,12 @@ tr:hover td { background: var(--surface2); }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  width: 520px;
+  width: 540px;
   max-width: 95vw;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 24px 64px rgba(0,0,0,.6);
 }
-
 .modal-header {
   padding: 24px 28px 20px;
   border-bottom: 1px solid var(--border);
@@ -277,24 +230,18 @@ tr:hover td { background: var(--surface2); }
   font-size: 20px; cursor: pointer; line-height: 1; padding: 4px;
 }
 .modal-close:hover { color: var(--text); }
-
-.modal-body { padding: 24px 28px; }
-.modal-footer {
-  padding: 16px 28px 24px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
+.modal-body   { padding: 24px 28px; }
+.modal-footer { padding: 16px 28px 24px; display: flex; justify-content: flex-end; gap: 10px; }
 
 /* ── Form ── */
 .form-group { margin-bottom: 18px; }
 .form-group label {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--muted);
   margin-bottom: 7px;
-  letter-spacing: .04em;
+  letter-spacing: .05em;
   text-transform: uppercase;
   font-family: var(--mono);
 }
@@ -316,28 +263,21 @@ tr:hover td { background: var(--surface2); }
   transition: border-color .15s;
   outline: none;
 }
-.form-group input[type=color] {
-  padding: 4px 8px;
-  height: 40px;
-  cursor: pointer;
-}
+.form-group input[type=color] { padding: 4px 8px; height: 40px; cursor: pointer; }
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus { border-color: var(--accent); }
 .form-group textarea { resize: vertical; min-height: 80px; }
+.form-group input:disabled { opacity: .45; cursor: not-allowed; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
 .perm-chip {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border: 1px solid var(--border);
   border-radius: 20px;
   cursor: pointer;
@@ -345,22 +285,65 @@ tr:hover td { background: var(--surface2); }
   transition: all .15s;
   user-select: none;
   background: var(--bg);
+  color: var(--text);
 }
 .perm-chip input { display: none; }
 .perm-chip:hover { border-color: var(--accent); }
 .perm-chip.checked {
-  background: rgba(79,142,247,.12);
+  background: rgba(79,142,247,.15);
   border-color: var(--accent);
   color: var(--accent);
 }
 
-.form-divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 20px 0;
-}
+.form-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
-/* ── Login screen ── */
+/* ── Toggle switch ── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+}
+.toggle-row .toggle-label {
+  font-size: 14px;
+  color: var(--text);
+}
+.toggle-row .toggle-sublabel {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle-switch input { display: none; }
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.toggle-track::after {
+  content: "";
+  position: absolute;
+  left: 3px; top: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s;
+}
+.toggle-switch input:checked + .toggle-track { background: var(--success); }
+.toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
+
+/* ── Login ── */
 #login-screen {
   position: fixed; inset: 0;
   background: var(--bg);
@@ -369,7 +352,6 @@ tr:hover td { background: var(--surface2); }
   justify-content: center;
   z-index: 999;
 }
-
 .login-box {
   width: 380px;
   background: var(--surface);
@@ -378,7 +360,6 @@ tr:hover td { background: var(--surface2); }
   padding: 40px;
   box-shadow: 0 32px 80px rgba(0,0,0,.5);
 }
-
 .login-box .login-logo {
   font-family: var(--mono);
   font-size: 12px;
@@ -387,17 +368,8 @@ tr:hover td { background: var(--surface2); }
   text-transform: uppercase;
   margin-bottom: 8px;
 }
-
-.login-box h1 {
-  font-size: 22px;
-  font-weight: 600;
-  margin-bottom: 28px;
-  letter-spacing: -.02em;
-}
-
+.login-box h1 { font-size: 22px; font-weight: 600; margin-bottom: 28px; letter-spacing: -.02em; }
 .login-box .form-group { margin-bottom: 14px; }
-.login-box .form-group label { font-size: 11px; }
-
 .login-box input {
   width: 100%;
   background: var(--bg);
@@ -411,7 +383,6 @@ tr:hover td { background: var(--surface2); }
   transition: border-color .15s;
 }
 .login-box input:focus { border-color: var(--accent); }
-
 #login-submit {
   width: 100%;
   margin-top: 8px;
@@ -429,7 +400,6 @@ tr:hover td { background: var(--surface2); }
 }
 #login-submit:hover { background: #3a7ae0; }
 #login-submit:disabled { opacity: .5; cursor: not-allowed; }
-
 .login-error {
   color: var(--danger);
   font-size: 13px;
@@ -439,12 +409,7 @@ tr:hover td { background: var(--surface2); }
 }
 
 /* ── Misc ── */
-.empty-state {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--muted);
-  font-size: 14px;
-}
+.empty-state { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 14px; }
 
 .badge-admin {
   font-family: var(--mono);
@@ -458,14 +423,10 @@ tr:hover td { background: var(--surface2); }
   text-transform: uppercase;
 }
 
-.alert {
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 18px;
-}
+.alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
 .alert-error   { background: rgba(224,92,92,.12); border: 1px solid rgba(224,92,92,.3); color: #f08080; }
 .alert-success { background: rgba(76,175,130,.12); border: 1px solid rgba(76,175,130,.3); color: var(--success); }
+.alert-warning { background: rgba(240,160,75,.12); border: 1px solid rgba(240,160,75,.3); color: var(--warning); }
 
 #toast {
   position: fixed;
@@ -480,16 +441,24 @@ tr:hover td { background: var(--surface2); }
   transform: translateY(80px);
   opacity: 0;
   transition: all .25s;
-  max-width: 320px;
+  max-width: 360px;
 }
 #toast.show { transform: translateY(0); opacity: 1; }
-#toast.ok   { border-color: rgba(76,175,130,.4); color: var(--success); }
-#toast.err  { border-color: rgba(224,92,92,.4);  color: var(--danger);  }
+#toast.ok  { border-color: rgba(76,175,130,.4);  color: var(--success); }
+#toast.err { border-color: rgba(224,92,92,.4);   color: var(--danger);  }
+
+a.mailto-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+a.mailto-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 
-<!-- ── Login ─────────────────────────────────── -->
+<!-- ── Login ── -->
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">Lab System</div>
@@ -508,7 +477,7 @@ tr:hover td { background: var(--surface2); }
   </div>
 </div>
 
-<!-- ── Shell ─────────────────────────────────── -->
+<!-- ── Shell ── -->
 <div id="topbar">
   <div class="logo">Lab System <span>/ Admin</span></div>
   <span id="topbar-user"></span>
@@ -570,9 +539,10 @@ tr:hover td { background: var(--surface2); }
             <th>Order</th>
             <th>Name</th>
             <th>Description</th>
+            <th>Status</th>
             <th>Max Slots</th>
             <th>Advance Days</th>
-            <th>Color</th>
+            <th>Colour</th>
             <th></th>
           </tr>
         </thead>
@@ -585,7 +555,6 @@ tr:hover td { background: var(--surface2); }
 
 </main>
 
-<!-- ── Toast ── -->
 <div id="toast"></div>
 
 <!-- ── Modal: Add/Edit User ── -->
@@ -606,13 +575,13 @@ tr:hover td { background: var(--surface2); }
         <div class="form-group">
           <label>Email Address</label>
           <input id="u-email" type="email" placeholder="smith@lab.ac.uk" />
-          <div class="form-hint" id="u-email-hint">Used for login</div>
         </div>
       </div>
 
-      <div class="form-group" id="u-password-group">
-        <label>Password <span id="u-password-label-extra" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(leave blank to keep current)</span></label>
+      <div class="form-group">
+        <label>Password</label>
         <input id="u-password" type="password" placeholder="Min 8 characters" />
+        <div class="form-hint" id="u-pw-hint"></div>
       </div>
 
       <div class="form-group">
@@ -665,8 +634,22 @@ tr:hover td { background: var(--surface2); }
       </div>
 
       <div class="form-group">
-        <label>Terms & Conditions / Notes (tc)</label>
-        <textarea id="i-tc" placeholder="Any usage rules or safety notes…"></textarea>
+        <label>Operational Status</label>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label" id="i-operational-label">Instrument is operational</div>
+            <div class="toggle-sublabel">Turn off to mark this instrument as unavailable</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="i-operational" checked onchange="updateOperationalLabel()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="i-notes" placeholder="Notes about current operational status…"></textarea>
       </div>
 
       <div class="form-row">
@@ -703,7 +686,7 @@ tr:hover td { background: var(--surface2); }
 
 <!-- ── Modal: Confirm Delete ── -->
 <div id="modal-confirm" class="modal-backdrop">
-  <div class="modal" style="width:400px">
+  <div class="modal" style="width:420px">
     <div class="modal-header">
       <h2 id="confirm-title">Confirm Delete</h2>
       <button class="modal-close" onclick="closeModal('modal-confirm')">✕</button>
@@ -719,27 +702,52 @@ tr:hover td { background: var(--surface2); }
 </div>
 
 <script>
-const SUPABASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+// ─────────────────────────────────────────────────────────────────
+//  KEYS
+//  The anon key handles login and all data (REST) operations.
+//  The service role key is required for:
+//    • Creating auth users without a confirmation email
+//    • Listing all auth users (to show emails in the table)
+//    • Resetting any user's password from the admin panel
+//    • Deleting users from Supabase Auth
+//
+//  Where to find it:
+//    Supabase dashboard → Project Settings → API → service_role (secret)
+//
+//  ⚠ This key bypasses Row Level Security. Keep this page private
+//    and behind the admin login — never expose it publicly.
+// ─────────────────────────────────────────────────────────────────
+const SUPABASE_URL     = "https://mqpvnisphntdwhqoiqlt.supabase.co";
+const ANON_KEY         = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+const SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzU3Mzk2MiwiZXhwIjoyMDkzMTQ5OTYyfQ.IzEy0FQJNVSGxfpi2Rl9PCnc3MuQ_bse3JnUyWtCxcE"; // ← paste from Supabase dashboard
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Anon client — for login and all data table operations
+const sb = supabase.createClient(SUPABASE_URL, ANON_KEY);
+
+// Admin client — for auth management only (uses service role key)
+const sbAdmin = supabase.createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
+
 const REST = SUPABASE_URL + "/rest/v1";
 const HEADERS = {
-  "apikey": SUPABASE_KEY,
-  "Authorization": `Bearer ${SUPABASE_KEY}`,
-  "Content-Type": "application/json",
-  "Prefer": "return=representation"
+  "apikey":        ANON_KEY,
+  "Authorization": `Bearer ${ANON_KEY}`,
+  "Content-Type":  "application/json",
+  "Prefer":        "return=representation"
 };
 
 let currentAdminUser = null;
-let allUsers = [], allInstruments = [], allPermissions = [];
+let allUsers         = [];
+let allAuthUsers     = [];   // fetched via admin API — contains emails
+let allInstruments   = [];
+let allPermissions   = [];
 
-// ── Editing state ──
-let editingUserId   = null;  // null = new user
-let editingInstrId  = null;  // null = new instrument
+let editingUserId  = null;
+let editingInstrId = null;
 
 // ═══════════════════════════════════════════
-// AUTH
+//  AUTH
 // ═══════════════════════════════════════════
 
 async function doLogin() {
@@ -747,38 +755,34 @@ async function doLogin() {
   const password = document.getElementById("login-password").value;
   const errEl    = document.getElementById("login-error");
   const btn      = document.getElementById("login-submit");
+
   errEl.textContent = "";
   btn.disabled = true;
   btn.textContent = "Signing in…";
 
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
   if (error) {
     errEl.textContent = error.message;
-    btn.disabled = false;
-    btn.textContent = "Sign In";
+    btn.disabled = false; btn.textContent = "Sign In";
     return;
   }
 
-  // Check admin flag in users table
+  // Verify admin flag in users table
   const res  = await fetch(`${REST}/users?id=eq.${data.user.id}&select=*`, { headers: HEADERS });
   const rows = await res.json();
 
   if (!rows.length || !rows[0].admin) {
     errEl.textContent = "Access denied — admin privileges required.";
     await sb.auth.signOut();
-    btn.disabled = false;
-    btn.textContent = "Sign In";
+    btn.disabled = false; btn.textContent = "Sign In";
     return;
   }
 
   currentAdminUser = { ...rows[0], email: data.user.email };
   document.getElementById("topbar-user").innerHTML =
-    `Logged in as <strong>${currentAdminUser.name}</strong>`;
+    `Logged in as <strong>${esc(currentAdminUser.name)}</strong>`;
   document.getElementById("login-screen").style.display = "none";
-
-  btn.disabled = false;
-  btn.textContent = "Sign In";
+  btn.disabled = false; btn.textContent = "Sign In";
 
   await loadAll();
 }
@@ -792,26 +796,34 @@ async function doLogout() {
 }
 
 // ═══════════════════════════════════════════
-// DATA
+//  DATA
 // ═══════════════════════════════════════════
 
-async function api(path) {
+async function apiGet(path) {
   const r = await fetch(`${REST}/${path}`, { headers: HEADERS });
-  return r.json();
+  const j = await r.json();
+  return Array.isArray(j) ? j : [];
 }
 
 async function loadAll() {
-  [allUsers, allInstruments, allPermissions] = await Promise.all([
-    api("users?select=*"),
-    api("instruments?select=*&order=sortorder.asc.nullslast,name.asc"),
-    api("permissions?select=*"),
+  const [users, instruments, permissions, authResult] = await Promise.all([
+    apiGet("users?select=*"),
+    apiGet("instruments?select=*&order=sortorder.asc.nullslast,name.asc"),
+    apiGet("permissions?select=*"),
+    sbAdmin.auth.admin.listUsers({ perPage: 1000 })
   ]);
+
+  allUsers       = users;
+  allInstruments = instruments;
+  allPermissions = permissions;
+  allAuthUsers   = authResult?.data?.users ?? [];
+
   renderUsers();
   renderInstruments();
 }
 
 // ═══════════════════════════════════════════
-// NAVIGATION
+//  NAVIGATION
 // ═══════════════════════════════════════════
 
 function switchPage(page) {
@@ -822,7 +834,7 @@ function switchPage(page) {
 }
 
 // ═══════════════════════════════════════════
-// TOAST
+//  TOAST
 // ═══════════════════════════════════════════
 
 let toastTimer;
@@ -831,81 +843,92 @@ function toast(msg, type = "ok") {
   el.textContent = (type === "ok" ? "✓  " : "✕  ") + msg;
   el.className = `show ${type}`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.className = "", 3200);
+  toastTimer = setTimeout(() => { el.className = ""; }, 3500);
 }
 
 // ═══════════════════════════════════════════
-// MODALS
+//  MODALS
 // ═══════════════════════════════════════════
 
 function openModal(id)  { document.getElementById(id).classList.add("visible"); }
 function closeModal(id) { document.getElementById(id).classList.remove("visible"); }
 
 function setModalAlert(containerId, msg, type = "error") {
-  const el = document.getElementById(containerId);
-  if (!msg) { el.innerHTML = ""; return; }
-  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  document.getElementById(containerId).innerHTML =
+    msg ? `<div class="alert alert-${type}">${msg}</div>` : "";
 }
 
 // ═══════════════════════════════════════════
-// USERS — RENDER
+//  USERS — RENDER
 // ═══════════════════════════════════════════
+
+function getAuthEmail(userId) {
+  const au = allAuthUsers.find(u => u.id === userId);
+  return au?.email ?? null;
+}
 
 function renderUsers() {
   const tbody = document.getElementById("users-tbody");
+
   if (!allUsers.length) {
     tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No users found.</td></tr>`;
     return;
   }
 
-  // Sort: admins first, then alphabetical
   const sorted = [...allUsers].sort((a, b) => {
     if (a.admin && !b.admin) return -1;
     if (!a.admin && b.admin) return  1;
-    return a.name.localeCompare(b.name);
+    return (a.name || "").localeCompare(b.name || "");
   });
 
   tbody.innerHTML = sorted.map(u => {
-    const perms = allPermissions.filter(p => p.user_id === u.id);
-    const instrNames = perms.map(p => {
-      const ins = allInstruments.find(i => i.id === p.instrument_id);
-      return ins ? `<span class="tag">${ins.name}</span>` : "";
-    }).join("");
+    const email = getAuthEmail(u.id);
+    const emailCell = email
+      ? `<a class="mailto-link" href="mailto:${esc(email)}">${esc(email)}</a>`
+      : `<span class="tag-none">—</span>`;
+
+    const userPerms = allPermissions.filter(p => p.user_id === u.id);
+    const instrTags = userPerms.length
+      ? userPerms.map(p => {
+          const ins = allInstruments.find(i => i.id === p.instrument_id);
+          return ins ? `<span class="tag">${esc(ins.name)}</span>` : "";
+        }).join("")
+      : `<span class="tag-none">No permissions</span>`;
 
     return `<tr>
       <td>
         <strong>${esc(u.name)}</strong>
         ${u.admin ? '<span class="badge-admin" style="margin-left:8px">Admin</span>' : ""}
       </td>
-      <td style="color:var(--muted);font-family:var(--mono);font-size:12px" id="email-${u.id}">—</td>
-      <td>${u.admin ? "Administrator" : "Researcher"}</td>
-      <td>${instrNames || '<span class="tag-none">No permissions</span>'}</td>
+      <td>${emailCell}</td>
+      <td style="color:var(--muted);font-size:12px">${u.admin ? "Administrator" : "Researcher"}</td>
+      <td>${instrTags}</td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="openEditUser('${u.id}')">Edit</button>
-        <button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="confirmDeleteUser('${u.id}')">Delete</button>
+        <button class="btn btn-ghost btn-sm" onclick="openEditUser('${esc(u.id)}')">Edit</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px"
+                onclick="confirmDeleteUser('${esc(u.id)}')">Delete</button>
       </td>
     </tr>`;
   }).join("");
-
-  // Fetch emails from auth — best effort, may not work with anon key without service role
-  // We skip silently if not available
 }
 
 // ═══════════════════════════════════════════
-// USERS — ADD
+//  USERS — OPEN ADD
 // ═══════════════════════════════════════════
 
 function openAddUser() {
   editingUserId = null;
+
   document.getElementById("modal-user-title").textContent = "Add User";
-  document.getElementById("u-save-btn").textContent = "Create User";
-  document.getElementById("u-name").value    = "";
-  document.getElementById("u-email").value   = "";
+  document.getElementById("u-save-btn").textContent       = "Create User";
+  document.getElementById("u-name").value     = "";
+  document.getElementById("u-email").value    = "";
   document.getElementById("u-email").disabled = false;
-  document.getElementById("u-email-hint").textContent = "Used for login";
-  document.getElementById("u-password").value  = "";
-  document.getElementById("u-password-label-extra").style.display = "none";
-  document.getElementById("u-admin").value = "false";
+  document.getElementById("u-password").value = "";
+  document.getElementById("u-pw-hint").textContent =
+    "Required. The user can change this after logging in.";
+  document.getElementById("u-admin").value    = "false";
+
   setModalAlert("modal-user-alert", "");
   buildPermChips(null);
   openModal("modal-user");
@@ -913,7 +936,7 @@ function openAddUser() {
 }
 
 // ═══════════════════════════════════════════
-// USERS — EDIT
+//  USERS — OPEN EDIT
 // ═══════════════════════════════════════════
 
 function openEditUser(userId) {
@@ -921,31 +944,47 @@ function openEditUser(userId) {
   if (!u) return;
 
   editingUserId = userId;
+
   document.getElementById("modal-user-title").textContent = "Edit User";
-  document.getElementById("u-save-btn").textContent = "Save Changes";
-  document.getElementById("u-name").value   = u.name || "";
-  document.getElementById("u-email").value  = "";          // we don't expose email in REST read
+  document.getElementById("u-save-btn").textContent       = "Save Changes";
+  document.getElementById("u-name").value     = u.name || "";
+  document.getElementById("u-email").value    = getAuthEmail(userId) || "";
   document.getElementById("u-email").disabled = true;
-  document.getElementById("u-email-hint").textContent = "Email cannot be changed here — use Supabase Auth dashboard";
   document.getElementById("u-password").value = "";
-  document.getElementById("u-password-label-extra").style.display = "inline";
-  document.getElementById("u-admin").value = u.admin ? "true" : "false";
+  document.getElementById("u-pw-hint").textContent =
+    "Leave blank to keep the current password.";
+  document.getElementById("u-admin").value    = u.admin ? "true" : "false";
+
   setModalAlert("modal-user-alert", "");
   buildPermChips(userId);
   openModal("modal-user");
   setTimeout(() => document.getElementById("u-name").focus(), 60);
 }
 
+// ═══════════════════════════════════════════
+//  PERMISSIONS CHIPS
+// ═══════════════════════════════════════════
+
 function buildPermChips(userId) {
   const container = document.getElementById("u-permissions");
-  const userPerms = userId
-    ? new Set(allPermissions.filter(p => p.user_id === userId).map(p => p.instrument_id))
-    : new Set();
+
+  if (!allInstruments.length) {
+    container.innerHTML =
+      `<span style="color:var(--muted);font-size:13px">No instruments defined yet.</span>`;
+    return;
+  }
+
+  // Build set of instrument IDs this user currently has
+  const granted = new Set(
+    userId
+      ? allPermissions.filter(p => p.user_id === userId).map(p => p.instrument_id)
+      : []
+  );
 
   container.innerHTML = allInstruments.map(i => {
-    const checked = userPerms.has(i.id);
-    return `<label class="perm-chip ${checked ? 'checked' : ''}" id="chip-${i.id}">
-      <input type="checkbox" value="${i.id}" ${checked ? "checked" : ""}
+    const checked = granted.has(i.id);
+    return `<label class="perm-chip ${checked ? "checked" : ""}">
+      <input type="checkbox" value="${esc(i.id)}" ${checked ? "checked" : ""}
              onchange="toggleChip(this)">
       ${esc(i.name)}
     </label>`;
@@ -957,7 +996,7 @@ function toggleChip(input) {
 }
 
 // ═══════════════════════════════════════════
-// USERS — SAVE
+//  USERS — SAVE
 // ═══════════════════════════════════════════
 
 async function saveUser() {
@@ -969,88 +1008,95 @@ async function saveUser() {
 
   setModalAlert("modal-user-alert", "");
 
-  if (!name) { setModalAlert("modal-user-alert", "Display name is required."); return; }
+  if (!name) {
+    setModalAlert("modal-user-alert", "Display name is required.");
+    return;
+  }
+
+  btn.disabled = true;
 
   if (!editingUserId) {
-    // ── CREATE ──
-    if (!email) { setModalAlert("modal-user-alert", "Email is required for new users."); return; }
-    if (password.length < 8) { setModalAlert("modal-user-alert", "Password must be at least 8 characters."); return; }
+    // ── CREATE ───────────────────────────────────────────────────
+    btn.textContent = "Creating…";
 
-    btn.disabled = true; btn.textContent = "Creating…";
-
-    // 1. Create auth user via Supabase Admin API — requires service role key.
-    //    With anon key we use signUp instead (user will get a confirmation email).
-    const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password });
-
-    if (signUpErr) {
-      setModalAlert("modal-user-alert", signUpErr.message);
-      btn.disabled = false; btn.textContent = "Create User";
-      return;
+    if (!email) {
+      setModalAlert("modal-user-alert", "Email address is required.");
+      btn.disabled = false; btn.textContent = "Create User"; return;
+    }
+    if (password.length < 8) {
+      setModalAlert("modal-user-alert", "Password must be at least 8 characters.");
+      btn.disabled = false; btn.textContent = "Create User"; return;
     }
 
-    const authId = signUpData.user?.id;
-    if (!authId) {
-      setModalAlert("modal-user-alert", "Failed to create auth user.");
-      btn.disabled = false; btn.textContent = "Create User";
-      return;
+    // Create in Supabase Auth via admin API (no confirmation email sent)
+    const { data: created, error: createErr } =
+      await sbAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true   // mark as confirmed immediately
+      });
+
+    if (createErr) {
+      setModalAlert("modal-user-alert", `Auth error: ${createErr.message}`);
+      btn.disabled = false; btn.textContent = "Create User"; return;
     }
 
-    // 2. Insert into users table
+    const authId = created.user.id;
+
+    // Insert into our users table using the auth-generated UUID
     const insertRes = await fetch(`${REST}/users`, {
-      method: "POST", headers: HEADERS,
-      body: JSON.stringify({ id: authId, name, admin: isAdmin })
+      method:  "POST",
+      headers: HEADERS,
+      body:    JSON.stringify({ id: authId, name, admin: isAdmin })
     });
 
     if (!insertRes.ok) {
-      setModalAlert("modal-user-alert", "Auth user created but failed to save to users table. Check Supabase.");
-      btn.disabled = false; btn.textContent = "Create User";
-      return;
+      const err = await insertRes.json().catch(() => ({}));
+      setModalAlert("modal-user-alert",
+        `Auth user created but users-table insert failed: ${err.message || "unknown error"}`);
+      btn.disabled = false; btn.textContent = "Create User"; return;
     }
 
-    // 3. Set permissions
+    // Now save permissions using the real auth UUID
     await syncPermissions(authId);
-
     toast(`User "${name}" created`);
 
   } else {
-    // ── UPDATE ──
-    btn.disabled = true; btn.textContent = "Saving…";
+    // ── UPDATE ───────────────────────────────────────────────────
+    btn.textContent = "Saving…";
 
-    // 1. Update users table
-    const updateRes = await fetch(`${REST}/users?id=eq.${editingUserId}`, {
-      method: "PATCH", headers: HEADERS,
-      body: JSON.stringify({ name, admin: isAdmin })
+    // Update users table
+    const patchRes = await fetch(`${REST}/users?id=eq.${encodeURIComponent(editingUserId)}`, {
+      method:  "PATCH",
+      headers: HEADERS,
+      body:    JSON.stringify({ name, admin: isAdmin })
     });
-    if (!updateRes.ok) {
-      setModalAlert("modal-user-alert", "Failed to update user record.");
-      btn.disabled = false; btn.textContent = "Save Changes";
-      return;
+
+    if (!patchRes.ok) {
+      const err = await patchRes.json().catch(() => ({}));
+      setModalAlert("modal-user-alert", `Failed to update user: ${err.message || "unknown error"}`);
+      btn.disabled = false; btn.textContent = "Save Changes"; return;
     }
 
-    // 2. Update password if provided
+    // Update password via admin API if provided
     if (password) {
       if (password.length < 8) {
         setModalAlert("modal-user-alert", "Password must be at least 8 characters.");
-        btn.disabled = false; btn.textContent = "Save Changes";
-        return;
+        btn.disabled = false; btn.textContent = "Save Changes"; return;
       }
-      // Note: updating another user's password requires service role key.
-      // With anon key this only works for the currently signed-in user.
-      const { error: pwErr } = await sb.auth.updateUser({ password });
+      const { error: pwErr } =
+        await sbAdmin.auth.admin.updateUserById(editingUserId, { password });
+
       if (pwErr) {
         setModalAlert("modal-user-alert",
-          `Details saved, but password update failed: ${pwErr.message}. ` +
-          `To reset another user's password, use Supabase Auth dashboard or add a service role key.`
-        );
+          `Details saved but password reset failed: ${pwErr.message}`);
         btn.disabled = false; btn.textContent = "Save Changes";
-        await loadAll();
-        return;
+        await loadAll(); return;
       }
     }
 
-    // 3. Sync permissions
+    // Sync permissions
     await syncPermissions(editingUserId);
-
     toast(`User "${name}" updated`);
   }
 
@@ -1060,33 +1106,44 @@ async function saveUser() {
   await loadAll();
 }
 
-async function syncPermissions(userId) {
-  // Get selected instruments from UI
-  const selected = [...document.querySelectorAll("#u-permissions input:checked")].map(el => el.value);
+// ═══════════════════════════════════════════
+//  PERMISSIONS — SYNC
+// ═══════════════════════════════════════════
 
-  // Get existing permissions
-  const existing = allPermissions.filter(p => p.user_id === userId).map(p => p.instrument_id);
+async function syncPermissions(userId) {
+  // Instrument IDs ticked in the UI
+  const selected = [...document.querySelectorAll("#u-permissions input:checked")]
+    .map(el => el.value);
+
+  // Instrument IDs already in the DB for this user
+  const existing = allPermissions
+    .filter(p => p.user_id === userId)
+    .map(p => p.instrument_id);
 
   const toAdd    = selected.filter(id => !existing.includes(id));
   const toRemove = existing.filter(id => !selected.includes(id));
 
   await Promise.all([
+    // INSERT — omit id so Supabase generates it automatically
     ...toAdd.map(instrId =>
       fetch(`${REST}/permissions`, {
-        method: "POST", headers: HEADERS,
-        body: JSON.stringify({ id: `${userId}_${instrId}`, user_id: userId, instrument_id: instrId })
+        method:  "POST",
+        headers: HEADERS,
+        body:    JSON.stringify({ user_id: userId, instrument_id: instrId })
       })
     ),
+    // DELETE
     ...toRemove.map(instrId =>
-      fetch(`${REST}/permissions?user_id=eq.${userId}&instrument_id=eq.${instrId}`, {
-        method: "DELETE", headers: HEADERS
-      })
+      fetch(
+        `${REST}/permissions?user_id=eq.${encodeURIComponent(userId)}&instrument_id=eq.${encodeURIComponent(instrId)}`,
+        { method: "DELETE", headers: HEADERS }
+      )
     )
   ]);
 }
 
 // ═══════════════════════════════════════════
-// USERS — DELETE
+//  USERS — DELETE
 // ═══════════════════════════════════════════
 
 function confirmDeleteUser(userId) {
@@ -1095,85 +1152,110 @@ function confirmDeleteUser(userId) {
 
   document.getElementById("confirm-title").textContent   = "Delete User";
   document.getElementById("confirm-message").textContent =
-    `Are you sure you want to delete "${u.name}"? This will remove their record and all permissions. Their bookings will remain in the system. This cannot be undone.`;
+    `Are you sure you want to delete "${u.name}"? Their record, permissions, and auth login will all ` +
+    `be removed. Existing bookings will remain. This cannot be undone.`;
 
-  const btn = document.getElementById("confirm-ok-btn");
-  btn.onclick = () => deleteUser(userId);
+  document.getElementById("confirm-ok-btn").onclick = () => deleteUser(userId);
   openModal("modal-confirm");
 }
 
 async function deleteUser(userId) {
   const u = allUsers.find(x => x.id === userId);
 
-  // Delete permissions first
-  await fetch(`${REST}/permissions?user_id=eq.${userId}`, { method: "DELETE", headers: HEADERS });
+  // 1. Delete permissions
+  await fetch(
+    `${REST}/permissions?user_id=eq.${encodeURIComponent(userId)}`,
+    { method: "DELETE", headers: HEADERS }
+  );
 
-  // Delete from users table
-  await fetch(`${REST}/users?id=eq.${userId}`, { method: "DELETE", headers: HEADERS });
+  // 2. Delete from users table
+  await fetch(
+    `${REST}/users?id=eq.${encodeURIComponent(userId)}`,
+    { method: "DELETE", headers: HEADERS }
+  );
 
-  // Note: deleting from auth.users requires service role key — we skip silently
-  toast(`User "${u?.name}" removed`);
+  // 3. Delete from Supabase Auth
+  await sbAdmin.auth.admin.deleteUser(userId);
+
+  toast(`User "${u?.name}" deleted`);
   closeModal("modal-confirm");
   await loadAll();
 }
 
 // ═══════════════════════════════════════════
-// INSTRUMENTS — RENDER
+//  INSTRUMENTS — RENDER
 // ═══════════════════════════════════════════
 
 function renderInstruments() {
   const tbody = document.getElementById("instruments-tbody");
+
   if (!allInstruments.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No instruments found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No instruments found.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = allInstruments.map(i => `
+  tbody.innerHTML = allInstruments.map(i => {
+    const operational = i.operational !== false; // treat null/true as operational
+    const statusBadge = operational
+      ? `<span style="color:var(--success);font-family:var(--mono);font-size:11px">● Operational</span>`
+      : `<span style="color:var(--danger);font-family:var(--mono);font-size:11px">● Offline</span>`;
+    return `
     <tr>
-      <td style="color:var(--muted);font-family:var(--mono);font-size:12px">${i.sortorder ?? "—"}</td>
-      <td><strong>${esc(i.name)}</strong><br>
-          <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(i.id)}</span></td>
+      <td style="color:var(--muted);font-family:var(--mono);font-size:12px">
+        ${i.sortorder ?? "—"}
+      </td>
+      <td>
+        <strong>${esc(i.name)}</strong><br>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(i.id)}</span>
+      </td>
       <td style="color:var(--muted);font-size:12px;max-width:200px">${esc(i.description || "—")}</td>
+      <td>${statusBadge}</td>
       <td style="font-family:var(--mono);font-size:12px">${i.maxslot ?? "—"}</td>
       <td style="font-family:var(--mono);font-size:12px">${i.advancedays ?? "—"}</td>
       <td>
         ${i.color
           ? `<span class="color-dot" style="background:${esc(i.color)}"></span>
              <span style="font-family:var(--mono);font-size:12px">${esc(i.color)}</span>`
-          : '<span style="color:var(--muted);font-size:12px">—</span>'}
+          : `<span style="color:var(--muted);font-size:12px">—</span>`}
       </td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="openEditInstrument('${i.id}')">Edit</button>
-        <button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="confirmDeleteInstrument('${i.id}')">Delete</button>
+        <button class="btn btn-ghost btn-sm"
+                onclick="openEditInstrument('${esc(i.id)}')">Edit</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:6px"
+                onclick="confirmDeleteInstrument('${esc(i.id)}')">Delete</button>
       </td>
-    </tr>
-  `).join("");
+    </tr>`;
+  }).join("");
 }
 
 // ═══════════════════════════════════════════
-// INSTRUMENTS — ADD
+//  INSTRUMENTS — OPEN ADD
 // ═══════════════════════════════════════════
 
 function openAddInstrument() {
   editingInstrId = null;
+
   document.getElementById("modal-instr-title").textContent = "Add Instrument";
-  document.getElementById("i-save-btn").textContent = "Create Instrument";
+  document.getElementById("i-save-btn").textContent        = "Create Instrument";
   document.getElementById("i-id").disabled   = false;
-  document.getElementById("i-id").value        = "";
-  document.getElementById("i-name").value      = "";
+  document.getElementById("i-id").value          = "";
+  document.getElementById("i-name").value        = "";
   document.getElementById("i-description").value = "";
-  document.getElementById("i-tc").value        = "";
-  document.getElementById("i-maxslot").value   = "";
+  document.getElementById("i-notes").value          = "";
+  document.getElementById("i-operational").checked = true;
+  updateOperationalLabel();
+  document.getElementById("i-maxslot").value     = "";
   document.getElementById("i-advancedays").value = "";
-  document.getElementById("i-sortorder").value  = "";
-  document.getElementById("i-color").value      = "#4f8ef7";
+  document.getElementById("i-sortorder").value   = "";
+  document.getElementById("i-color").value       = "#4f8ef7";
+
   setModalAlert("modal-instr-alert", "");
   openModal("modal-instrument");
   setTimeout(() => document.getElementById("i-id").focus(), 60);
 }
 
 // ═══════════════════════════════════════════
-// INSTRUMENTS — EDIT
+//  INSTRUMENTS — OPEN EDIT
 // ═══════════════════════════════════════════
 
 function openEditInstrument(instrId) {
@@ -1181,31 +1263,36 @@ function openEditInstrument(instrId) {
   if (!i) return;
 
   editingInstrId = instrId;
+
   document.getElementById("modal-instr-title").textContent = "Edit Instrument";
-  document.getElementById("i-save-btn").textContent = "Save Changes";
-  document.getElementById("i-id").value       = i.id;
-  document.getElementById("i-id").disabled    = true;   // ID cannot change
-  document.getElementById("i-name").value     = i.name || "";
+  document.getElementById("i-save-btn").textContent        = "Save Changes";
+  document.getElementById("i-id").value          = i.id;
+  document.getElementById("i-id").disabled       = true;
+  document.getElementById("i-name").value        = i.name        || "";
   document.getElementById("i-description").value = i.description || "";
-  document.getElementById("i-tc").value       = i.tc || "";
-  document.getElementById("i-maxslot").value  = i.maxslot ?? "";
+  document.getElementById("i-notes").value          = i.notes          || "";
+  document.getElementById("i-operational").checked  = i.operational !== false;
+  updateOperationalLabel();
+  document.getElementById("i-maxslot").value     = i.maxslot     ?? "";
   document.getElementById("i-advancedays").value = i.advancedays ?? "";
-  document.getElementById("i-sortorder").value = i.sortorder ?? "";
-  document.getElementById("i-color").value    = i.color || "#4f8ef7";
+  document.getElementById("i-sortorder").value   = i.sortorder   ?? "";
+  document.getElementById("i-color").value       = i.color       || "#4f8ef7";
+
   setModalAlert("modal-instr-alert", "");
   openModal("modal-instrument");
   setTimeout(() => document.getElementById("i-name").focus(), 60);
 }
 
 // ═══════════════════════════════════════════
-// INSTRUMENTS — SAVE
+//  INSTRUMENTS — SAVE
 // ═══════════════════════════════════════════
 
 async function saveInstrument() {
   const id          = document.getElementById("i-id").value.trim();
   const name        = document.getElementById("i-name").value.trim();
   const description = document.getElementById("i-description").value.trim();
-  const tc          = document.getElementById("i-tc").value.trim();
+  const notes       = document.getElementById("i-notes").value.trim();
+  const operational = document.getElementById("i-operational").checked;
   const maxslot     = document.getElementById("i-maxslot").value;
   const advancedays = document.getElementById("i-advancedays").value;
   const sortorder   = document.getElementById("i-sortorder").value;
@@ -1214,24 +1301,24 @@ async function saveInstrument() {
 
   setModalAlert("modal-instr-alert", "");
 
-  if (!id)   { setModalAlert("modal-instr-alert", "Instrument ID is required."); return; }
-  if (!name) { setModalAlert("modal-instr-alert", "Display name is required."); return; }
+  if (!id)           { setModalAlert("modal-instr-alert", "Instrument ID is required."); return; }
+  if (!name)         { setModalAlert("modal-instr-alert", "Display name is required.");  return; }
   if (/\s/.test(id)) { setModalAlert("modal-instr-alert", "Instrument ID cannot contain spaces."); return; }
 
   const payload = {
     name,
     description: description || null,
-    tc: tc || null,
+    notes:       notes       || null,
+    operational,
     maxslot:     maxslot     ? parseInt(maxslot)     : null,
     advancedays: advancedays ? parseInt(advancedays) : null,
     sortorder:   sortorder   ? parseInt(sortorder)   : null,
-    color:       color || null,
+    color:       color       || null,
   };
 
   btn.disabled = true; btn.textContent = "Saving…";
 
   if (!editingInstrId) {
-    // CREATE
     payload.id = id;
     const res = await fetch(`${REST}/instruments`, {
       method: "POST", headers: HEADERS, body: JSON.stringify(payload)
@@ -1239,20 +1326,18 @@ async function saveInstrument() {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       setModalAlert("modal-instr-alert", err.message || "Failed to create instrument.");
-      btn.disabled = false; btn.textContent = "Create Instrument";
-      return;
+      btn.disabled = false; btn.textContent = "Create Instrument"; return;
     }
     toast(`Instrument "${name}" created`);
   } else {
-    // UPDATE
-    const res = await fetch(`${REST}/instruments?id=eq.${editingInstrId}`, {
-      method: "PATCH", headers: HEADERS, body: JSON.stringify(payload)
-    });
+    const res = await fetch(
+      `${REST}/instruments?id=eq.${encodeURIComponent(editingInstrId)}`,
+      { method: "PATCH", headers: HEADERS, body: JSON.stringify(payload) }
+    );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       setModalAlert("modal-instr-alert", err.message || "Failed to update instrument.");
-      btn.disabled = false; btn.textContent = "Save Changes";
-      return;
+      btn.disabled = false; btn.textContent = "Save Changes"; return;
     }
     toast(`Instrument "${name}" updated`);
   }
@@ -1264,7 +1349,7 @@ async function saveInstrument() {
 }
 
 // ═══════════════════════════════════════════
-// INSTRUMENTS — DELETE
+//  INSTRUMENTS — DELETE
 // ═══════════════════════════════════════════
 
 function confirmDeleteInstrument(instrId) {
@@ -1273,20 +1358,24 @@ function confirmDeleteInstrument(instrId) {
 
   document.getElementById("confirm-title").textContent   = "Delete Instrument";
   document.getElementById("confirm-message").textContent =
-    `Are you sure you want to delete "${i.name}"? All permissions for this instrument will also be removed. Existing bookings will remain in the system. This cannot be undone.`;
+    `Are you sure you want to delete "${i.name}"? All user permissions for this instrument will ` +
+    `also be removed. Existing bookings will remain. This cannot be undone.`;
 
-  const btn = document.getElementById("confirm-ok-btn");
-  btn.onclick = () => deleteInstrument(instrId);
+  document.getElementById("confirm-ok-btn").onclick = () => deleteInstrument(instrId);
   openModal("modal-confirm");
 }
 
 async function deleteInstrument(instrId) {
   const i = allInstruments.find(x => x.id === instrId);
 
-  // Remove permissions first
-  await fetch(`${REST}/permissions?instrument_id=eq.${instrId}`, { method: "DELETE", headers: HEADERS });
-  // Remove instrument
-  await fetch(`${REST}/instruments?id=eq.${instrId}`, { method: "DELETE", headers: HEADERS });
+  await fetch(
+    `${REST}/permissions?instrument_id=eq.${encodeURIComponent(instrId)}`,
+    { method: "DELETE", headers: HEADERS }
+  );
+  await fetch(
+    `${REST}/instruments?id=eq.${encodeURIComponent(instrId)}`,
+    { method: "DELETE", headers: HEADERS }
+  );
 
   toast(`Instrument "${i?.name}" deleted`);
   closeModal("modal-confirm");
@@ -1294,16 +1383,24 @@ async function deleteInstrument(instrId) {
 }
 
 // ═══════════════════════════════════════════
-// UTILS
+//  UTILS
 // ═══════════════════════════════════════════
+
+function updateOperationalLabel() {
+  const checked = document.getElementById("i-operational").checked;
+  document.getElementById("i-operational-label").textContent =
+    checked ? "Instrument is operational" : "Instrument is offline / unavailable";
+}
 
 function esc(str) {
   return String(str ?? "")
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;");
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-// ── Boot ─────────────────────────────────────
+// ═══════════════════════════════════════════
+//  BOOT — resume existing session
+// ═══════════════════════════════════════════
 
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
@@ -1313,7 +1410,7 @@ function esc(str) {
     if (rows.length && rows[0].admin) {
       currentAdminUser = { ...rows[0], email: session.user.email };
       document.getElementById("topbar-user").innerHTML =
-        `Logged in as <strong>${currentAdminUser.name}</strong>`;
+        `Logged in as <strong>${esc(currentAdminUser.name)}</strong>`;
       document.getElementById("login-screen").style.display = "none";
       await loadAll();
     }
