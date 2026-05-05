@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lab Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
@@ -297,48 +299,24 @@ tr:hover td { background: var(--surface2); }
 
 .form-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
-/* ── Toggle switch ── */
+/* ── Operational toggle ── */
 .toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 11px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px 14px;
 }
-.toggle-row .toggle-label {
-  font-size: 14px;
-  color: var(--text);
-}
-.toggle-row .toggle-sublabel {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-.toggle-switch {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  flex-shrink: 0;
-}
+.toggle-row .toggle-label    { font-size: 14px; color: var(--text); }
+.toggle-row .toggle-sublabel { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.toggle-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
 .toggle-switch input { display: none; }
 .toggle-track {
-  position: absolute;
-  inset: 0;
-  background: var(--border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background .2s;
+  position: absolute; inset: 0; background: var(--border);
+  border-radius: 12px; cursor: pointer; transition: background .2s;
 }
 .toggle-track::after {
-  content: "";
-  position: absolute;
-  left: 3px; top: 3px;
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform .2s;
+  content: ""; position: absolute; left: 3px; top: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; transition: transform .2s;
 }
 .toggle-switch input:checked + .toggle-track { background: var(--success); }
 .toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
@@ -454,6 +432,32 @@ a.mailto-link {
   font-size: 12px;
 }
 a.mailto-link:hover { text-decoration: underline; }
+
+.btn-report { background: rgba(79,142,247,.12); color: var(--accent); border: 1px solid rgba(79,142,247,.3); }
+.btn-report:hover { background: rgba(79,142,247,.22); }
+
+.format-pick {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+.format-btn {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s;
+}
+.format-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,142,247,.06); }
+.format-btn .fmt-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+.format-btn .fmt-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -542,7 +546,6 @@ a.mailto-link:hover { text-decoration: underline; }
             <th>Status</th>
             <th>Max Slots</th>
             <th>Advance Days</th>
-            <th>Colour</th>
             <th></th>
           </tr>
         </thead>
@@ -634,20 +637,6 @@ a.mailto-link:hover { text-decoration: underline; }
       </div>
 
       <div class="form-group">
-        <label>Operational Status</label>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label" id="i-operational-label">Instrument is operational</div>
-            <div class="toggle-sublabel">Turn off to mark this instrument as unavailable</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="i-operational" checked onchange="updateOperationalLabel()">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-      </div>
-
-      <div class="form-group">
         <label>Notes</label>
         <textarea id="i-notes" placeholder="Notes about current operational status…"></textarea>
       </div>
@@ -665,21 +654,70 @@ a.mailto-link:hover { text-decoration: underline; }
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Sort Order</label>
-          <input id="i-sortorder" type="number" min="1" placeholder="e.g. 1" />
-          <div class="form-hint">Lower numbers appear first</div>
-        </div>
-        <div class="form-group">
-          <label>Colour</label>
-          <input id="i-color" type="color" value="#4f8ef7" />
+      <div class="form-group">
+        <label>Sort Order</label>
+        <input id="i-sortorder" type="number" min="1" placeholder="e.g. 1" />
+        <div class="form-hint">Lower numbers appear first</div>
+      </div>
+
+      <div class="form-group">
+        <label>Operational Status</label>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label" id="i-operational-label">Instrument is operational</div>
+            <div class="toggle-sublabel">Turn off to mark this instrument as unavailable</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="i-operational" checked onchange="updateOperationalLabel()">
+            <span class="toggle-track"></span>
+          </label>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-instrument')">Cancel</button>
       <button class="btn btn-primary" id="i-save-btn" onclick="saveInstrument()">Save Instrument</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Usage Report ── -->
+<div id="modal-report" class="modal-backdrop">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <h2 id="report-title">Usage Report</h2>
+      <button class="modal-close" onclick="closeModal('modal-report')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom:18px">
+        <div class="form-group" style="margin-bottom:0">
+          <label>From date</label>
+          <input id="report-from" type="date" />
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>To date</label>
+          <input id="report-to" type="date" />
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:4px">
+        <label>Download format</label>
+      </div>
+      <div class="format-pick">
+        <button class="format-btn" onclick="generateReport('csv')">
+          <span class="fmt-icon">📊</span>
+          CSV
+          <div class="fmt-label">Open in Excel</div>
+        </button>
+        <button class="format-btn" onclick="generateReport('pdf')">
+          <span class="fmt-icon">📄</span>
+          PDF
+          <div class="fmt-label">Print-ready report</div>
+        </button>
+      </div>
+      <div id="report-alert" style="margin-top:14px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-report')">Close</button>
     </div>
   </div>
 </div>
@@ -739,9 +777,10 @@ const HEADERS = {
 
 let currentAdminUser = null;
 let allUsers         = [];
-let allAuthUsers     = [];   // fetched via admin API — contains emails
+let allAuthUsers     = [];
 let allInstruments   = [];
 let allPermissions   = [];
+let allBookings      = [];
 
 let editingUserId  = null;
 let editingInstrId = null;
@@ -806,16 +845,18 @@ async function apiGet(path) {
 }
 
 async function loadAll() {
-  const [users, instruments, permissions, authResult] = await Promise.all([
+  const [users, instruments, permissions, bookings, authResult] = await Promise.all([
     apiGet("users?select=*"),
     apiGet("instruments?select=*&order=sortorder.asc.nullslast,name.asc"),
     apiGet("permissions?select=*"),
+    apiGet("bookings?select=*"),
     sbAdmin.auth.admin.listUsers({ perPage: 1000 })
   ]);
 
   allUsers       = users;
   allInstruments = instruments;
   allPermissions = permissions;
+  allBookings    = bookings;
   allAuthUsers   = authResult?.data?.users ?? [];
 
   renderUsers();
@@ -1190,20 +1231,18 @@ function renderInstruments() {
   const tbody = document.getElementById("instruments-tbody");
 
   if (!allInstruments.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No instruments found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No instruments found.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = allInstruments.map(i => {
-    const operational = i.operational !== false; // treat null/true as operational
+    const operational = i.operational !== false;
     const statusBadge = operational
       ? `<span style="color:var(--success);font-family:var(--mono);font-size:11px">● Operational</span>`
       : `<span style="color:var(--danger);font-family:var(--mono);font-size:11px">● Offline</span>`;
     return `
     <tr>
-      <td style="color:var(--muted);font-family:var(--mono);font-size:12px">
-        ${i.sortorder ?? "—"}
-      </td>
+      <td style="color:var(--muted);font-family:var(--mono);font-size:12px">${i.sortorder ?? "—"}</td>
       <td>
         <strong>${esc(i.name)}</strong><br>
         <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(i.id)}</span>
@@ -1212,14 +1251,10 @@ function renderInstruments() {
       <td>${statusBadge}</td>
       <td style="font-family:var(--mono);font-size:12px">${i.maxslot ?? "—"}</td>
       <td style="font-family:var(--mono);font-size:12px">${i.advancedays ?? "—"}</td>
-      <td>
-        ${i.color
-          ? `<span class="color-dot" style="background:${esc(i.color)}"></span>
-             <span style="font-family:var(--mono);font-size:12px">${esc(i.color)}</span>`
-          : `<span style="color:var(--muted);font-size:12px">—</span>`}
-      </td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-ghost btn-sm"
+        <button class="btn btn-report btn-sm"
+                onclick="openReport('${esc(i.id)}')">Report</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:6px"
                 onclick="openEditInstrument('${esc(i.id)}')">Edit</button>
         <button class="btn btn-danger btn-sm" style="margin-left:6px"
                 onclick="confirmDeleteInstrument('${esc(i.id)}')">Delete</button>
@@ -1242,12 +1277,11 @@ function openAddInstrument() {
   document.getElementById("i-name").value        = "";
   document.getElementById("i-description").value = "";
   document.getElementById("i-notes").value          = "";
-  document.getElementById("i-operational").checked = true;
-  updateOperationalLabel();
   document.getElementById("i-maxslot").value     = "";
   document.getElementById("i-advancedays").value = "";
   document.getElementById("i-sortorder").value   = "";
-  document.getElementById("i-color").value       = "#4f8ef7";
+  document.getElementById("i-operational").checked = true;
+  updateOperationalLabel();
 
   setModalAlert("modal-instr-alert", "");
   openModal("modal-instrument");
@@ -1271,12 +1305,11 @@ function openEditInstrument(instrId) {
   document.getElementById("i-name").value        = i.name        || "";
   document.getElementById("i-description").value = i.description || "";
   document.getElementById("i-notes").value          = i.notes          || "";
-  document.getElementById("i-operational").checked  = i.operational !== false;
-  updateOperationalLabel();
   document.getElementById("i-maxslot").value     = i.maxslot     ?? "";
   document.getElementById("i-advancedays").value = i.advancedays ?? "";
   document.getElementById("i-sortorder").value   = i.sortorder   ?? "";
-  document.getElementById("i-color").value       = i.color       || "#4f8ef7";
+  document.getElementById("i-operational").checked  = i.operational !== false;
+  updateOperationalLabel();
 
   setModalAlert("modal-instr-alert", "");
   openModal("modal-instrument");
@@ -1296,7 +1329,6 @@ async function saveInstrument() {
   const maxslot     = document.getElementById("i-maxslot").value;
   const advancedays = document.getElementById("i-advancedays").value;
   const sortorder   = document.getElementById("i-sortorder").value;
-  const color       = document.getElementById("i-color").value;
   const btn         = document.getElementById("i-save-btn");
 
   setModalAlert("modal-instr-alert", "");
@@ -1313,7 +1345,6 @@ async function saveInstrument() {
     maxslot:     maxslot     ? parseInt(maxslot)     : null,
     advancedays: advancedays ? parseInt(advancedays) : null,
     sortorder:   sortorder   ? parseInt(sortorder)   : null,
-    color:       color       || null,
   };
 
   btn.disabled = true; btn.textContent = "Saving…";
@@ -1382,15 +1413,168 @@ async function deleteInstrument(instrId) {
   await loadAll();
 }
 
-// ═══════════════════════════════════════════
-//  UTILS
-// ═══════════════════════════════════════════
-
 function updateOperationalLabel() {
   const checked = document.getElementById("i-operational").checked;
   document.getElementById("i-operational-label").textContent =
     checked ? "Instrument is operational" : "Instrument is offline / unavailable";
 }
+
+// ═══════════════════════════════════════════
+//  REPORTS
+// ═══════════════════════════════════════════
+
+let reportInstrId = null;
+
+function openReport(instrId) {
+  reportInstrId = instrId;
+  const instr = allInstruments.find(i => i.id === instrId);
+  document.getElementById("report-title").textContent = `Usage Report — ${instr?.name ?? instrId}`;
+  document.getElementById("report-alert").innerHTML = "";
+
+  // Default date range: start of current year → today
+  const now   = new Date();
+  const today = now.toISOString().split("T")[0];
+  const jan1  = `${now.getFullYear()}-01-01`;
+  document.getElementById("report-from").value = jan1;
+  document.getElementById("report-to").value   = today;
+
+  openModal("modal-report");
+}
+
+function getReportRows() {
+  const from   = document.getElementById("report-from").value;
+  const to     = document.getElementById("report-to").value;
+  const instr  = allInstruments.find(i => i.id === reportInstrId);
+
+  // Filter bookings for this instrument within date range
+  const rows = allBookings
+    .filter(b => {
+      if (b.instrument !== reportInstrId) return false;
+      if (from && b.date < from) return false;
+      if (to   && b.date > to)   return false;
+      return true;
+    })
+    .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.hour - b.hour)
+    .map(b => ({
+      date:  b.date,
+      day:   new Date(b.date + "T12:00:00").toLocaleDateString("en-GB", {weekday:"short"}),
+      time:  b.hour.toString().padStart(2,"0") + ":00",
+      user:  b.name,
+    }));
+
+  return { rows, instr, from, to };
+}
+
+async function generateReport(format) {
+  const alertEl = document.getElementById("report-alert");
+  alertEl.innerHTML = "";
+
+  // Fetch fresh bookings for accuracy
+  const fresh = await fetch(`${REST}/bookings?select=*&instrument=eq.${encodeURIComponent(reportInstrId)}`, { headers: HEADERS });
+  allBookings = await fresh.json();
+
+  const { rows, instr, from, to } = getReportRows();
+
+  if (!rows.length) {
+    alertEl.innerHTML = `<div class="alert alert-warning">No bookings found for this instrument in the selected date range.</div>`;
+    return;
+  }
+
+  const filename = `${instr?.id ?? "instrument"}_usage_${from}_to_${to}`;
+
+  if (format === "csv") {
+    generateCSV(rows, instr, from, to, filename);
+  } else {
+    generatePDF(rows, instr, from, to, filename);
+  }
+}
+
+function generateCSV(rows, instr, from, to, filename) {
+  // Build per-user summary
+  const userTotals = {};
+  rows.forEach(r => { userTotals[r.user] = (userTotals[r.user] || 0) + 1; });
+
+  const lines = [
+    [`Usage Report — ${instr?.name ?? reportInstrId}`],
+    [`Period: ${from} to ${to}`],
+    [`Total bookings: ${rows.length}`],
+    [],
+    ["Date", "Day", "Time", "User"],
+    ...rows.map(r => [r.date, r.day, r.time, r.user]),
+    [],
+    ["Summary by user"],
+    ["User", "Hours booked"],
+    ...Object.entries(userTotals).sort((a,b)=>b[1]-a[1]).map(([u,n])=>[u,n]),
+  ];
+
+  const csv = lines.map(row =>
+    row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")
+  ).join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename + ".csv"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function generatePDF(rows, instr, from, to, filename) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  const pageW  = doc.internal.pageSize.getWidth();
+  const margin = 18;
+
+  // Header
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Usage Report: ${instr?.name ?? reportInstrId}`, margin, 22);
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(120, 120, 140);
+  doc.text(`Period: ${from}  →  ${to}     Total bookings: ${rows.length}`, margin, 30);
+  doc.text(`Generated: ${new Date().toLocaleString("en-GB")}`, margin, 35);
+  doc.setTextColor(0, 0, 0);
+
+  // Booking table
+  doc.autoTable({
+    startY: 42,
+    head:   [["Date", "Day", "Time", "User"]],
+    body:   rows.map(r => [r.date, r.day, r.time, r.user]),
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [245, 247, 255] },
+    margin: { left: margin, right: margin },
+  });
+
+  // Summary by user
+  const userTotals = {};
+  rows.forEach(r => { userTotals[r.user] = (userTotals[r.user] || 0) + 1; });
+  const summaryRows = Object.entries(userTotals).sort((a,b)=>b[1]-a[1]).map(([u,n])=>[u, n]);
+
+  const afterTable = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("Summary by User", margin, afterTable);
+
+  doc.autoTable({
+    startY: afterTable + 4,
+    head:   [["User", "Hours booked"]],
+    body:   summaryRows,
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [245, 247, 255] },
+    margin: { left: margin, right: margin },
+    columnStyles: { 1: { halign: "center" } },
+  });
+
+  doc.save(filename + ".pdf");
+}
+
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
 
 function esc(str) {
   return String(str ?? "")
