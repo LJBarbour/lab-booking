@@ -637,6 +637,20 @@ a.mailto-link:hover { text-decoration: underline; }
       </div>
 
       <div class="form-group">
+        <label>Operational Status</label>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label" id="i-operational-label">Instrument is operational</div>
+            <div class="toggle-sublabel">Turn off to mark this instrument as unavailable</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="i-operational" checked onchange="updateOperationalLabel()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
         <label>Notes</label>
         <textarea id="i-notes" placeholder="Notes about current operational status…"></textarea>
       </div>
@@ -659,24 +673,51 @@ a.mailto-link:hover { text-decoration: underline; }
         <input id="i-sortorder" type="number" min="1" placeholder="e.g. 1" />
         <div class="form-hint">Lower numbers appear first</div>
       </div>
-
-      <div class="form-group">
-        <label>Operational Status</label>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label" id="i-operational-label">Instrument is operational</div>
-            <div class="toggle-sublabel">Turn off to mark this instrument as unavailable</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="i-operational" checked onchange="updateOperationalLabel()">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-instrument')">Cancel</button>
       <button class="btn btn-primary" id="i-save-btn" onclick="saveInstrument()">Save Instrument</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: User Usage Report ── -->
+<div id="modal-user-report" class="modal-backdrop">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <h2 id="user-report-title">User Report</h2>
+      <button class="modal-close" onclick="closeModal('modal-user-report')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom:18px">
+        <div class="form-group" style="margin-bottom:0">
+          <label>From date</label>
+          <input id="user-report-from" type="date" />
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>To date</label>
+          <input id="user-report-to" type="date" />
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:4px">
+        <label>Download format</label>
+      </div>
+      <div class="format-pick">
+        <button class="format-btn" onclick="generateUserReport('csv')">
+          <span class="fmt-icon">📊</span>
+          CSV
+          <div class="fmt-label">Open in Excel</div>
+        </button>
+        <button class="format-btn" onclick="generateUserReport('pdf')">
+          <span class="fmt-icon">📄</span>
+          PDF
+          <div class="fmt-label">Print-ready report</div>
+        </button>
+      </div>
+      <div id="user-report-alert" style="margin-top:14px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-user-report')">Close</button>
     </div>
   </div>
 </div>
@@ -945,7 +986,8 @@ function renderUsers() {
       <td style="color:var(--muted);font-size:12px">${u.admin ? "Administrator" : "Researcher"}</td>
       <td>${instrTags}</td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="openEditUser('${esc(u.id)}')">Edit</button>
+        <button class="btn btn-report btn-sm" onclick="openUserReport('${esc(u.id)}')">Report</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="openEditUser('${esc(u.id)}')">Edit</button>
         <button class="btn btn-danger btn-sm" style="margin-left:6px"
                 onclick="confirmDeleteUser('${esc(u.id)}')">Delete</button>
       </td>
@@ -1561,6 +1603,163 @@ function generatePDF(rows, instr, from, to, filename) {
   doc.autoTable({
     startY: afterTable + 4,
     head:   [["User", "Hours booked"]],
+    body:   summaryRows,
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [245, 247, 255] },
+    margin: { left: margin, right: margin },
+    columnStyles: { 1: { halign: "center" } },
+  });
+
+  doc.save(filename + ".pdf");
+}
+
+// ═══════════════════════════════════════════
+//  USER REPORTS
+// ═══════════════════════════════════════════
+
+let reportUserId = null;
+
+function openUserReport(userId) {
+  reportUserId = userId;
+  const u = allUsers.find(x => x.id === userId);
+  document.getElementById("user-report-title").textContent = `Usage Report — ${u?.name ?? "User"}`;
+  document.getElementById("user-report-alert").innerHTML = "";
+
+  const now   = new Date();
+  const today = now.toISOString().split("T")[0];
+  const jan1  = `${now.getFullYear()}-01-01`;
+  document.getElementById("user-report-from").value = jan1;
+  document.getElementById("user-report-to").value   = today;
+
+  openModal("modal-user-report");
+}
+
+function getUserReportRows() {
+  const from = document.getElementById("user-report-from").value;
+  const to   = document.getElementById("user-report-to").value;
+  const u    = allUsers.find(x => x.id === reportUserId);
+
+  const rows = allBookings
+    .filter(b => {
+      if (b.name !== u?.name) return false;
+      if (from && b.date < from) return false;
+      if (to   && b.date > to)   return false;
+      return true;
+    })
+    .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.hour - b.hour)
+    .map(b => {
+      const instr = allInstruments.find(i => i.id === b.instrument);
+      return {
+        date:       b.date,
+        day:        new Date(b.date + "T12:00:00").toLocaleDateString("en-GB", {weekday:"short"}),
+        time:       b.hour.toString().padStart(2,"0") + ":00",
+        instrument: instr?.name ?? b.instrument,
+      };
+    });
+
+  return { rows, user: u, from, to };
+}
+
+async function generateUserReport(format) {
+  const alertEl = document.getElementById("user-report-alert");
+  alertEl.innerHTML = "";
+
+  // Fetch fresh bookings for this user
+  const u = allUsers.find(x => x.id === reportUserId);
+  const fresh = await fetch(
+    `${REST}/bookings?select=*&name=eq.${encodeURIComponent(u?.name ?? "")}`,
+    { headers: HEADERS }
+  );
+  const userBookings = await fresh.json();
+  // Temporarily merge into allBookings for the row builder
+  const saved = allBookings;
+  allBookings = userBookings;
+
+  const { rows, user, from, to } = getUserReportRows();
+  allBookings = saved;
+
+  if (!rows.length) {
+    alertEl.innerHTML = `<div class="alert alert-warning">No bookings found for this user in the selected date range.</div>`;
+    return;
+  }
+
+  const safeName = (user?.name ?? "user").replace(/[^a-z0-9]/gi, "_");
+  const filename = `${safeName}_usage_${from}_to_${to}`;
+
+  if (format === "csv") {
+    generateUserCSV(rows, user, from, to, filename);
+  } else {
+    generateUserPDF(rows, user, from, to, filename);
+  }
+}
+
+function generateUserCSV(rows, user, from, to, filename) {
+  const instrTotals = {};
+  rows.forEach(r => { instrTotals[r.instrument] = (instrTotals[r.instrument] || 0) + 1; });
+
+  const lines = [
+    [`Usage Report — ${user?.name ?? "User"}`],
+    [`Period: ${from} to ${to}`],
+    [`Total bookings: ${rows.length}`],
+    [],
+    ["Date", "Day", "Time", "Instrument"],
+    ...rows.map(r => [r.date, r.day, r.time, r.instrument]),
+    [],
+    ["Summary by instrument"],
+    ["Instrument", "Hours booked"],
+    ...Object.entries(instrTotals).sort((a,b)=>b[1]-a[1]).map(([i,n])=>[i,n]),
+  ];
+
+  const csv = lines.map(row =>
+    row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")
+  ).join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename + ".csv"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function generateUserPDF(rows, user, from, to, filename) {
+  const { jsPDF } = window.jspdf;
+  const doc    = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const margin = 18;
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Usage Report: ${user?.name ?? "User"}`, margin, 22);
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(120, 120, 140);
+  doc.text(`Period: ${from}  →  ${to}     Total bookings: ${rows.length}`, margin, 30);
+  doc.text(`Generated: ${new Date().toLocaleString("en-GB")}`, margin, 35);
+  doc.setTextColor(0, 0, 0);
+
+  doc.autoTable({
+    startY: 42,
+    head:   [["Date", "Day", "Time", "Instrument"]],
+    body:   rows.map(r => [r.date, r.day, r.time, r.instrument]),
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [245, 247, 255] },
+    margin: { left: margin, right: margin },
+  });
+
+  const instrTotals = {};
+  rows.forEach(r => { instrTotals[r.instrument] = (instrTotals[r.instrument] || 0) + 1; });
+  const summaryRows = Object.entries(instrTotals).sort((a,b)=>b[1]-a[1]).map(([i,n])=>[i,n]);
+
+  const afterTable = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("Summary by Instrument", margin, afterTable);
+
+  doc.autoTable({
+    startY: afterTable + 4,
+    head:   [["Instrument", "Hours booked"]],
     body:   summaryRows,
     styles: { fontSize: 9, cellPadding: 3 },
     headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: "bold" },
