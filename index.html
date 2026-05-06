@@ -21,7 +21,9 @@ button {
   cursor:pointer;
   border-radius:6px;
 }
+
 button:hover { background:#f0f3ff; }
+
 button.active {
   background:#dbe7ff;
   font-weight:600;
@@ -29,73 +31,15 @@ button.active {
   padding-left:6px;
 }
 
+#instr-image { width:100%; max-width:140px; margin-top:10px; border-radius:6px; }
+
 main { padding:24px; overflow-y:auto; display:flex; flex-direction:column; }
 
-/* ── Instrument info bar (above calendar) ── */
-#instr-info-bar {
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:14px;
-  min-height:40px;
-}
+#title-row { display:flex; flex-direction:column; flex:0 0 auto; }
 
-#instr-info-left {
-  display:flex;
-  gap:14px;
-  align-items:flex-start;
-  flex:1;
-}
+.week-nav { display:flex; gap:10px; justify-content:flex-end; margin-bottom:6px; margin-top:auto; padding-top:10px; }
+.week-nav button { width:auto; padding:6px 10px; }
 
-#instr-image {
-  height:121px;
-  width:auto;
-  border-radius:8px;
-  object-fit:cover;
-  flex-shrink:0;
-  display:none;
-}
-
-#instr-info-text { flex:1; }
-
-#instr-description {
-  font-size:16px;
-  font-weight:600;
-  color:#1a1d2e;
-  margin-bottom:5px;
-  line-height:1.3;
-}
-
-#instr-notes {
-  font-size:13px;
-  color:#6b7594;
-  line-height:1.5;
-  margin-bottom:6px;
-  white-space:pre-wrap;
-}
-
-#instr-status { font-size:12px; font-weight:500; }
-.status-ok  { color:#2e7d32; }
-.status-off {
-  color:#c62828;
-  background:#fff3f3;
-  padding:3px 8px;
-  border-radius:4px;
-  border:1px solid #f5b8b8;
-  display:inline-block;
-}
-
-/* ── Week nav (right-justified, top of calendar area) ── */
-.week-nav {
-  display:flex;
-  gap:8px;
-  align-items:flex-start;
-  flex-shrink:0;
-}
-.week-nav button { width:auto; padding:6px 12px; margin-bottom:0; }
-
-/* ── Calendar ── */
 .calendar {
   display:grid;
   grid-template-columns:60px repeat(7,1fr);
@@ -118,29 +62,20 @@ main { padding:24px; overflow-y:auto; display:flex; flex-direction:column; }
 .date { font-size:14px; font-weight:600; color:#444; }
 .header.today-col { background:#ffe082; }
 .time { font-size:11px; color:#9aa0ad; justify-content:flex-end; padding-right:8px; }
-
-.cell.clickable:hover  { background:#eef2ff; cursor:pointer; }
+.cell.clickable:hover { background:#eef2ff; cursor:pointer; }
 .cell.needs-login:hover { background:#fff8e1; cursor:pointer; }
-
-/* Drag-selection highlights */
-.cell.drag-book   { background:#c5d8ff !important; cursor:crosshair; }
-.cell.drag-delete { background:#ffd5d5 !important; cursor:crosshair; }
 
 .booking-box {
   position:absolute; inset:1px;
   background:#dbe7ff; border-radius:6px;
   display:flex; align-items:center; justify-content:center; font-size:11px;
   overflow:hidden; padding:0 3px; text-align:center;
-  user-select:none;
 }
-.booking-box.mine      { background:#d7f5e3; cursor:pointer; }
-.booking-box.past      { background:#e0e0e0; color:#888; }
-/* Admin can delete other people's bookings — show a subtle red outline */
-.booking-box.admin-del { cursor:pointer; outline:1px solid rgba(224,92,92,.5); }
-
+.booking-box.mine { background:#d7f5e3; cursor:pointer; }
+.booking-box.past { background:#e0e0e0; color:#888; }
 .past-cell { background:#f0f0f0; color:#999; }
 
-/* ── User area ── */
+/* User area */
 #user-badge {
   background:#f0f3ff; border-radius:8px; padding:10px 12px;
   font-size:14px; font-weight:600; color:#1a1d2e;
@@ -170,7 +105,7 @@ main { padding:24px; overflow-y:auto; display:flex; flex-direction:column; }
 
 #readonly-notice { font-size:12px; color:#9aa0ad; line-height:1.5; margin-bottom:16px; }
 
-/* ── Modals ── */
+/* Shared modal styles */
 .modal {
   display:none; position:fixed; inset:0;
   background:rgba(0,0,0,0.45); z-index:100;
@@ -184,11 +119,13 @@ main { padding:24px; overflow-y:auto; display:flex; flex-direction:column; }
   box-sizing:border-box;
 }
 .modal-box h2 { margin:0 0 24px; font-size:20px; color:#1a1d2e; }
+
 .modal-box input {
   width:100%; padding:10px 12px; margin-bottom:14px;
   border:1px solid #d0d4e0; border-radius:8px; font-size:14px; box-sizing:border-box;
 }
 .modal-box input.error-field { border-color:#e57373; }
+
 .modal-submit {
   width:100%; padding:11px; background:#4a6cf7; color:#fff;
   border:none; border-radius:8px; font-size:15px; font-weight:600;
@@ -196,35 +133,31 @@ main { padding:24px; overflow-y:auto; display:flex; flex-direction:column; }
 }
 .modal-submit:hover { background:#3a5ce0; }
 .modal-submit:disabled { background:#a0aef7; cursor:not-allowed; }
+
 .modal-error   { color:#d32f2f; font-size:13px; margin-top:10px; min-height:18px; }
 .modal-success { color:#2e7d32; font-size:13px; margin-top:10px; min-height:18px; }
+
 .modal-close {
   position:absolute; top:14px; right:16px; background:none; border:none;
   font-size:20px; color:#aaa; cursor:pointer; width:auto; padding:0; margin:0; line-height:1;
 }
 .modal-close:hover { color:#555; background:none; }
 
-/* ── Password strength ── */
+/* Password strength */
 #pw-strength-wrap { margin:-6px 0 14px; }
 #pw-strength-bar-bg { height:4px; background:#e0e0e0; border-radius:2px; }
 #pw-strength-bar    { height:100%; border-radius:2px; width:0%; transition:width .2s,background .2s; }
 #pw-strength-label  { font-size:11px; color:#9aa0ad; margin-top:4px; }
 
-/* ── Error banner ── */
+/* Error banner */
 #error-banner {
   display:none; background:#fdecea; border:1px solid #f5b8b8;
   color:#c62828; padding:10px 14px; border-radius:8px;
   font-size:13px; margin-bottom:14px;
 }
-
-/* ── Admin badge (inline in user badge) ── */
-.badge-admin-inline {
-  font-size:10px; background:#ede9fe; color:#7c3aed;
-  border-radius:4px; padding:2px 6px; font-weight:600;
-  margin-left:6px; letter-spacing:.03em; vertical-align:middle;
-}
 </style>
 </head>
+
 <body>
 
 <!-- Login modal -->
@@ -266,26 +199,17 @@ main { padding:24px; overflow-y:auto; display:flex; flex-direction:column; }
   <div id="error-banner"></div>
   <h3>Instruments</h3>
   <div id="instr"></div>
+  <img id="instr-image" src="" alt="" style="display:none">
 </aside>
 
 <main>
-  <!-- Instrument info bar: image left | description+notes+status | nav right -->
-  <div id="instr-info-bar">
-    <div id="instr-info-left">
-      <img id="instr-image" src="" alt="">
-      <div id="instr-info-text">
-        <div id="instr-description"></div>
-        <div id="instr-notes"></div>
-        <div id="instr-status"></div>
-      </div>
-    </div>
-    <div class="week-nav">
-      <button onclick="changeWeek(-1)">← Previous</button>
-      <button onclick="goToday()">Today</button>
-      <button onclick="changeWeek(1)">Next →</button>
-    </div>
-  </div>
+  <h2 id="title"></h2>
 
+  <div class="week-nav">
+    <button onclick="changeWeek(-1)">← Previous</button>
+    <button onclick="goToday()">Today</button>
+    <button onclick="changeWeek(1)">Next →</button>
+  </div>
   <div id="calendar" class="calendar"></div>
   <div id="cal-message" style="color:#9aa0ad; font-size:14px; margin-top:20px;"></div>
 </main>
@@ -303,117 +227,9 @@ const HEADERS = {
 };
 
 let instruments=[], bookings=[], permissions=[];
-let currentUser=null, currentUserID=null, currentUserEmail=null;
-let currentUserIsAdmin=false;
-let currentInstr=null, weekOffset=0;
+let currentUser=null, currentUserEmail=null, currentInstr=null, weekOffset=0;
 
-// ═══════════════════════════════════════════
-//  DRAG STATE
-//  Unified click+drag: mousedown starts a drag of 1+ cells,
-//  mouseup commits. A plain click is a drag of exactly one cell.
-// ═══════════════════════════════════════════
-
-let dragActive = false;
-let dragMode   = null;   // 'book' | 'delete'
-let dragSlots  = [];     // [{hour, date, booking, el}]
-let dragKeys   = new Set();
-
-function startDrag(mode, hour, date, booking, el) {
-  dragActive = true;
-  dragMode   = mode;
-  dragSlots  = [];
-  dragKeys.clear();
-  tryAddDragSlot(hour, date, booking, el);
-  document.body.style.userSelect = 'none';
-}
-
-function tryAddDragSlot(hour, date, booking, el) {
-  const key = `${hour}|${date}`;
-  if (dragKeys.has(key)) return;
-
-  if (dragMode === 'book') {
-    // Don't double-book
-    const taken = bookings.find(x => x.instrument===currentInstr.id && x.hour===hour && x.date===date);
-    if (taken) return;
-    // Don't book in the past
-    const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
-    if (slotTime < new Date()) return;
-    // Non-admins: respect advancedays
-    if (!currentUserIsAdmin && currentInstr.advancedays != null) {
-      const maxDate = new Date();
-      maxDate.setDate(maxDate.getDate() + currentInstr.advancedays);
-      if (slotTime > maxDate) return;
-    }
-  }
-
-  if (dragMode === 'delete') {
-    if (!booking) return;
-    const mine = norm(booking.name) === norm(currentUser);
-    if (!mine && !currentUserIsAdmin) return;
-  }
-
-  dragKeys.add(key);
-  dragSlots.push({hour, date, booking, el});
-  el.classList.add(dragMode === 'book' ? 'drag-book' : 'drag-delete');
-}
-
-async function endDrag() {
-  if (!dragActive) return;
-  dragActive = false;
-  document.body.style.userSelect = '';
-
-  // Remove highlights before async work
-  dragSlots.forEach(s => s.el.classList.remove('drag-book', 'drag-delete'));
-
-  const slots = [...dragSlots];
-  dragSlots = []; dragKeys.clear();
-  if (!slots.length) return;
-
-  if (dragMode === 'book') {
-    // Non-admins: check maxslot across the whole batch before committing
-    if (!currentUserIsAdmin && currentInstr.maxslot != null) {
-      const now = new Date();
-      const existing = bookings.filter(b => {
-        const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
-        return norm(b.name)===norm(currentUser) && b.instrument===currentInstr.id && t>=now;
-      }).length;
-      if (existing + slots.length > currentInstr.maxslot) {
-        alert(`Booking limit reached — you can have at most ${currentInstr.maxslot} active bookings for this instrument.`);
-        return;
-      }
-    }
-    const base = Date.now();
-    await Promise.all(slots.map(({hour, date}, idx) =>
-      fetch(`${REST}/bookings`, {
-        method: "POST", headers: HEADERS,
-        body: JSON.stringify({
-          id: `${base}${idx}`,
-          instrument: currentInstr.id,
-          date, hour,
-          name: currentUser
-        })
-      })
-    ));
-
-  } else if (dragMode === 'delete') {
-    await Promise.all(slots.map(({booking: b}) =>
-      fetch(
-        `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${encodeURIComponent(b.name)}`,
-        { method: "DELETE", headers: HEADERS }
-      )
-    ));
-  }
-
-  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
-  renderCalendar();
-}
-
-// Commit drag on mouseup anywhere
-document.addEventListener('mouseup', endDrag);
-
-// ═══════════════════════════════════════════
-//  MODALS
-// ═══════════════════════════════════════════
+// ── Modals ────────────────────────────────────────────────────
 
 function openModal(id){
   document.getElementById(id).classList.add("visible");
@@ -439,20 +255,20 @@ function closeModal(id){
   document.getElementById(id).classList.remove("visible");
 }
 
-// ═══════════════════════════════════════════
-//  PASSWORD STRENGTH
-// ═══════════════════════════════════════════
+// ── Password strength ─────────────────────────────────────────
 
 function updateStrength(){
   const val  = document.getElementById("pw-new").value;
   const bar  = document.getElementById("pw-strength-bar");
   const lbl  = document.getElementById("pw-strength-label");
+
   let score = 0;
   if(val.length >= 8)           score++;
   if(val.length >= 12)          score++;
   if(/[A-Z]/.test(val))         score++;
   if(/[0-9]/.test(val))         score++;
   if(/[^A-Za-z0-9]/.test(val)) score++;
+
   const levels = [
     { pct:"0%",   color:"#e0e0e0", label:"" },
     { pct:"20%",  color:"#e53935", label:"Very weak" },
@@ -461,15 +277,14 @@ function updateStrength(){
     { pct:"80%",  color:"#43a047", label:"Strong" },
     { pct:"100%", color:"#2e7d32", label:"Very strong" },
   ];
+
   const lvl = levels[Math.min(score, 5)];
   bar.style.width      = val.length ? lvl.pct : "0%";
   bar.style.background = lvl.color;
   lbl.textContent      = val.length ? lvl.label : "";
 }
 
-// ═══════════════════════════════════════════
-//  AUTH
-// ═══════════════════════════════════════════
+// ── Auth ──────────────────────────────────────────────────────
 
 function showError(msg){
   const el = document.getElementById("error-banner");
@@ -494,21 +309,19 @@ async function doLogin(){
     return;
   }
 
-  currentUser        = rows[0].name;
-  currentUserID      = rows[0].id;
-  currentUserEmail   = data.user.email;
-  currentUserIsAdmin = rows[0].admin || false;
+  currentUser      = rows[0].name;
+  currentUserID    = rows[0].id;
+  currentUserEmail = data.user.email;
   closeModal("login-modal");
   render();
 }
 
 async function doLogout(){
   await sb.auth.signOut();
-  currentUser        = null;
-  currentUserID      = null;
-  currentUserEmail   = null;
-  currentUserIsAdmin = false;
-  currentInstr       = instruments[0] || null;
+  currentUser      = null;
+  currentUserID    = null;
+  currentUserEmail = null;
+  currentInstr     = instruments[0] || null;
   render();
 }
 
@@ -520,27 +333,35 @@ async function doChangePassword(){
   const okEl      = document.getElementById("pw-success");
   const submitBtn = document.getElementById("pw-submit");
 
-  errEl.textContent = ""; okEl.textContent = "";
+  errEl.textContent = "";
+  okEl.textContent  = "";
   ["pw-current","pw-new","pw-confirm"].forEach(f =>
     document.getElementById(f).classList.remove("error-field")
   );
+
   if(!current){
     errEl.textContent = "Please enter your current password.";
-    document.getElementById("pw-current").classList.add("error-field"); return;
+    document.getElementById("pw-current").classList.add("error-field");
+    return;
   }
   if(newPw.length < 8){
     errEl.textContent = "New password must be at least 8 characters.";
-    document.getElementById("pw-new").classList.add("error-field"); return;
+    document.getElementById("pw-new").classList.add("error-field");
+    return;
   }
   if(newPw !== confirm){
     errEl.textContent = "Passwords do not match.";
-    document.getElementById("pw-confirm").classList.add("error-field"); return;
+    document.getElementById("pw-confirm").classList.add("error-field");
+    return;
   }
   if(current === newPw){
     errEl.textContent = "New password must differ from your current password.";
-    document.getElementById("pw-new").classList.add("error-field"); return;
+    document.getElementById("pw-new").classList.add("error-field");
+    return;
   }
-  submitBtn.disabled = true; submitBtn.textContent = "Updating…";
+
+  submitBtn.disabled    = true;
+  submitBtn.textContent = "Updating…";
 
   const { error: authErr } = await sb.auth.signInWithPassword({
     email: currentUserEmail, password: current
@@ -548,10 +369,15 @@ async function doChangePassword(){
   if(authErr){
     errEl.textContent = "Current password is incorrect.";
     document.getElementById("pw-current").classList.add("error-field");
-    submitBtn.disabled = false; submitBtn.textContent = "Update Password"; return;
+    submitBtn.disabled    = false;
+    submitBtn.textContent = "Update Password";
+    return;
   }
+
   const { error: updateErr } = await sb.auth.updateUser({ password: newPw });
-  submitBtn.disabled = false; submitBtn.textContent = "Update Password";
+  submitBtn.disabled    = false;
+  submitBtn.textContent = "Update Password";
+
   if(updateErr){ errEl.textContent = updateErr.message; return; }
 
   okEl.textContent = "✓ Password updated successfully.";
@@ -561,9 +387,7 @@ async function doChangePassword(){
   setTimeout(()=>closeModal("pw-modal"), 2000);
 }
 
-// ═══════════════════════════════════════════
-//  DATA
-// ═══════════════════════════════════════════
+// ── Data ──────────────────────────────────────────────────────
 
 async function load(){
   showError("");
@@ -575,6 +399,7 @@ async function load(){
     ]);
     if(i.code || b.code || p.code)
       throw new Error(i.message || b.message || p.message || "Database error");
+
     instruments  = i;
     bookings     = b;
     permissions  = p;
@@ -584,26 +409,22 @@ async function load(){
   }
 }
 
-// ═══════════════════════════════════════════
-//  RENDER
-// ═══════════════════════════════════════════
+// ── Render ────────────────────────────────────────────────────
 
 function render(){
   renderUserArea();
   renderInstr();
-  renderInstrInfo();
+  renderTitle();
+  renderImage();
   renderCalendar();
 }
 
 function renderUserArea(){
   const el = document.getElementById("user-area");
   if(currentUser){
-    const badge = currentUserIsAdmin
-      ? '<span class="badge-admin-inline">ADMIN</span>'
-      : '';
     el.innerHTML = `
       <div id="user-badge">
-        <span>${currentUser}${badge}</span>
+        <span>${currentUser}</span>
         <button id="logout-btn" onclick="doLogout()">Logout</button>
       </div>
       <button id="change-pw-link" onclick="openModal('pw-modal')">🔑 Change password</button>`;
@@ -617,11 +438,11 @@ function renderUserArea(){
 function renderInstr(){
   const el = document.getElementById("instr");
 
-  // Logged-out or admin → all instruments; regular user → permitted only
-  const visible = (!currentUser || currentUserIsAdmin
-    ? instruments
-    : instruments.filter(i => permissions.some(p => p.user_id===currentUserID && p.instrument_id===i.id))
+  const visible = (currentUser
+    ? instruments.filter(i => permissions.some(p => p.user_id===currentUserID && p.instrument_id===i.id))
+    : instruments
   ).slice().sort((a, b) => {
+    // Sort by sortorder column if present, fall back to alphabetical by name
     const aHas = a.sortorder != null;
     const bHas = b.sortorder != null;
     if(aHas && bHas) return a.sortorder - b.sortorder;
@@ -642,29 +463,11 @@ function renderInstr(){
 }
 
 function selectInstr(id){ currentInstr = instruments.find(i=>i.id===id); render(); }
-
-function renderInstrInfo(){
-  const img      = document.getElementById("instr-image");
-  const descEl   = document.getElementById("instr-description");
-  const notesEl  = document.getElementById("instr-notes");
-  const statusEl = document.getElementById("instr-status");
-
-  if(currentInstr){
-    img.src = currentInstr.id + ".jpg";
-    img.style.display = "block";
-    img.onerror = () => { img.style.display = "none"; };
-    descEl.textContent  = currentInstr.description || "";
-    notesEl.textContent = currentInstr.notes || "";
-    const op = currentInstr.operational !== false;
-    statusEl.innerHTML  = op
-      ? `<span class="status-ok">● Operational</span>`
-      : `<span class="status-off">⚠ Offline / Unavailable</span>`;
-  } else {
-    img.style.display    = "none";
-    descEl.textContent   = "";
-    notesEl.textContent  = "";
-    statusEl.textContent = "";
-  }
+function renderTitle(){ document.getElementById("title").textContent = currentInstr?.description || ""; }
+function renderImage(){
+  const img = document.getElementById("instr-image");
+  if(currentInstr){ img.src = currentInstr.id+".png"; img.style.display="block"; }
+  else             { img.style.display="none"; }
 }
 
 function norm(s){ return (s||"").trim().toLowerCase(); }
@@ -698,7 +501,6 @@ function renderCalendar(){
   const now=new Date();
   const todayStr=now.toISOString().split("T")[0];
 
-  // Column headers
   cal.appendChild(document.createElement("div"));
   days.forEach((d,i)=>{
     const h=document.createElement("div");
@@ -708,7 +510,6 @@ function renderCalendar(){
     cal.appendChild(h);
   });
 
-  // Hour rows
   for(let h=0;h<24;h++){
     const t=document.createElement("div");
     t.className="cell time";
@@ -723,57 +524,55 @@ function renderCalendar(){
       c.className="cell"+(isPast?" past-cell":"");
 
       const b=bookings.find(x=>x.instrument===currentInstr.id&&x.hour===h&&x.date===dateStr);
-
       if(b){
-        // ── Booked cell ──
-        const mine      = currentUser && norm(b.name)===norm(currentUser);
-        const canDelete = !isPast && (mine || currentUserIsAdmin);
-        const boxCls    = ["booking-box", mine?"mine":"", isPast?"past":"", canDelete&&!mine?"admin-del":""]
-                          .filter(Boolean).join(" ");
-        c.innerHTML = `<div class="${boxCls}">${b.name}</div>`;
-
-        if(canDelete){
-          c.addEventListener('mousedown', e=>{
-            e.preventDefault();
-            startDrag('delete', h, dateStr, b, c);
-          });
-          c.addEventListener('mouseover', ()=>{
-            if(dragActive && dragMode==='delete') tryAddDragSlot(h, dateStr, b, c);
-          });
-        }
-
+        const mine=currentUser&&norm(b.name)===norm(currentUser);
+        c.innerHTML=`<div class="booking-box ${mine?'mine':''} ${isPast?'past':''}">${b.name}</div>`;
+        if(mine&&!isPast) c.onclick=()=>deleteBooking(b);
       } else if(!isPast){
-        // ── Empty future cell ──
-        if(currentUser){
-          // Admins bypass advancedays; regular users respect it
-          const withinWindow = currentUserIsAdmin
-            || currentInstr.advancedays == null
-            || slotTime <= new Date(new Date().setDate(now.getDate()+currentInstr.advancedays));
-
-          if(withinWindow){
-            c.classList.add("clickable");
-            c.addEventListener('mousedown', e=>{
-              e.preventDefault();
-              startDrag('book', h, dateStr, null, c);
-            });
-            c.addEventListener('mouseover', ()=>{
-              if(dragActive && dragMode==='book') tryAddDragSlot(h, dateStr, null, c);
-            });
-          }
-        } else {
-          c.classList.add("needs-login");
-          c.onclick=()=>openModal("login-modal");
-        }
+        if(currentUser){ c.classList.add("clickable"); c.onclick=()=>book(h,dateStr); }
+        else            { c.classList.add("needs-login"); c.onclick=()=>openModal("login-modal"); }
       }
-
       cal.appendChild(c);
     }
   }
 }
 
-// ═══════════════════════════════════════════
-//  BOOT
-// ═══════════════════════════════════════════
+// ── Booking actions ───────────────────────────────────────────
+
+async function book(hour,date){
+  if(!currentUser){ openModal("login-modal"); return; }
+  const now=new Date();
+  const slotTime=new Date(date+"T"+hour.toString().padStart(2,'0')+":00");
+  if(slotTime<now){ alert("Cannot book in the past"); return; }
+  const maxDays=currentInstr.advancedays??999;
+  const maxDate=new Date(); maxDate.setDate(now.getDate()+maxDays);
+  if(slotTime>maxDate){ alert("Booking too far in advance"); return; }
+  const count=bookings.filter(b=>{
+    const t=new Date(b.date+"T"+b.hour.toString().padStart(2,'0')+":00");
+    return norm(b.name)===norm(currentUser)&&b.instrument===currentInstr.id&&t>=now;
+  }).length;
+  if(count>=(currentInstr.maxslot??999)){ alert("Booking limit reached"); return; }
+
+  await fetch(`${REST}/bookings`,{
+    method:"POST", headers:HEADERS,
+    body:JSON.stringify({ id:Date.now().toString(), instrument:currentInstr.id, date, hour, name:currentUser })
+  });
+  bookings=await fetch(`${REST}/bookings?select=*`,{headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+async function deleteBooking(b){
+  if(!currentUser){ openModal("login-modal"); return; }
+  if(!confirm("Delete this booking?")) return;
+  await fetch(
+    `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${b.name}`,
+    { method:"DELETE", headers:HEADERS }
+  );
+  bookings=await fetch(`${REST}/bookings?select=*`,{headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+// ── Boot ─────────────────────────────────────────────────────
 
 (async()=>{
   renderUserArea();
@@ -783,10 +582,9 @@ function renderCalendar(){
     const res  = await fetch(`${REST}/users?id=eq.${session.user.id}&select=*`, { headers: HEADERS });
     const rows = await res.json();
     if(rows.length){
-      currentUser        = rows[0].name;
-      currentUserID      = rows[0].id;
-      currentUserEmail   = session.user.email;
-      currentUserIsAdmin = rows[0].admin || false;
+      currentUser      = rows[0].name;
+      currentUserID    = rows[0].id;
+      currentUserEmail = session.user.email;
     }
   }
   render();
