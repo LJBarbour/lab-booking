@@ -477,6 +477,51 @@ main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   border: 1px solid rgba(124,92,252,.3);
 }
 
+/* ── Power-user badge ── */
+.badge-pu-inline {
+  font-size: 9px;
+  background: rgba(251,191,36,.2);
+  color: #fbbf24;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: 700;
+  margin-left: 6px;
+  letter-spacing: .06em;
+  vertical-align: middle;
+  border: 1px solid rgba(251,191,36,.35);
+}
+
+/* ── Sidebar: instrument button with power-user access ── */
+button.pu-access {
+  border-left: 3px solid rgba(251,191,36,.55);
+  padding-left: 9px;
+  color: rgba(251,191,36,.75);
+}
+button.pu-access:hover { color: #fbbf24; background: rgba(251,191,36,.07); }
+button.pu-access.active {
+  background: rgba(251,191,36,.12);
+  border-left: 3px solid #fbbf24;
+  color: #fde68a;
+}
+
+/* ── Info-bar power-user status pill ── */
+.status-pu {
+  color: #78350f;
+  background: #fef3c7;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid #fde68a;
+  display: inline-block;
+  margin-left: 6px;
+}
+
+/* ── Booking box: deletable by power user (amber outline) ── */
+.booking-box.pu-del {
+  cursor: pointer;
+  outline: 1.5px solid rgba(251,191,36,.7);
+  outline-offset: -1px;
+}
+
 /* ═══════════════════════════════════════════
    MODALS
 ═══════════════════════════════════════════ */
@@ -664,10 +709,16 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let instruments=[], bookings=[], permissions=[];
+let instruments=[], bookings=[], permissions=[], powerUsers=[];
 let currentUser=null, currentUserID=null, currentUserEmail=null;
 let currentUserIsAdmin=false;
+let powerUserInstrIds=[];  // instrument IDs where this user has power-user privileges
 let currentInstr=null, weekOffset=0;
+
+// True when the current user has admin-level access to the given instrument
+function isPowerUserFor(instrId){
+  return currentUserIsAdmin || powerUserInstrIds.includes(instrId);
+}
 
 // ═══════════════════════════════════════════
 //  DRAG STATE
@@ -700,8 +751,8 @@ function tryAddDragSlot(hour, date, booking, el) {
     // Don't book in the past
     const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
     if (slotTime < new Date()) return;
-    // Non-admins: respect advancedays
-    if (!currentUserIsAdmin && currentInstr.advancedays != null) {
+    // Non-admins/non-power-users: respect advancedays
+    if (!isPowerUserFor(currentInstr.id) && currentInstr.advancedays != null) {
       const maxDate = new Date();
       maxDate.setDate(maxDate.getDate() + currentInstr.advancedays);
       if (slotTime > maxDate) return;
@@ -711,7 +762,7 @@ function tryAddDragSlot(hour, date, booking, el) {
   if (dragMode === 'delete') {
     if (!booking) return;
     const mine = norm(booking.name) === norm(currentUser);
-    if (!mine && !currentUserIsAdmin) return;
+    if (!mine && !isPowerUserFor(currentInstr.id)) return;
   }
 
   dragKeys.add(key);
@@ -732,8 +783,8 @@ async function endDrag() {
   if (!slots.length) return;
 
   if (dragMode === 'book') {
-    // Non-admins: check maxslot across the whole batch before committing
-    if (!currentUserIsAdmin && currentInstr.maxslot != null) {
+    // Non-admins/non-power-users: check maxslot across the whole batch before committing
+    if (!isPowerUserFor(currentInstr.id) && currentInstr.maxslot != null) {
       const now = new Date();
       const existing = bookings.filter(b => {
         const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
@@ -860,6 +911,9 @@ async function doLogin(){
   currentUserID      = rows[0].id;
   currentUserEmail   = data.user.email;
   currentUserIsAdmin = rows[0].admin || false;
+  powerUserInstrIds  = powerUsers
+    .filter(p => p.user_id === rows[0].id)
+    .map(p => p.instrument_id);
   closeModal("login-modal");
   render();
 }
@@ -870,6 +924,7 @@ async function doLogout(){
   currentUserID      = null;
   currentUserEmail   = null;
   currentUserIsAdmin = false;
+  powerUserInstrIds  = [];
   currentInstr       = instruments[0] || null;
   render();
 }
@@ -930,16 +985,18 @@ async function doChangePassword(){
 async function load(){
   showError("");
   try {
-    const [i, b, p] = await Promise.all([
+    const [i, b, p, pu] = await Promise.all([
       fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json()),
       fetch(`${REST}/bookings?select=*`,    {headers:HEADERS}).then(r=>r.json()),
       fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/powerusers?select=*`,  {headers:HEADERS}).then(r=>r.json()),
     ]);
     if(i.code || b.code || p.code)
       throw new Error(i.message || b.message || p.message || "Database error");
     instruments  = i;
     bookings     = b;
     permissions  = p;
+    powerUsers   = Array.isArray(pu) ? pu : [];
     currentInstr = instruments[0] || null;
   } catch(err){
     showError("Could not load data: " + err.message);
@@ -962,7 +1019,9 @@ function renderUserArea(){
   if(currentUser){
     const badge = currentUserIsAdmin
       ? '<span class="badge-admin-inline">ADMIN</span>'
-      : '';
+      : powerUserInstrIds.length
+        ? '<span class="badge-pu-inline">⚡ POWER USER</span>'
+        : '';
     el.innerHTML = `
       <div id="user-badge">
         <span>${currentUser}${badge}</span>
@@ -979,10 +1038,15 @@ function renderUserArea(){
 function renderInstr(){
   const el = document.getElementById("instr");
 
-  // Logged-out or admin → all instruments; regular user → permitted only
+  // Build visible set:
+  //   - logged-out or admin → all instruments
+  //   - regular/power user  → instruments they have regular OR power-user access to
   const visible = (!currentUser || currentUserIsAdmin
     ? instruments
-    : instruments.filter(i => permissions.some(p => p.user_id===currentUserID && p.instrument_id===i.id))
+    : instruments.filter(i =>
+        permissions.some(p => p.user_id===currentUserID && p.instrument_id===i.id) ||
+        powerUserInstrIds.includes(i.id)
+      )
   ).slice().sort((a, b) => {
     const aHas = a.sortorder != null;
     const bHas = b.sortorder != null;
@@ -995,12 +1059,18 @@ function renderInstr(){
   if(!visible.find(i => currentInstr && i.id===currentInstr.id))
     currentInstr = visible[0] || null;
 
-  el.innerHTML = visible.length
-    ? visible.map(i =>
-        `<button class="${currentInstr && i.id===currentInstr.id ? 'active' : ''}"
-                 onclick="selectInstr('${i.id}')">${i.name}</button>`
-      ).join("")
-    : `<p style="font-size:13px;color:rgba(255,255,255,.3)">No instruments available.</p>`;
+  if(!visible.length){
+    el.innerHTML = `<p style="font-size:13px;color:rgba(255,255,255,.3)">No instruments available.</p>`;
+    return;
+  }
+
+  el.innerHTML = visible.map(i => {
+    const isPU      = !currentUserIsAdmin && powerUserInstrIds.includes(i.id);
+    const isActive  = currentInstr && i.id===currentInstr.id;
+    const classes   = [isActive ? 'active' : '', isPU ? 'pu-access' : ''].filter(Boolean).join(' ');
+    const puMark    = isPU ? ' ⚡' : '';
+    return `<button class="${classes}" onclick="selectInstr('${i.id}')">${i.name}${puMark}</button>`;
+  }).join("");
 }
 
 function selectInstr(id){ currentInstr = instruments.find(i=>i.id===id); render(); }
@@ -1018,9 +1088,12 @@ function renderInstrInfo(){
     descEl.textContent  = currentInstr.description || "";
     notesEl.textContent = currentInstr.notes        || "";
     const op = currentInstr.operational !== false;
-    statusEl.innerHTML  = op
+    const puPill = (!currentUserIsAdmin && powerUserInstrIds.includes(currentInstr.id))
+      ? `<span class="status-pu">⚡ Power User Access</span>`
+      : '';
+    statusEl.innerHTML  = (op
       ? `<span class="status-ok">● Operational</span>`
-      : `<span class="status-off">⚠ Offline / Unavailable</span>`;
+      : `<span class="status-off">⚠ Offline / Unavailable</span>`) + puPill;
   } else {
     img.style.display    = "none";
     descEl.textContent   = "";
@@ -1089,8 +1162,12 @@ function renderCalendar(){
       if(b){
         // ── Booked cell ──
         const mine      = currentUser && norm(b.name)===norm(currentUser);
-        const canDelete = !isPast && (mine || currentUserIsAdmin);
-        const boxCls    = ["booking-box", mine?"mine":"", isPast?"past":"", canDelete&&!mine?"admin-del":""]
+        const puLevel   = isPowerUserFor(currentInstr.id);
+        const canDelete = !isPast && (mine || puLevel);
+        const boxCls    = ["booking-box",
+                           mine ? "mine" : "",
+                           isPast ? "past" : "",
+                           canDelete && !mine ? (currentUserIsAdmin ? "admin-del" : "pu-del") : ""]
                           .filter(Boolean).join(" ");
         c.innerHTML = `<div class="${boxCls}">${b.name}</div>`;
 
@@ -1107,8 +1184,8 @@ function renderCalendar(){
       } else if(!isPast){
         // ── Empty future cell ──
         if(currentUser){
-          // Admins bypass advancedays; regular users respect it
-          const withinWindow = currentUserIsAdmin
+          // Power users and admins bypass advancedays on their instruments
+          const withinWindow = isPowerUserFor(currentInstr.id)
             || currentInstr.advancedays == null
             || slotTime <= new Date(new Date().setDate(now.getDate()+currentInstr.advancedays));
 
@@ -1149,6 +1226,9 @@ function renderCalendar(){
       currentUserID      = rows[0].id;
       currentUserEmail   = session.user.email;
       currentUserIsAdmin = rows[0].admin || false;
+      powerUserInstrIds  = powerUsers
+        .filter(p => p.user_id === rows[0].id)
+        .map(p => p.instrument_id);
     }
   }
   render();
