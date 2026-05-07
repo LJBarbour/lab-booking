@@ -401,6 +401,24 @@ tr:hover td { background: var(--surface2); }
   text-transform: uppercase;
 }
 
+.badge-poweruser {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(240,160,75,.2);
+  color: var(--warning);
+  border: 1px solid rgba(240,160,75,.3);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.perm-chip.power-checked {
+  background: rgba(240,160,75,.15);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
 .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
 .alert-error   { background: rgba(224,92,92,.12); border: 1px solid rgba(224,92,92,.3); color: #f08080; }
 .alert-success { background: rgba(76,175,130,.12); border: 1px solid rgba(76,175,130,.3); color: var(--success); }
@@ -600,6 +618,17 @@ a.mailto-link:hover { text-decoration: underline; }
       <div class="form-group">
         <label>Instrument Permissions</label>
         <div class="checkbox-group" id="u-permissions"></div>
+      </div>
+
+      <hr class="form-divider">
+
+      <div class="form-group">
+        <label>Power User Instruments
+          <span style="font-family:var(--sans);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px">
+            — can edit instrument details &amp; run reports
+          </span>
+        </label>
+        <div class="checkbox-group" id="u-powerusers"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -816,11 +845,14 @@ const HEADERS = {
   "Prefer":        "return=representation"
 };
 
-let currentAdminUser = null;
+let currentAdminUser          = null;
+let currentUserIsPowerUser    = false;   // true when logged in as power user (not full admin)
+let currentUserPowerInstrIds  = [];      // instrument IDs this power user manages
 let allUsers         = [];
 let allAuthUsers     = [];
 let allInstruments   = [];
 let allPermissions   = [];
+let allPowerUsers    = [];
 let allBookings      = [];
 
 let editingUserId  = null;
@@ -847,29 +879,55 @@ async function doLogin() {
     return;
   }
 
-  // Verify admin flag in users table
+  // Verify admin or power-user status
   const res  = await fetch(`${REST}/users?id=eq.${data.user.id}&select=*`, { headers: HEADERS });
   const rows = await res.json();
 
-  if (!rows.length || !rows[0].admin) {
-    errEl.textContent = "Access denied — admin privileges required.";
+  if (!rows.length) {
+    errEl.textContent = "No researcher account linked to this login.";
     await sb.auth.signOut();
     btn.disabled = false; btn.textContent = "Sign In";
     return;
   }
 
-  currentAdminUser = { ...rows[0], email: data.user.email };
+  const userRow = rows[0];
+
+  if (!userRow.admin) {
+    // Check if this user is a power user for any instrument
+    const puRes  = await fetch(`${REST}/powerusers?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`, { headers: HEADERS });
+    const puRows = await puRes.json();
+
+    if (!puRows.length) {
+      errEl.textContent = "Access denied — admin or power user privileges required.";
+      await sb.auth.signOut();
+      btn.disabled = false; btn.textContent = "Sign In";
+      return;
+    }
+
+    // Power user login
+    currentUserIsPowerUser   = true;
+    currentUserPowerInstrIds = puRows.map(r => r.instrument_id);
+  } else {
+    currentUserIsPowerUser   = false;
+    currentUserPowerInstrIds = [];
+  }
+
+  currentAdminUser = { ...userRow, email: data.user.email };
+  const roleLabel = currentUserIsPowerUser ? " <span class='badge-poweruser'>Power User</span>" : "";
   document.getElementById("topbar-user").innerHTML =
-    `Logged in as <strong>${esc(currentAdminUser.name)}</strong>`;
+    `Logged in as <strong>${esc(currentAdminUser.name)}</strong>${roleLabel}`;
   document.getElementById("login-screen").style.display = "none";
   btn.disabled = false; btn.textContent = "Sign In";
 
   await loadAll();
+  applyRoleUI();
 }
 
 async function doLogout() {
   await sb.auth.signOut();
-  currentAdminUser = null;
+  currentAdminUser         = null;
+  currentUserIsPowerUser   = false;
+  currentUserPowerInstrIds = [];
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("login-password").value = "";
   document.getElementById("login-error").textContent = "";
@@ -886,10 +944,11 @@ async function apiGet(path) {
 }
 
 async function loadAll() {
-  const [users, instruments, permissions, bookings, authResult] = await Promise.all([
+  const [users, instruments, permissions, powerusers, bookings, authResult] = await Promise.all([
     apiGet("users?select=*"),
     apiGet("instruments?select=*&order=sortorder.asc.nullslast,name.asc"),
     apiGet("permissions?select=*"),
+    apiGet("powerusers?select=*"),
     apiGet("bookings?select=*"),
     sbAdmin.auth.admin.listUsers({ perPage: 1000 })
   ]);
@@ -897,6 +956,7 @@ async function loadAll() {
   allUsers       = users;
   allInstruments = instruments;
   allPermissions = permissions;
+  allPowerUsers  = powerusers;
   allBookings    = bookings;
   allAuthUsers   = authResult?.data?.users ?? [];
 
@@ -913,6 +973,27 @@ function switchPage(page) {
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
   document.getElementById(`page-${page}`).classList.add("active");
   document.querySelector(`[data-page="${page}"]`).classList.add("active");
+}
+
+// ═══════════════════════════════════════════
+//  ROLE UI — show/hide elements based on role
+// ═══════════════════════════════════════════
+
+function applyRoleUI() {
+  const isPU = currentUserIsPowerUser;
+
+  // Power users land on Instruments, can't access Users
+  if (isPU) {
+    switchPage("instruments");
+    document.querySelector('[data-page="users"]').style.display  = "none";
+  } else {
+    document.querySelector('[data-page="users"]').style.display  = "";
+    document.querySelector('[data-page="instruments"]').style.display = "";
+  }
+
+  // "Add Instrument" button — hidden for power users
+  const addInstrBtn = document.querySelector('#page-instruments .btn-primary');
+  if (addInstrBtn) addInstrBtn.style.display = isPU ? "none" : "";
 }
 
 // ═══════════════════════════════════════════
@@ -977,14 +1058,30 @@ function renderUsers() {
         }).join("")
       : `<span class="tag-none">No permissions</span>`;
 
+    // Power user tags (amber)
+    const userPowerInstrs = allPowerUsers.filter(p => p.user_id === u.id);
+    const powerTags = userPowerInstrs.length
+      ? userPowerInstrs.map(p => {
+          const ins = allInstruments.find(i => i.id === p.instrument_id);
+          return ins ? `<span class="tag" style="background:rgba(240,160,75,.15);color:var(--warning);border:1px solid rgba(240,160,75,.3)">⚡ ${esc(ins.name)}</span>` : "";
+        }).join("")
+      : "";
+
+    const isPU = !u.admin && userPowerInstrs.length > 0;
+    const roleLabel = u.admin
+      ? "Administrator"
+      : isPU ? `Power User` : "Researcher";
+    const roleBadge = u.admin
+      ? `<span class="badge-admin" style="margin-left:8px">Admin</span>`
+      : isPU ? `<span class="badge-poweruser" style="margin-left:8px">Power User</span>` : "";
+
     return `<tr>
       <td>
-        <strong>${esc(u.name)}</strong>
-        ${u.admin ? '<span class="badge-admin" style="margin-left:8px">Admin</span>' : ""}
+        <strong>${esc(u.name)}</strong>${roleBadge}
       </td>
       <td>${emailCell}</td>
-      <td style="color:var(--muted);font-size:12px">${u.admin ? "Administrator" : "Researcher"}</td>
-      <td>${instrTags}</td>
+      <td style="color:var(--muted);font-size:12px">${roleLabel}</td>
+      <td>${instrTags}${powerTags ? `<br style="margin:2px 0">${powerTags}` : ""}</td>
       <td style="text-align:right;white-space:nowrap">
         <button class="btn btn-report btn-sm" onclick="openUserReport('${esc(u.id)}')">Report</button>
         <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="openEditUser('${esc(u.id)}')">Edit</button>
@@ -1014,6 +1111,7 @@ function openAddUser() {
 
   setModalAlert("modal-user-alert", "");
   buildPermChips(null);
+  buildPowerUserChips(null);
   openModal("modal-user");
   setTimeout(() => document.getElementById("u-name").focus(), 60);
 }
@@ -1040,6 +1138,7 @@ function openEditUser(userId) {
 
   setModalAlert("modal-user-alert", "");
   buildPermChips(userId);
+  buildPowerUserChips(userId);
   openModal("modal-user");
   setTimeout(() => document.getElementById("u-name").focus(), 60);
 }
@@ -1076,6 +1175,35 @@ function buildPermChips(userId) {
 
 function toggleChip(input) {
   input.closest(".perm-chip").classList.toggle("checked", input.checked);
+}
+
+function buildPowerUserChips(userId) {
+  const container = document.getElementById("u-powerusers");
+
+  if (!allInstruments.length) {
+    container.innerHTML =
+      `<span style="color:var(--muted);font-size:13px">No instruments defined yet.</span>`;
+    return;
+  }
+
+  const granted = new Set(
+    userId
+      ? allPowerUsers.filter(p => p.user_id === userId).map(p => p.instrument_id)
+      : []
+  );
+
+  container.innerHTML = allInstruments.map(i => {
+    const checked = granted.has(i.id);
+    return `<label class="perm-chip ${checked ? "power-checked" : ""}" id="pu-chip-${CSS.escape(i.id)}">
+      <input type="checkbox" value="${esc(i.id)}" ${checked ? "checked" : ""}
+             onchange="togglePUChip(this)">
+      ${esc(i.name)}
+    </label>`;
+  }).join("");
+}
+
+function togglePUChip(input) {
+  input.closest(".perm-chip").classList.toggle("power-checked", input.checked);
 }
 
 // ═══════════════════════════════════════════
@@ -1142,6 +1270,7 @@ async function saveUser() {
 
     // Now save permissions using the real auth UUID
     await syncPermissions(authId);
+    await syncPowerUsers(authId);
     toast(`User "${name}" created`);
 
   } else {
@@ -1180,6 +1309,7 @@ async function saveUser() {
 
     // Sync permissions
     await syncPermissions(editingUserId);
+    await syncPowerUsers(editingUserId);
     toast(`User "${name}" updated`);
   }
 
@@ -1226,6 +1356,38 @@ async function syncPermissions(userId) {
 }
 
 // ═══════════════════════════════════════════
+//  POWER USERS — SYNC
+// ═══════════════════════════════════════════
+
+async function syncPowerUsers(userId) {
+  const selected = [...document.querySelectorAll("#u-powerusers input:checked")]
+    .map(el => el.value);
+
+  const existing = allPowerUsers
+    .filter(p => p.user_id === userId)
+    .map(p => p.instrument_id);
+
+  const toAdd    = selected.filter(id => !existing.includes(id));
+  const toRemove = existing.filter(id => !selected.includes(id));
+
+  await Promise.all([
+    ...toAdd.map(instrId =>
+      fetch(`${REST}/powerusers`, {
+        method:  "POST",
+        headers: HEADERS,
+        body:    JSON.stringify({ user_id: userId, instrument_id: instrId })
+      })
+    ),
+    ...toRemove.map(instrId =>
+      fetch(
+        `${REST}/powerusers?user_id=eq.${encodeURIComponent(userId)}&instrument_id=eq.${encodeURIComponent(instrId)}`,
+        { method: "DELETE", headers: HEADERS }
+      )
+    )
+  ]);
+}
+
+// ═══════════════════════════════════════════
 //  USERS — DELETE
 // ═══════════════════════════════════════════
 
@@ -1251,13 +1413,19 @@ async function deleteUser(userId) {
     { method: "DELETE", headers: HEADERS }
   );
 
-  // 2. Delete from users table
+  // 2. Delete power user entries
+  await fetch(
+    `${REST}/powerusers?user_id=eq.${encodeURIComponent(userId)}`,
+    { method: "DELETE", headers: HEADERS }
+  );
+
+  // 3. Delete from users table
   await fetch(
     `${REST}/users?id=eq.${encodeURIComponent(userId)}`,
     { method: "DELETE", headers: HEADERS }
   );
 
-  // 3. Delete from Supabase Auth
+  // 4. Delete from Supabase Auth
   await sbAdmin.auth.admin.deleteUser(userId);
 
   toast(`User "${u?.name}" deleted`);
@@ -1272,16 +1440,35 @@ async function deleteUser(userId) {
 function renderInstruments() {
   const tbody = document.getElementById("instruments-tbody");
 
-  if (!allInstruments.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No instruments found.</td></tr>`;
+  // Power users only see their instruments
+  const visible = currentUserIsPowerUser
+    ? allInstruments.filter(i => currentUserPowerInstrIds.includes(i.id))
+    : allInstruments;
+
+  if (!visible.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${currentUserIsPowerUser ? "No instruments assigned to you." : "No instruments found."}</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = allInstruments.map(i => {
+  tbody.innerHTML = visible.map(i => {
     const operational = i.operational !== false;
     const statusBadge = operational
       ? `<span style="color:var(--success);font-family:var(--mono);font-size:11px">● Operational</span>`
       : `<span style="color:var(--danger);font-family:var(--mono);font-size:11px">● Offline</span>`;
+
+    // Power users get Report + Edit only; full admins get all three
+    const actionBtns = currentUserIsPowerUser
+      ? `<button class="btn btn-report btn-sm"
+                onclick="openReport('${esc(i.id)}')">Report</button>
+         <button class="btn btn-ghost btn-sm" style="margin-left:6px"
+                onclick="openEditInstrument('${esc(i.id)}')">Edit</button>`
+      : `<button class="btn btn-report btn-sm"
+                onclick="openReport('${esc(i.id)}')">Report</button>
+         <button class="btn btn-ghost btn-sm" style="margin-left:6px"
+                onclick="openEditInstrument('${esc(i.id)}')">Edit</button>
+         <button class="btn btn-danger btn-sm" style="margin-left:6px"
+                onclick="confirmDeleteInstrument('${esc(i.id)}')">Delete</button>`;
+
     return `
     <tr>
       <td style="color:var(--muted);font-family:var(--mono);font-size:12px">${i.sortorder ?? "—"}</td>
@@ -1293,14 +1480,7 @@ function renderInstruments() {
       <td>${statusBadge}</td>
       <td style="font-family:var(--mono);font-size:12px">${i.maxslot ?? "—"}</td>
       <td style="font-family:var(--mono);font-size:12px">${i.advancedays ?? "—"}</td>
-      <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-report btn-sm"
-                onclick="openReport('${esc(i.id)}')">Report</button>
-        <button class="btn btn-ghost btn-sm" style="margin-left:6px"
-                onclick="openEditInstrument('${esc(i.id)}')">Edit</button>
-        <button class="btn btn-danger btn-sm" style="margin-left:6px"
-                onclick="confirmDeleteInstrument('${esc(i.id)}')">Delete</button>
-      </td>
+      <td style="text-align:right;white-space:nowrap">${actionBtns}</td>
     </tr>`;
   }).join("");
 }
@@ -1790,12 +1970,33 @@ function esc(str) {
   if (session?.user) {
     const res  = await fetch(`${REST}/users?id=eq.${session.user.id}&select=*`, { headers: HEADERS });
     const rows = await res.json();
-    if (rows.length && rows[0].admin) {
-      currentAdminUser = { ...rows[0], email: session.user.email };
-      document.getElementById("topbar-user").innerHTML =
-        `Logged in as <strong>${esc(currentAdminUser.name)}</strong>`;
-      document.getElementById("login-screen").style.display = "none";
-      await loadAll();
+    if (rows.length) {
+      const userRow = rows[0];
+      if (userRow.admin) {
+        // Full admin
+        currentUserIsPowerUser   = false;
+        currentUserPowerInstrIds = [];
+        currentAdminUser = { ...userRow, email: session.user.email };
+        document.getElementById("topbar-user").innerHTML =
+          `Logged in as <strong>${esc(currentAdminUser.name)}</strong>`;
+        document.getElementById("login-screen").style.display = "none";
+        await loadAll();
+        applyRoleUI();
+      } else {
+        // Check power user
+        const puRes  = await fetch(`${REST}/powerusers?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`, { headers: HEADERS });
+        const puRows = await puRes.json();
+        if (puRows.length) {
+          currentUserIsPowerUser   = true;
+          currentUserPowerInstrIds = puRows.map(r => r.instrument_id);
+          currentAdminUser = { ...userRow, email: session.user.email };
+          document.getElementById("topbar-user").innerHTML =
+            `Logged in as <strong>${esc(currentAdminUser.name)}</strong> <span class="badge-poweruser">Power User</span>`;
+          document.getElementById("login-screen").style.display = "none";
+          await loadAll();
+          applyRoleUI();
+        }
+      }
     }
   }
 })();
