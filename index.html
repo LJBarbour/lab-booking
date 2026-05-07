@@ -192,7 +192,6 @@ main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   object-fit: cover;
   flex-shrink: 0;
   display: none;
-  box-shadow: var(--shadow-sm);
 }
 
 #instr-info-text { flex: 1; min-width: 0; padding-top: 2px; }
@@ -269,7 +268,6 @@ main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   overflow: hidden;
   background: var(--white);
   box-shadow: var(--shadow-sm);
-  flex: 1;
 }
 
 .cell {
@@ -324,7 +322,7 @@ main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 /* Empty bookable cell */
 .cell.clickable:hover {
   background: #eef2ff;
-  cursor: crosshair;
+  cursor: pointer;
 }
 .cell.needs-login:hover {
   background: var(--amber-soft);
@@ -338,8 +336,8 @@ main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 .past-cell .time { background: #f4f5f9; }
 
 /* Drag highlights */
-.cell.drag-book   { background: #c7d7fe !important; cursor: crosshair; }
-.cell.drag-delete { background: #fecaca !important; cursor: crosshair; }
+.cell.drag-book   { background: #c7d7fe !important; cursor: pointer; }
+.cell.drag-delete { background: #fecaca !important; cursor: pointer; }
 
 /* Booking boxes */
 .booking-box {
