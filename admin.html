@@ -476,6 +476,166 @@ a.mailto-link:hover { text-decoration: underline; }
 .format-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,142,247,.06); }
 .format-btn .fmt-icon { font-size: 28px; display: block; margin-bottom: 6px; }
 .format-btn .fmt-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════
+   MOBILE  (≤ 700px)
+   Desktop layout is completely unchanged.
+   On mobile:
+     • Sidebar becomes a fixed bottom tab bar
+     • Main scrolls in the remaining viewport
+     • Tables scroll horizontally; less-important columns hidden
+     • Modals become full-width bottom sheets
+     • Form rows stack to one column
+     • Padding/font sizes tighten
+═══════════════════════════════════════════ */
+@media (max-width: 700px) {
+
+  /* ── Layout ── */
+  body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 48px 1fr 58px;  /* topbar | main | bottom-nav */
+    height: 100dvh;                      /* dynamic viewport height */
+    overflow: hidden;
+  }
+
+  /* ── Top bar ── */
+  #topbar {
+    padding: 0 14px;
+    gap: 8px;
+  }
+  #topbar .logo { font-size: 11px; }
+  #topbar-user  { display: none; }        /* shown inside menu instead */
+
+  /* ── Sidebar → bottom tab bar ── */
+  nav {
+    grid-row: 3;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    flex-direction: row;
+    align-items: stretch;
+    padding: 0;
+    gap: 0;
+  }
+  .nav-section { display: none; }        /* hide "Manage" label */
+
+  .nav-btn {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 4px;
+    border-radius: 0;
+    font-size: 11px;
+    height: 100%;
+  }
+  .nav-btn .icon { font-size: 20px; width: auto; }
+  .nav-btn.active {
+    background: rgba(79,142,247,.15);
+    border-top: 2px solid var(--accent);
+    color: var(--accent);
+    border-left: none;
+  }
+
+  /* ── Main ── */
+  main {
+    grid-row: 2;
+    padding: 16px 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+  }
+  .page-header h1 { font-size: 18px; }
+  .page-header .btn { width: 100%; justify-content: center; }
+
+  /* ── Tables: horizontal scroll, hide less-important columns ── */
+  .card { border-radius: 8px; overflow: hidden; }
+
+  /* Wrap table in a scrollable container */
+  .card table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Tighten cell padding */
+  th { padding: 10px 12px; font-size: 10px; }
+  td { padding: 12px 12px; font-size: 12px; white-space: nowrap; }
+
+  /* Hide lower-priority columns on the Users table */
+  /* Col order: Name | Email | Role | Permissions | Actions */
+  #users-tbody tr td:nth-child(3),       /* Role */
+  #page-users thead tr th:nth-child(3)   { display: none; }
+
+  /* Hide lower-priority columns on the Instruments table */
+  /* Col order: Order | Name | Description | Status | MaxSlots | AdvanceDays | Actions */
+  #instruments-tbody tr td:nth-child(1),
+  #instruments-tbody tr td:nth-child(3),
+  #instruments-tbody tr td:nth-child(5),
+  #instruments-tbody tr td:nth-child(6),
+  #page-instruments thead tr th:nth-child(1),
+  #page-instruments thead tr th:nth-child(3),
+  #page-instruments thead tr th:nth-child(5),
+  #page-instruments thead tr th:nth-child(6) { display: none; }
+
+  /* Action buttons: stack vertically inside cells */
+  td:last-child {
+    white-space: normal !important;
+    text-align: right;
+  }
+  td:last-child .btn-sm {
+    display: inline-block;
+    margin: 2px 0 2px 4px;
+  }
+
+  /* ── Modals → full-width bottom sheet ── */
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 90dvh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: none;
+  }
+  .modal-header { padding: 18px 20px 14px; }
+  .modal-body   { padding: 16px 20px; }
+  .modal-footer { padding: 12px 20px 24px; gap: 8px; }
+  .modal-footer .btn { flex: 1; justify-content: center; }
+
+  /* ── Form rows → single column ── */
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+
+  /* ── Login box → full-width card ── */
+  .login-box {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 16px;
+    padding: 28px 24px;
+  }
+  .login-box h1 { font-size: 20px; margin-bottom: 20px; }
+
+  /* ── Toast → bottom-centre, above tab bar ── */
+  #toast {
+    bottom: 70px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+    text-align: center;
+  }
+
+  /* ── Report format picker ── */
+  .format-pick { gap: 8px; }
+  .format-btn  { padding: 12px 8px; }
+  .format-btn .fmt-icon { font-size: 22px; }
+
+}
 </style>
 </head>
 <body>
