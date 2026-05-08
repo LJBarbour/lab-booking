@@ -1243,7 +1243,7 @@ function renderUsers() {
       <td style="color:var(--muted);font-size:12px">${roleLabel}</td>
       <td>${instrTags}${powerTags ? `<br style="margin:2px 0">${powerTags}` : ""}</td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-report btn-sm" onclick="openUserReport('${esc(u.id)}')">Report</button>
+        <button class="btn btn-report btn-sm" onclick="openUserReport('${esc(u.id)}')">Usage Report</button>
         <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="openEditUser('${esc(u.id)}')">Edit</button>
         <button class="btn btn-danger btn-sm" style="margin-left:6px"
                 onclick="confirmDeleteUser('${esc(u.id)}')">Delete</button>
@@ -1619,11 +1619,11 @@ function renderInstruments() {
     // Power users get Report + Edit only; full admins get all three
     const actionBtns = currentUserIsPowerUser
       ? `<button class="btn btn-report btn-sm"
-                onclick="openReport('${esc(i.id)}')">Report</button>
+                onclick="openReport('${esc(i.id)}')">Usage Report</button>
          <button class="btn btn-ghost btn-sm" style="margin-left:6px"
                 onclick="openEditInstrument('${esc(i.id)}')">Edit</button>`
       : `<button class="btn btn-report btn-sm"
-                onclick="openReport('${esc(i.id)}')">Report</button>
+                onclick="openReport('${esc(i.id)}')">Usage Report</button>
          <button class="btn btn-ghost btn-sm" style="margin-left:6px"
                 onclick="openEditInstrument('${esc(i.id)}')">Edit</button>
          <button class="btn btn-danger btn-sm" style="margin-left:6px"
