@@ -1322,17 +1322,18 @@ function renderUsers() {
     // Action buttons differ by who is logged in
     let actionBtns;
     if (currentUserIsCurator) {
-      // Curators can only edit permissions for their instruments; no delete, no full edit
+      // Curators cannot edit permissions for administrators, nor their own
+      const canEditPerms = role !== "administrator" && u.id !== currentAdminUser.id;
       actionBtns = `
-        <button class="btn btn-report btn-sm" onclick="openUserReport('${esc(u.id)}')">Usage Report</button>
-        <button class="btn btn-ghost btn-sm" style="margin-left:6px"
-                onclick="openEditUserPermissions('${esc(u.id)}')">Edit Permissions</button>`;
+        ${canEditPerms ? `<button class="btn btn-ghost btn-sm"
+                onclick="openEditUserPermissions('${esc(u.id)}')">Edit Permissions</button>` : ""}
+        <button class="btn btn-report btn-sm" style="margin-left:6px" onclick="openUserReport('${esc(u.id)}')">Usage Report</button>`;
     } else {
       actionBtns = `
-        <button class="btn btn-report btn-sm" onclick="openUserReport('${esc(u.id)}')">Usage Report</button>
-        <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="openEditUser('${esc(u.id)}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="openEditUser('${esc(u.id)}')">Edit</button>
         <button class="btn btn-danger btn-sm" style="margin-left:6px"
-                onclick="confirmDeleteUser('${esc(u.id)}')">Delete</button>`;
+                onclick="confirmDeleteUser('${esc(u.id)}')">Delete</button>
+        <button class="btn btn-report btn-sm" style="margin-left:6px" onclick="openUserReport('${esc(u.id)}')">Usage Report</button>`;
     }
 
     return `<tr>
