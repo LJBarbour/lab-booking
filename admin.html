@@ -189,15 +189,6 @@ tr:hover td { background: var(--surface2); }
 }
 .tag-none { color: var(--muted); font-style: italic; font-size: 12px; }
 
-.color-dot {
-  display: inline-block;
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  margin-right: 6px;
-  vertical-align: middle;
-  border: 1px solid rgba(255,255,255,.15);
-}
-
 /* ── Modal ── */
 .modal-backdrop {
   display: none;
@@ -296,6 +287,69 @@ tr:hover td { background: var(--surface2); }
   border-color: var(--accent);
   color: var(--accent);
 }
+.perm-chip.curator-checked {
+  background: rgba(240,160,75,.15);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+/* ── Permission items with per-instrument restrictions ── */
+.perm-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  margin-bottom: 6px;
+  transition: border-color .15s;
+  overflow: hidden;
+}
+.perm-item.checked { border-color: var(--accent); }
+.perm-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.perm-item-header input[type=checkbox] { cursor: pointer; accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; }
+.perm-item-header .perm-item-name { font-size: 13px; flex: 1; }
+.perm-item-header .perm-item-hint {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.perm-item-restrictions {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--border);
+  background: rgba(79,142,247,.04);
+}
+.perm-item-restrictions.visible { display: grid; }
+.perm-item-restrictions .restrict-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 5px;
+}
+.perm-item-restrictions input[type=number] {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color .15s;
+}
+.perm-item-restrictions input[type=number]:focus { border-color: var(--accent); }
 
 .form-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
@@ -401,7 +455,7 @@ tr:hover td { background: var(--surface2); }
   text-transform: uppercase;
 }
 
-.badge-poweruser {
+.badge-curator {
   font-family: var(--mono);
   font-size: 10px;
   padding: 2px 7px;
@@ -413,10 +467,16 @@ tr:hover td { background: var(--surface2); }
   text-transform: uppercase;
 }
 
-.perm-chip.power-checked {
-  background: rgba(240,160,75,.15);
-  border-color: var(--warning);
+.perm-scope-note {
+  font-size: 12px;
   color: var(--warning);
+  background: rgba(240,160,75,.08);
+  border: 1px solid rgba(240,160,75,.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-family: var(--mono);
+  letter-spacing: .01em;
 }
 
 .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
@@ -479,32 +539,21 @@ a.mailto-link:hover { text-decoration: underline; }
 
 /* ═══════════════════════════════════════════
    MOBILE  (≤ 700px)
-   Desktop layout is completely unchanged.
-   On mobile:
-     • Sidebar becomes a fixed bottom tab bar
-     • Main scrolls in the remaining viewport
-     • Tables scroll horizontally; less-important columns hidden
-     • Modals become full-width bottom sheets
-     • Form rows stack to one column
-     • Padding/font sizes tighten
 ═══════════════════════════════════════════ */
 @media (max-width: 700px) {
 
   /* ── Layout ── */
   body {
     grid-template-columns: 1fr;
-    grid-template-rows: 48px 1fr 58px;  /* topbar | main | bottom-nav */
-    height: 100dvh;                      /* dynamic viewport height */
+    grid-template-rows: 48px 1fr 58px;
+    height: 100dvh;
     overflow: hidden;
   }
 
   /* ── Top bar ── */
-  #topbar {
-    padding: 0 14px;
-    gap: 8px;
-  }
+  #topbar { padding: 0 14px; gap: 8px; }
   #topbar .logo { font-size: 11px; }
-  #topbar-user  { display: none; }        /* shown inside menu instead */
+  #topbar-user  { display: none; }
 
   /* ── Sidebar → bottom tab bar ── */
   nav {
@@ -516,7 +565,7 @@ a.mailto-link:hover { text-decoration: underline; }
     padding: 0;
     gap: 0;
   }
-  .nav-section { display: none; }        /* hide "Manage" label */
+  .nav-section { display: none; }
 
   .nav-btn {
     flex: 1;
@@ -556,47 +605,29 @@ a.mailto-link:hover { text-decoration: underline; }
   .page-header h1 { font-size: 18px; }
   .page-header .btn { width: 100%; justify-content: center; }
 
-  /* ── Tables: horizontal scroll, hide less-important columns ── */
+  /* ── Tables: horizontal scroll ── */
   .card { border-radius: 8px; overflow: hidden; }
-
-  /* Wrap table in a scrollable container */
   .card table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-  /* Tighten cell padding */
   th { padding: 10px 12px; font-size: 10px; }
   td { padding: 12px 12px; font-size: 12px; white-space: nowrap; }
 
   /* Hide lower-priority columns on the Users table */
   /* Col order: Name | Email | Role | Permissions | Actions */
-  #users-tbody tr td:nth-child(3),       /* Role */
-  #page-users thead tr th:nth-child(3)   { display: none; }
+  #users-tbody tr td:nth-child(3),
+  #page-users thead tr th:nth-child(3) { display: none; }
 
   /* Hide lower-priority columns on the Instruments table */
-  /* Col order: Order | Name | Description | Status | MaxSlots | AdvanceDays | Actions */
+  /* Col order: Order | Name | Description | Status | Actions */
   #instruments-tbody tr td:nth-child(1),
   #instruments-tbody tr td:nth-child(3),
-  #instruments-tbody tr td:nth-child(5),
-  #instruments-tbody tr td:nth-child(6),
   #page-instruments thead tr th:nth-child(1),
-  #page-instruments thead tr th:nth-child(3),
-  #page-instruments thead tr th:nth-child(5),
-  #page-instruments thead tr th:nth-child(6) { display: none; }
+  #page-instruments thead tr th:nth-child(3) { display: none; }
 
-  /* Action buttons: stack vertically inside cells */
-  td:last-child {
-    white-space: normal !important;
-    text-align: right;
-  }
-  td:last-child .btn-sm {
-    display: inline-block;
-    margin: 2px 0 2px 4px;
-  }
+  td:last-child { white-space: normal !important; text-align: right; }
+  td:last-child .btn-sm { display: inline-block; margin: 2px 0 2px 4px; }
 
   /* ── Modals → full-width bottom sheet ── */
-  .modal-backdrop {
-    align-items: flex-end;
-    padding: 0;
-  }
+  .modal-backdrop { align-items: flex-end; padding: 0; }
   .modal {
     width: 100% !important;
     max-width: 100% !important;
@@ -611,8 +642,9 @@ a.mailto-link:hover { text-decoration: underline; }
 
   /* ── Form rows → single column ── */
   .form-row { grid-template-columns: 1fr; gap: 0; }
+  .perm-item-restrictions { grid-template-columns: 1fr; }
 
-  /* ── Login box → full-width card ── */
+  /* ── Login box ── */
   .login-box {
     width: 100%;
     max-width: 400px;
@@ -621,20 +653,13 @@ a.mailto-link:hover { text-decoration: underline; }
   }
   .login-box h1 { font-size: 20px; margin-bottom: 20px; }
 
-  /* ── Toast → bottom-centre, above tab bar ── */
-  #toast {
-    bottom: 70px;
-    right: 12px;
-    left: 12px;
-    max-width: none;
-    text-align: center;
-  }
+  /* ── Toast ── */
+  #toast { bottom: 70px; right: 12px; left: 12px; max-width: none; text-align: center; }
 
   /* ── Report format picker ── */
   .format-pick { gap: 8px; }
   .format-btn  { padding: 12px 8px; }
   .format-btn .fmt-icon { font-size: 22px; }
-
 }
 </style>
 </head>
@@ -722,13 +747,11 @@ a.mailto-link:hover { text-decoration: underline; }
             <th>Name</th>
             <th>Description</th>
             <th>Status</th>
-            <th>Max Slots</th>
-            <th>Advance Days</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="instruments-tbody">
-          <tr><td colspan="7" class="empty-state">Loading…</td></tr>
+          <tr><td colspan="5" class="empty-state">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -766,30 +789,53 @@ a.mailto-link:hover { text-decoration: underline; }
       </div>
 
       <div class="form-group">
-        <label>Admin Access</label>
-        <select id="u-admin">
-          <option value="false">No — standard researcher</option>
-          <option value="true">Yes — can access admin console</option>
+        <label>Role</label>
+        <select id="u-role" onchange="onRoleChange()">
+          <option value="user">User — standard researcher</option>
+          <option value="curator">Curator — manages designated instruments</option>
+          <option value="administrator">Administrator — full system access</option>
         </select>
       </div>
 
       <hr class="form-divider">
 
-      <div class="form-group">
-        <label>Instrument Permissions</label>
-        <div class="checkbox-group" id="u-permissions"></div>
+      <!-- Shown when role = "user" -->
+      <div id="u-permissions-section">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Instrument Permissions
+            <span style="font-family:var(--sans);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px">
+              — tick to grant access; set optional booking restrictions below each
+            </span>
+          </label>
+          <div id="u-permissions" style="margin-top:8px"></div>
+        </div>
       </div>
 
-      <hr class="form-divider">
-
-      <div class="form-group">
-        <label>Power User Instruments
-          <span style="font-family:var(--sans);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px">
-            — can edit instrument details &amp; run reports
-          </span>
-        </label>
-        <div class="checkbox-group" id="u-powerusers"></div>
+      <!-- Shown when role = "curator" -->
+      <div id="u-curator-section" style="display:none">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Managed Instruments
+            <span style="font-family:var(--sans);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px">
+              — instruments this curator can edit &amp; report on
+            </span>
+          </label>
+          <div class="checkbox-group" id="u-curators" style="margin-top:8px"></div>
+        </div>
       </div>
+
+      <!-- Shown when role = "curator" — user-level access on non-curated instruments -->
+      <div id="u-curator-extra-section" style="display:none">
+        <hr class="form-divider">
+        <div class="form-group" style="margin-bottom:0">
+          <label>User Access to Other Instruments
+            <span style="font-family:var(--sans);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px">
+              — instruments this curator can also book as a regular user
+            </span>
+          </label>
+          <div id="u-permissions-extra" style="margin-top:8px"></div>
+        </div>
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-user')">Cancel</button>
@@ -844,19 +890,6 @@ a.mailto-link:hover { text-decoration: underline; }
         <textarea id="i-notes" placeholder="Notes about current operational status…"></textarea>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Max Bookable Slots</label>
-          <input id="i-maxslot" type="number" min="1" placeholder="e.g. 5" />
-          <div class="form-hint">Max future slots per user at once</div>
-        </div>
-        <div class="form-group">
-          <label>Advance Booking (days)</label>
-          <input id="i-advancedays" type="number" min="1" placeholder="e.g. 30" />
-          <div class="form-hint">How far ahead users can book</div>
-        </div>
-      </div>
-
       <div class="form-group">
         <label>Sort Order</label>
         <input id="i-sortorder" type="number" min="1" placeholder="e.g. 1" />
@@ -878,6 +911,7 @@ a.mailto-link:hover { text-decoration: underline; }
       <button class="modal-close" onclick="closeModal('modal-user-report')">✕</button>
     </div>
     <div class="modal-body">
+      <div id="user-report-scope" class="perm-scope-note" style="display:none"></div>
       <div class="form-row" style="margin-bottom:18px">
         <div class="form-group" style="margin-bottom:0">
           <label>From date</label>
@@ -952,6 +986,32 @@ a.mailto-link:hover { text-decoration: underline; }
   </div>
 </div>
 
+<!-- ── Modal: Curator — Edit User Permissions ── -->
+<div id="modal-curator-perm" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="curator-perm-title">Edit Permissions</h2>
+      <button class="modal-close" onclick="closeModal('modal-curator-perm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-curator-perm-alert"></div>
+      <p id="curator-perm-scope" class="perm-scope-note" style="display:none"></p>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Instrument Access
+          <span style="font-family:var(--sans);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px">
+            — your managed instruments only
+          </span>
+        </label>
+        <div id="curator-perm-items" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-curator-perm')">Cancel</button>
+      <button class="btn btn-primary" id="curator-perm-save-btn" onclick="saveUserPermissions()">Save Permissions</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Modal: Confirm Delete ── -->
 <div id="modal-confirm" class="modal-backdrop">
   <div class="modal" style="width:420px">
@@ -972,27 +1032,12 @@ a.mailto-link:hover { text-decoration: underline; }
 <script>
 // ─────────────────────────────────────────────────────────────────
 //  KEYS
-//  The anon key handles login and all data (REST) operations.
-//  The service role key is required for:
-//    • Creating auth users without a confirmation email
-//    • Listing all auth users (to show emails in the table)
-//    • Resetting any user's password from the admin panel
-//    • Deleting users from Supabase Auth
-//
-//  Where to find it:
-//    Supabase dashboard → Project Settings → API → service_role (secret)
-//
-//  ⚠ This key bypasses Row Level Security. Keep this page private
-//    and behind the admin login — never expose it publicly.
 // ─────────────────────────────────────────────────────────────────
 const SUPABASE_URL     = "https://mqpvnisphntdwhqoiqlt.supabase.co";
 const ANON_KEY         = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
-const SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzU3Mzk2MiwiZXhwIjoyMDkzMTQ5OTYyfQ.IzEy0FQJNVSGxfpi2Rl9PCnc3MuQ_bse3JnUyWtCxcE"; // ← paste from Supabase dashboard
+const SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzU3Mzk2MiwiZXhwIjoyMDkzMTQ5OTYyfQ.IzEy0FQJNVSGxfpi2Rl9PCnc3MuQ_bse3JnUyWtCxcE";
 
-// Anon client — for login and all data table operations
 const sb = supabase.createClient(SUPABASE_URL, ANON_KEY);
-
-// Admin client — for auth management only (uses service role key)
 const sbAdmin = supabase.createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
@@ -1005,15 +1050,16 @@ const HEADERS = {
   "Prefer":        "return=representation"
 };
 
-let currentAdminUser          = null;
-let currentUserIsPowerUser    = false;   // true when logged in as power user (not full admin)
-let currentUserPowerInstrIds  = [];      // instrument IDs this power user manages
-let allUsers         = [];
-let allAuthUsers     = [];
-let allInstruments   = [];
-let allPermissions   = [];
-let allPowerUsers    = [];
-let allBookings      = [];
+let currentAdminUser           = null;
+let currentUserIsCurator       = false;   // true when logged in as curator (not full admin)
+let currentUserCuratorInstrIds = [];      // instrument IDs this curator manages
+let allUsers          = [];
+let allAuthUsers      = [];
+let allInstruments    = [];
+let allPermissions    = [];
+let allCurators       = [];
+let allAdministrators = [];
+let allBookings       = [];
 
 let editingUserId  = null;
 let editingInstrId = null;
@@ -1039,7 +1085,7 @@ async function doLogin() {
     return;
   }
 
-  // Verify admin or power-user status
+  // Verify role
   const res  = await fetch(`${REST}/users?id=eq.${data.user.id}&select=*`, { headers: HEADERS });
   const rows = await res.json();
 
@@ -1052,28 +1098,34 @@ async function doLogin() {
 
   const userRow = rows[0];
 
-  if (!userRow.admin) {
-    // Check if this user is a power user for any instrument
-    const puRes  = await fetch(`${REST}/powerusers?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`, { headers: HEADERS });
-    const puRows = await puRes.json();
+  // Check administrators table
+  const adminRes  = await fetch(`${REST}/administrators?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`, { headers: HEADERS });
+  const adminRows = await adminRes.json();
 
-    if (!puRows.length) {
-      errEl.textContent = "Access denied — admin or power user privileges required.";
+  if (adminRows.length) {
+    // Full administrator
+    currentUserIsCurator       = false;
+    currentUserCuratorInstrIds = [];
+  } else {
+    // Check curators table
+    const curRes  = await fetch(`${REST}/curators?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`, { headers: HEADERS });
+    const curRows = await curRes.json();
+
+    if (!curRows.length) {
+      errEl.textContent = "Access denied — administrator or curator privileges required.";
       await sb.auth.signOut();
       btn.disabled = false; btn.textContent = "Sign In";
       return;
     }
 
-    // Power user login
-    currentUserIsPowerUser   = true;
-    currentUserPowerInstrIds = puRows.map(r => r.instrument_id);
-  } else {
-    currentUserIsPowerUser   = false;
-    currentUserPowerInstrIds = [];
+    currentUserIsCurator       = true;
+    currentUserCuratorInstrIds = curRows.map(r => r.instrument_id);
   }
 
   currentAdminUser = { ...userRow, email: data.user.email };
-  const roleLabel = currentUserIsPowerUser ? " <span class='badge-poweruser'>Power User</span>" : "";
+  const roleLabel = currentUserIsCurator
+    ? " <span class='badge-curator'>Curator</span>"
+    : " <span class='badge-admin'>Admin</span>";
   document.getElementById("topbar-user").innerHTML =
     `Logged in as <strong>${esc(currentAdminUser.name)}</strong>${roleLabel}`;
   document.getElementById("login-screen").style.display = "none";
@@ -1085,9 +1137,9 @@ async function doLogin() {
 
 async function doLogout() {
   await sb.auth.signOut();
-  currentAdminUser         = null;
-  currentUserIsPowerUser   = false;
-  currentUserPowerInstrIds = [];
+  currentAdminUser           = null;
+  currentUserIsCurator       = false;
+  currentUserCuratorInstrIds = [];
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("login-password").value = "";
   document.getElementById("login-error").textContent = "";
@@ -1104,21 +1156,23 @@ async function apiGet(path) {
 }
 
 async function loadAll() {
-  const [users, instruments, permissions, powerusers, bookings, authResult] = await Promise.all([
+  const [users, instruments, permissions, curators, administrators, bookings, authResult] = await Promise.all([
     apiGet("users?select=*"),
     apiGet("instruments?select=*&order=sortorder.asc.nullslast,name.asc"),
     apiGet("permissions?select=*"),
-    apiGet("powerusers?select=*"),
+    apiGet("curators?select=*"),
+    apiGet("administrators?select=*"),
     apiGet("bookings?select=*"),
     sbAdmin.auth.admin.listUsers({ perPage: 1000 })
   ]);
 
-  allUsers       = users;
-  allInstruments = instruments;
-  allPermissions = permissions;
-  allPowerUsers  = powerusers;
-  allBookings    = bookings;
-  allAuthUsers   = authResult?.data?.users ?? [];
+  allUsers          = users;
+  allInstruments    = instruments;
+  allPermissions    = permissions;
+  allCurators       = curators;
+  allAdministrators = administrators;
+  allBookings       = bookings;
+  allAuthUsers      = authResult?.data?.users ?? [];
 
   renderUsers();
   renderInstruments();
@@ -1140,20 +1194,25 @@ function switchPage(page) {
 // ═══════════════════════════════════════════
 
 function applyRoleUI() {
-  const isPU = currentUserIsPowerUser;
+  const isCurator = currentUserIsCurator;
 
-  // Power users land on Instruments, can't access Users
-  if (isPU) {
+  // Curators can see both pages; they land on Instruments
+  if (isCurator) {
     switchPage("instruments");
-    document.querySelector('[data-page="users"]').style.display  = "none";
+    document.querySelector('[data-page="users"]').style.display  = "";
+    document.querySelector('[data-page="instruments"]').style.display = "";
   } else {
     document.querySelector('[data-page="users"]').style.display  = "";
     document.querySelector('[data-page="instruments"]').style.display = "";
   }
 
-  // "Add Instrument" button — hidden for power users
+  // "Add User" button — hidden for curators
+  const addUserBtn = document.querySelector('#page-users .btn-primary');
+  if (addUserBtn) addUserBtn.style.display = isCurator ? "none" : "";
+
+  // "Add Instrument" button — hidden for curators
   const addInstrBtn = document.querySelector('#page-instruments .btn-primary');
-  if (addInstrBtn) addInstrBtn.style.display = isPU ? "none" : "";
+  if (addInstrBtn) addInstrBtn.style.display = isCurator ? "none" : "";
 }
 
 // ═══════════════════════════════════════════
@@ -1190,6 +1249,12 @@ function getAuthEmail(userId) {
   return au?.email ?? null;
 }
 
+function getUserRole(userId) {
+  if (allAdministrators.some(a => a.user_id === userId)) return "administrator";
+  if (allCurators.some(c => c.user_id === userId))       return "curator";
+  return "user";
+}
+
 function renderUsers() {
   const tbody = document.getElementById("users-tbody");
 
@@ -1199,8 +1264,9 @@ function renderUsers() {
   }
 
   const sorted = [...allUsers].sort((a, b) => {
-    if (a.admin && !b.admin) return -1;
-    if (!a.admin && b.admin) return  1;
+    const ra = getUserRole(a.id), rb = getUserRole(b.id);
+    const order = { administrator: 0, curator: 1, user: 2 };
+    if (order[ra] !== order[rb]) return order[ra] - order[rb];
     return (a.name || "").localeCompare(b.name || "");
   });
 
@@ -1210,46 +1276,91 @@ function renderUsers() {
       ? `<a class="mailto-link" href="mailto:${esc(email)}">${esc(email)}</a>`
       : `<span class="tag-none">—</span>`;
 
-    const userPerms = allPermissions.filter(p => p.user_id === u.id);
-    const instrTags = userPerms.length
-      ? userPerms.map(p => {
-          const ins = allInstruments.find(i => i.id === p.instrument_id);
-          return ins ? `<span class="tag">${esc(ins.name)}</span>` : "";
-        }).join("")
-      : `<span class="tag-none">No permissions</span>`;
-
-    // Power user tags (amber)
-    const userPowerInstrs = allPowerUsers.filter(p => p.user_id === u.id);
-    const powerTags = userPowerInstrs.length
-      ? userPowerInstrs.map(p => {
-          const ins = allInstruments.find(i => i.id === p.instrument_id);
-          return ins ? `<span class="tag" style="background:rgba(240,160,75,.15);color:var(--warning);border:1px solid rgba(240,160,75,.3)">⚡ ${esc(ins.name)}</span>` : "";
-        }).join("")
-      : "";
-
-    const isPU = !u.admin && userPowerInstrs.length > 0;
-    const roleLabel = u.admin
-      ? "Administrator"
-      : isPU ? `Power User` : "Researcher";
-    const roleBadge = u.admin
+    const role = getUserRole(u.id);
+    const roleBadge = role === "administrator"
       ? `<span class="badge-admin" style="margin-left:8px">Admin</span>`
-      : isPU ? `<span class="badge-poweruser" style="margin-left:8px">Power User</span>` : "";
+      : role === "curator"
+        ? `<span class="badge-curator" style="margin-left:8px">Curator</span>`
+        : "";
 
-    return `<tr>
-      <td>
-        <strong>${esc(u.name)}</strong>${roleBadge}
-      </td>
-      <td>${emailCell}</td>
-      <td style="color:var(--muted);font-size:12px">${roleLabel}</td>
-      <td>${instrTags}${powerTags ? `<br style="margin:2px 0">${powerTags}` : ""}</td>
-      <td style="text-align:right;white-space:nowrap">
+    const roleLabel = role === "administrator" ? "Administrator"
+      : role === "curator" ? "Curator" : "Researcher";
+
+    // Build instrument tags — always show full picture
+    let instrTags = "";
+    if (role === "administrator") {
+      instrTags = `<span class="tag-none" style="font-style:normal">All instruments</span>`;
+    } else {
+      // Curator assignments (amber)
+      const curatorInstrs = allCurators.filter(c => c.user_id === u.id);
+      const curatorTags = curatorInstrs.map(c => {
+        const ins = allInstruments.find(i => i.id === c.instrument_id);
+        return ins
+          ? `<span class="tag" style="background:rgba(240,160,75,.15);color:var(--warning);border:1px solid rgba(240,160,75,.3)">🔧 ${esc(ins.name)}</span>`
+          : "";
+      }).join("");
+
+      // User-level permissions (blue), including those a curator holds on other instruments
+      const userPerms = allPermissions.filter(p => p.user_id === u.id);
+      const permTags = userPerms.map(p => {
+        const ins = allInstruments.find(i => i.id === p.instrument_id);
+        if (!ins) return "";
+        const parts = [];
+        if (p.maxslot)     parts.push(`${p.maxslot}h`);
+        if (p.advancedays) parts.push(`${p.advancedays}d`);
+        const hint = parts.length
+          ? `<span style="opacity:.55;margin-left:3px">${parts.join("·")}</span>`
+          : "";
+        return `<span class="tag">${esc(ins.name)}${hint}</span>`;
+      }).join("");
+
+      instrTags = curatorTags + permTags;
+      if (!instrTags) instrTags = `<span class="tag-none">No permissions</span>`;
+    }
+
+    // Action buttons differ by who is logged in
+    let actionBtns;
+    if (currentUserIsCurator) {
+      // Curators can only edit permissions for their instruments; no delete, no full edit
+      actionBtns = `
+        <button class="btn btn-report btn-sm" onclick="openUserReport('${esc(u.id)}')">Usage Report</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:6px"
+                onclick="openEditUserPermissions('${esc(u.id)}')">Edit Permissions</button>`;
+    } else {
+      actionBtns = `
         <button class="btn btn-report btn-sm" onclick="openUserReport('${esc(u.id)}')">Usage Report</button>
         <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="openEditUser('${esc(u.id)}')">Edit</button>
         <button class="btn btn-danger btn-sm" style="margin-left:6px"
-                onclick="confirmDeleteUser('${esc(u.id)}')">Delete</button>
+                onclick="confirmDeleteUser('${esc(u.id)}')">Delete</button>`;
+    }
+
+    return `<tr>
+      <td><strong>${esc(u.name)}</strong>${roleBadge}</td>
+      <td>${emailCell}</td>
+      <td style="color:var(--muted);font-size:12px">${roleLabel}</td>
+      <td>${instrTags}</td>
+      <td style="text-align:right;white-space:nowrap">${actionBtns}
       </td>
     </tr>`;
   }).join("");
+}
+
+// ═══════════════════════════════════════════
+//  USERS — ROLE MODAL SECTION TOGGLE
+// ═══════════════════════════════════════════
+
+function onRoleChange() {
+  const role = document.getElementById("u-role").value;
+  document.getElementById("u-permissions-section").style.display      = role === "user"    ? "" : "none";
+  document.getElementById("u-curator-section").style.display          = role === "curator" ? "" : "none";
+  document.getElementById("u-curator-extra-section").style.display    = role === "curator" ? "" : "none";
+
+  if (role === "curator") {
+    // Build extra permissions for instruments NOT currently selected as curator instruments
+    const curatedIds = [...document.querySelectorAll("#u-curators input:checked")].map(el => el.value);
+    const otherIds   = allInstruments.filter(i => !curatedIds.includes(i.id)).map(i => i.id);
+    buildPermItemsInto("u-permissions-extra", editingUserId, otherIds, "permx-");
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1267,11 +1378,13 @@ function openAddUser() {
   document.getElementById("u-password").value = "";
   document.getElementById("u-pw-hint").textContent =
     "Required. The user can change this after logging in.";
-  document.getElementById("u-admin").value    = "false";
+  document.getElementById("u-role").value = "user";
+  onRoleChange();
 
   setModalAlert("modal-user-alert", "");
-  buildPermChips(null);
-  buildPowerUserChips(null);
+  buildPermItemsInto("u-permissions", null, null, "perm-");
+  buildPermItemsInto("u-permissions-extra", null, allInstruments.map(i => i.id), "permx-");
+  buildCuratorChips(null);
   openModal("modal-user");
   setTimeout(() => document.getElementById("u-name").focus(), 60);
 }
@@ -1286,6 +1399,11 @@ function openEditUser(userId) {
 
   editingUserId = userId;
 
+  const role = getUserRole(userId);
+  // Instruments this user currently curates (used to exclude from extra section)
+  const curatedIds = allCurators.filter(c => c.user_id === userId).map(c => c.instrument_id);
+  const otherIds   = allInstruments.filter(i => !curatedIds.includes(i.id)).map(i => i.id);
+
   document.getElementById("modal-user-title").textContent = "Edit User";
   document.getElementById("u-save-btn").textContent       = "Save Changes";
   document.getElementById("u-name").value     = u.name || "";
@@ -1294,21 +1412,109 @@ function openEditUser(userId) {
   document.getElementById("u-password").value = "";
   document.getElementById("u-pw-hint").textContent =
     "Leave blank to keep the current password.";
-  document.getElementById("u-admin").value    = u.admin ? "true" : "false";
+  document.getElementById("u-role").value = role;
+  onRoleChange();
 
   setModalAlert("modal-user-alert", "");
-  buildPermChips(userId);
-  buildPowerUserChips(userId);
+  buildPermItemsInto("u-permissions", userId, null, "perm-");
+  buildPermItemsInto("u-permissions-extra", userId, otherIds, "permx-");
+  buildCuratorChips(userId);
   openModal("modal-user");
   setTimeout(() => document.getElementById("u-name").focus(), 60);
 }
 
 // ═══════════════════════════════════════════
-//  PERMISSIONS CHIPS
+//  PERMISSION ITEMS — GENERIC BUILDER
+//  containerId : element to fill
+//  userId      : pre-populate from existing permissions (null = new user)
+//  instrIds    : array of instrument IDs to show (null = all)
+//  prefix      : CSS-id prefix e.g. "perm-" / "permx-" / "permc-"
 // ═══════════════════════════════════════════
 
-function buildPermChips(userId) {
-  const container = document.getElementById("u-permissions");
+function buildPermItemsInto(containerId, userId, instrIds, prefix) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const instrs = instrIds
+    ? allInstruments.filter(i => instrIds.includes(i.id))
+    : allInstruments;
+
+  if (!instrs.length) {
+    container.innerHTML =
+      `<span style="color:var(--muted);font-size:13px">No instruments available.</span>`;
+    return;
+  }
+
+  const existingPerms = userId
+    ? allPermissions.filter(p => p.user_id === userId)
+    : [];
+
+  container.innerHTML = instrs.map(i => {
+    const perm        = existingPerms.find(p => p.instrument_id === i.id);
+    const checked     = !!perm;
+    const maxslot     = perm?.maxslot     ?? "";
+    const advancedays = perm?.advancedays ?? "";
+    const hintParts   = [];
+    if (maxslot)     hintParts.push(`${maxslot}h`);
+    if (advancedays) hintParts.push(`${advancedays}d adv.`);
+    const hint = checked
+      ? (hintParts.length ? hintParts.join(" · ") : "Unrestricted")
+      : "";
+    const eid = CSS.escape(i.id);
+    return `
+    <div class="perm-item ${checked ? "checked" : ""}" id="${prefix}item-${eid}">
+      <label class="perm-item-header">
+        <input type="checkbox" value="${esc(i.id)}" ${checked ? "checked" : ""}
+               onchange="togglePermItemPrefixed(this,'${prefix}')">
+        <span class="perm-item-name">${esc(i.name)}</span>
+        <span class="perm-item-hint" id="${prefix}hint-${eid}">${esc(hint)}</span>
+      </label>
+      <div class="perm-item-restrictions ${checked ? "visible" : ""}" id="${prefix}restrict-${eid}">
+        <div>
+          <span class="restrict-label">Max future hours</span>
+          <input type="number" min="1" placeholder="Unlimited"
+                 id="${prefix}maxslot-${eid}" value="${esc(maxslot)}"
+                 oninput="updatePermHintPrefixed('${prefix}','${eid}')">
+        </div>
+        <div>
+          <span class="restrict-label">Advance booking (days)</span>
+          <input type="number" min="1" placeholder="Unlimited"
+                 id="${prefix}advdays-${eid}" value="${esc(advancedays)}"
+                 oninput="updatePermHintPrefixed('${prefix}','${eid}')">
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function togglePermItemPrefixed(input, prefix) {
+  const eid      = CSS.escape(input.value);
+  const item     = document.getElementById(`${prefix}item-${eid}`);
+  const restrict = document.getElementById(`${prefix}restrict-${eid}`);
+  if (item)     item.classList.toggle("checked", input.checked);
+  if (restrict) restrict.classList.toggle("visible", input.checked);
+  updatePermHintPrefixed(prefix, eid);
+}
+
+function updatePermHintPrefixed(prefix, eid) {
+  const msEl = document.getElementById(`${prefix}maxslot-${eid}`);
+  const adEl = document.getElementById(`${prefix}advdays-${eid}`);
+  const cbEl = document.querySelector(`#${prefix}item-${eid} input[type=checkbox]`);
+  const hint = document.getElementById(`${prefix}hint-${eid}`);
+  if (!hint) return;
+  if (!cbEl?.checked) { hint.textContent = ""; return; }
+  const parts = [];
+  if (msEl?.value) parts.push(`${msEl.value}h`);
+  if (adEl?.value) parts.push(`${adEl.value}d adv.`);
+  hint.textContent = parts.length ? parts.join(" · ") : "Unrestricted";
+}
+
+// ═══════════════════════════════════════════
+//  CURATOR CHIPS
+// ═══════════════════════════════════════════
+
+function buildCuratorChips(userId) {
+  const container = document.getElementById("u-curators");
 
   if (!allInstruments.length) {
     container.innerHTML =
@@ -1316,54 +1522,24 @@ function buildPermChips(userId) {
     return;
   }
 
-  // Build set of instrument IDs this user currently has
   const granted = new Set(
     userId
-      ? allPermissions.filter(p => p.user_id === userId).map(p => p.instrument_id)
+      ? allCurators.filter(c => c.user_id === userId).map(c => c.instrument_id)
       : []
   );
 
   container.innerHTML = allInstruments.map(i => {
     const checked = granted.has(i.id);
-    return `<label class="perm-chip ${checked ? "checked" : ""}">
+    return `<label class="perm-chip ${checked ? "curator-checked" : ""}">
       <input type="checkbox" value="${esc(i.id)}" ${checked ? "checked" : ""}
-             onchange="toggleChip(this)">
+             onchange="toggleCuratorChip(this)">
       ${esc(i.name)}
     </label>`;
   }).join("");
 }
 
-function toggleChip(input) {
-  input.closest(".perm-chip").classList.toggle("checked", input.checked);
-}
-
-function buildPowerUserChips(userId) {
-  const container = document.getElementById("u-powerusers");
-
-  if (!allInstruments.length) {
-    container.innerHTML =
-      `<span style="color:var(--muted);font-size:13px">No instruments defined yet.</span>`;
-    return;
-  }
-
-  const granted = new Set(
-    userId
-      ? allPowerUsers.filter(p => p.user_id === userId).map(p => p.instrument_id)
-      : []
-  );
-
-  container.innerHTML = allInstruments.map(i => {
-    const checked = granted.has(i.id);
-    return `<label class="perm-chip ${checked ? "power-checked" : ""}" id="pu-chip-${CSS.escape(i.id)}">
-      <input type="checkbox" value="${esc(i.id)}" ${checked ? "checked" : ""}
-             onchange="togglePUChip(this)">
-      ${esc(i.name)}
-    </label>`;
-  }).join("");
-}
-
-function togglePUChip(input) {
-  input.closest(".perm-chip").classList.toggle("power-checked", input.checked);
+function toggleCuratorChip(input) {
+  input.closest(".perm-chip").classList.toggle("curator-checked", input.checked);
 }
 
 // ═══════════════════════════════════════════
@@ -1374,7 +1550,7 @@ async function saveUser() {
   const name     = document.getElementById("u-name").value.trim();
   const email    = document.getElementById("u-email").value.trim();
   const password = document.getElementById("u-password").value;
-  const isAdmin  = document.getElementById("u-admin").value === "true";
+  const role     = document.getElementById("u-role").value;
   const btn      = document.getElementById("u-save-btn");
 
   setModalAlert("modal-user-alert", "");
@@ -1399,12 +1575,11 @@ async function saveUser() {
       btn.disabled = false; btn.textContent = "Create User"; return;
     }
 
-    // Create in Supabase Auth via admin API (no confirmation email sent)
     const { data: created, error: createErr } =
       await sbAdmin.auth.admin.createUser({
         email,
         password,
-        email_confirm: true   // mark as confirmed immediately
+        email_confirm: true
       });
 
     if (createErr) {
@@ -1414,11 +1589,10 @@ async function saveUser() {
 
     const authId = created.user.id;
 
-    // Insert into our users table using the auth-generated UUID
     const insertRes = await fetch(`${REST}/users`, {
       method:  "POST",
       headers: HEADERS,
-      body:    JSON.stringify({ id: authId, name, admin: isAdmin })
+      body:    JSON.stringify({ id: authId, name })
     });
 
     if (!insertRes.ok) {
@@ -1428,20 +1602,26 @@ async function saveUser() {
       btn.disabled = false; btn.textContent = "Create User"; return;
     }
 
-    // Now save permissions using the real auth UUID
-    await syncPermissions(authId);
-    await syncPowerUsers(authId);
+    await syncRoleEntries(authId, role);
+    if (role === "user") {
+      await syncPermissions(authId);
+    } else if (role === "curator") {
+      await syncCurators(authId);
+      const curatedIds = [...document.querySelectorAll("#u-curators input:checked")].map(el => el.value);
+      const otherIds   = allInstruments.filter(i => !curatedIds.includes(i.id)).map(i => i.id);
+      await syncPermissionsFromContainer(authId, "u-permissions-extra", "permx-", otherIds);
+    }
+    // Administrator: no permissions or curator entries needed
     toast(`User "${name}" created`);
 
   } else {
     // ── UPDATE ───────────────────────────────────────────────────
     btn.textContent = "Saving…";
 
-    // Update users table
     const patchRes = await fetch(`${REST}/users?id=eq.${encodeURIComponent(editingUserId)}`, {
       method:  "PATCH",
       headers: HEADERS,
-      body:    JSON.stringify({ name, admin: isAdmin })
+      body:    JSON.stringify({ name })
     });
 
     if (!patchRes.ok) {
@@ -1450,7 +1630,6 @@ async function saveUser() {
       btn.disabled = false; btn.textContent = "Save Changes"; return;
     }
 
-    // Update password via admin API if provided
     if (password) {
       if (password.length < 8) {
         setModalAlert("modal-user-alert", "Password must be at least 8 characters.");
@@ -1467,9 +1646,34 @@ async function saveUser() {
       }
     }
 
-    // Sync permissions
-    await syncPermissions(editingUserId);
-    await syncPowerUsers(editingUserId);
+    await syncRoleEntries(editingUserId, role);
+
+    if (role === "user") {
+      // Full permission sync; remove curator entries
+      await syncPermissions(editingUserId);
+      await fetch(`${REST}/curators?user_id=eq.${encodeURIComponent(editingUserId)}`,
+        { method: "DELETE", headers: HEADERS });
+    } else if (role === "curator") {
+      // Sync curator assignments; sync extra user permissions on non-curated instruments
+      await syncCurators(editingUserId);
+      const curatedIds = [...document.querySelectorAll("#u-curators input:checked")].map(el => el.value);
+      const otherIds   = allInstruments.filter(i => !curatedIds.includes(i.id)).map(i => i.id);
+      await syncPermissionsFromContainer(editingUserId, "u-permissions-extra", "permx-", otherIds);
+      // Remove permissions for instruments the user is now curating (they have unrestricted access)
+      const curatedPerms = allPermissions.filter(
+        p => p.user_id === editingUserId && curatedIds.includes(p.instrument_id));
+      await Promise.all(curatedPerms.map(p =>
+        fetch(`${REST}/permissions?user_id=eq.${encodeURIComponent(editingUserId)}&instrument_id=eq.${encodeURIComponent(p.instrument_id)}`,
+          { method: "DELETE", headers: HEADERS })
+      ));
+    } else if (role === "administrator") {
+      // Admins have global access — clear granular entries
+      await fetch(`${REST}/permissions?user_id=eq.${encodeURIComponent(editingUserId)}`,
+        { method: "DELETE", headers: HEADERS });
+      await fetch(`${REST}/curators?user_id=eq.${encodeURIComponent(editingUserId)}`,
+        { method: "DELETE", headers: HEADERS });
+    }
+
     toast(`User "${name}" updated`);
   }
 
@@ -1480,35 +1684,118 @@ async function saveUser() {
 }
 
 // ═══════════════════════════════════════════
-//  PERMISSIONS — SYNC
+//  ROLE ENTRIES — SYNC
+//  Manages the administrators table
 // ═══════════════════════════════════════════
 
-async function syncPermissions(userId) {
-  // Instrument IDs ticked in the UI
-  const selected = [...document.querySelectorAll("#u-permissions input:checked")]
+async function syncRoleEntries(userId, role) {
+  const isCurrentlyAdmin = allAdministrators.some(a => a.user_id === userId);
+  const shouldBeAdmin    = role === "administrator";
+
+  if (shouldBeAdmin && !isCurrentlyAdmin) {
+    await fetch(`${REST}/administrators`, {
+      method:  "POST",
+      headers: HEADERS,
+      body:    JSON.stringify({ user_id: userId })
+    });
+  } else if (!shouldBeAdmin && isCurrentlyAdmin) {
+    await fetch(
+      `${REST}/administrators?user_id=eq.${encodeURIComponent(userId)}`,
+      { method: "DELETE", headers: HEADERS }
+    );
+  }
+}
+
+// ═══════════════════════════════════════════
+//  PERMISSIONS — SYNC (generic)
+//  Reads checked instruments from `containerId`, using `prefix` to find
+//  the restriction inputs.  If `limitInstrIds` is supplied, only those
+//  instruments' permissions are touched (others are left unchanged).
+// ═══════════════════════════════════════════
+
+async function syncPermissionsFromContainer(userId, containerId, prefix, limitInstrIds) {
+  const selected = [...document.querySelectorAll(`#${containerId} input[type=checkbox]:checked`)]
     .map(el => el.value);
 
-  // Instrument IDs already in the DB for this user
-  const existing = allPermissions
-    .filter(p => p.user_id === userId)
-    .map(p => p.instrument_id);
+  // Only look at the subset of the DB that this call is responsible for
+  const scope = limitInstrIds
+    ? allPermissions.filter(p => p.user_id === userId && limitInstrIds.includes(p.instrument_id))
+    : allPermissions.filter(p => p.user_id === userId);
 
-  const toAdd    = selected.filter(id => !existing.includes(id));
-  const toRemove = existing.filter(id => !selected.includes(id));
+  const existingIds   = scope.map(p => p.instrument_id);
+  const scopeSelected = limitInstrIds ? selected.filter(id => limitInstrIds.includes(id)) : selected;
+
+  const toAdd    = scopeSelected.filter(id => !existingIds.includes(id));
+  const toRemove = existingIds.filter(id => !scopeSelected.includes(id));
+  const toUpdate = scopeSelected.filter(id =>  existingIds.includes(id));
+
+  const getRestrictions = instrId => {
+    const eid = CSS.escape(instrId);
+    const ms  = document.getElementById(`${prefix}maxslot-${eid}`)?.value;
+    const ad  = document.getElementById(`${prefix}advdays-${eid}`)?.value;
+    return { maxslot: ms ? parseInt(ms) : null, advancedays: ad ? parseInt(ad) : null };
+  };
+
+  const ops = [];
+
+  toAdd.forEach(instrId => {
+    const { maxslot, advancedays } = getRestrictions(instrId);
+    ops.push(fetch(`${REST}/permissions`, {
+      method: "POST", headers: HEADERS,
+      body: JSON.stringify({ user_id: userId, instrument_id: instrId, maxslot, advancedays })
+    }));
+  });
+
+  toRemove.forEach(instrId => {
+    ops.push(fetch(
+      `${REST}/permissions?user_id=eq.${encodeURIComponent(userId)}&instrument_id=eq.${encodeURIComponent(instrId)}`,
+      { method: "DELETE", headers: HEADERS }
+    ));
+  });
+
+  toUpdate.forEach(instrId => {
+    const { maxslot, advancedays } = getRestrictions(instrId);
+    const existingPerm = scope.find(p => p.instrument_id === instrId);
+    if (existingPerm &&
+        (existingPerm.maxslot !== maxslot || existingPerm.advancedays !== advancedays)) {
+      ops.push(fetch(
+        `${REST}/permissions?user_id=eq.${encodeURIComponent(userId)}&instrument_id=eq.${encodeURIComponent(instrId)}`,
+        { method: "PATCH", headers: HEADERS, body: JSON.stringify({ maxslot, advancedays }) }
+      ));
+    }
+  });
+
+  await Promise.all(ops);
+}
+
+// Convenience wrapper — full user role permissions (all instruments)
+async function syncPermissions(userId) {
+  await syncPermissionsFromContainer(userId, "u-permissions", "perm-", null);
+}
+
+// ═══════════════════════════════════════════
+//  CURATORS — SYNC
+// ═══════════════════════════════════════════
+
+async function syncCurators(userId) {
+  const selected = [...document.querySelectorAll("#u-curators input:checked")]
+    .map(el => el.value);
+
+  const existing    = allCurators.filter(c => c.user_id === userId).map(c => c.instrument_id);
+  const toAdd       = selected.filter(id => !existing.includes(id));
+  const toRemove    = existing.filter(id => !selected.includes(id));
 
   await Promise.all([
-    // INSERT — omit id so Supabase generates it automatically
     ...toAdd.map(instrId =>
-      fetch(`${REST}/permissions`, {
+      fetch(`${REST}/curators`, {
         method:  "POST",
         headers: HEADERS,
         body:    JSON.stringify({ user_id: userId, instrument_id: instrId })
       })
     ),
-    // DELETE
     ...toRemove.map(instrId =>
       fetch(
-        `${REST}/permissions?user_id=eq.${encodeURIComponent(userId)}&instrument_id=eq.${encodeURIComponent(instrId)}`,
+        `${REST}/curators?user_id=eq.${encodeURIComponent(userId)}&instrument_id=eq.${encodeURIComponent(instrId)}`,
         { method: "DELETE", headers: HEADERS }
       )
     )
@@ -1516,35 +1803,55 @@ async function syncPermissions(userId) {
 }
 
 // ═══════════════════════════════════════════
-//  POWER USERS — SYNC
+//  CURATOR — EDIT A USER'S PERMISSIONS
+//  (restricted modal: only curator's instruments,
+//   no name / password / role editing)
 // ═══════════════════════════════════════════
 
-async function syncPowerUsers(userId) {
-  const selected = [...document.querySelectorAll("#u-powerusers input:checked")]
-    .map(el => el.value);
+let curatorPermUserId = null;
 
-  const existing = allPowerUsers
-    .filter(p => p.user_id === userId)
-    .map(p => p.instrument_id);
+function openEditUserPermissions(userId) {
+  curatorPermUserId = userId;
+  const u = allUsers.find(x => x.id === userId);
 
-  const toAdd    = selected.filter(id => !existing.includes(id));
-  const toRemove = existing.filter(id => !selected.includes(id));
+  document.getElementById("curator-perm-title").textContent =
+    `Permissions — ${u?.name ?? "User"}`;
 
-  await Promise.all([
-    ...toAdd.map(instrId =>
-      fetch(`${REST}/powerusers`, {
-        method:  "POST",
-        headers: HEADERS,
-        body:    JSON.stringify({ user_id: userId, instrument_id: instrId })
-      })
-    ),
-    ...toRemove.map(instrId =>
-      fetch(
-        `${REST}/powerusers?user_id=eq.${encodeURIComponent(userId)}&instrument_id=eq.${encodeURIComponent(instrId)}`,
-        { method: "DELETE", headers: HEADERS }
-      )
-    )
-  ]);
+  setModalAlert("modal-curator-perm-alert", "");
+
+  // Show which instruments this applies to
+  const instrNames = currentUserCuratorInstrIds
+    .map(id => allInstruments.find(i => i.id === id)?.name ?? id)
+    .join(", ");
+  const scopeEl = document.getElementById("curator-perm-scope");
+  scopeEl.textContent = `Editing access for your managed instrument${currentUserCuratorInstrIds.length !== 1 ? "s" : ""}: ${instrNames}`;
+  scopeEl.style.display = "";
+
+  buildPermItemsInto("curator-perm-items", userId, currentUserCuratorInstrIds, "permc-");
+  openModal("modal-curator-perm");
+}
+
+async function saveUserPermissions() {
+  const btn = document.getElementById("curator-perm-save-btn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  setModalAlert("modal-curator-perm-alert", "");
+
+  try {
+    await syncPermissionsFromContainer(
+      curatorPermUserId,
+      "curator-perm-items",
+      "permc-",
+      currentUserCuratorInstrIds
+    );
+    const u = allUsers.find(x => x.id === curatorPermUserId);
+    toast(`Permissions updated for "${u?.name}"`);
+    closeModal("modal-curator-perm");
+    await loadAll();
+  } catch (e) {
+    setModalAlert("modal-curator-perm-alert", `Failed to save: ${e.message}`);
+  }
+
+  btn.disabled = false; btn.textContent = "Save Permissions";
 }
 
 // ═══════════════════════════════════════════
@@ -1573,19 +1880,25 @@ async function deleteUser(userId) {
     { method: "DELETE", headers: HEADERS }
   );
 
-  // 2. Delete power user entries
+  // 2. Delete curator entries
   await fetch(
-    `${REST}/powerusers?user_id=eq.${encodeURIComponent(userId)}`,
+    `${REST}/curators?user_id=eq.${encodeURIComponent(userId)}`,
     { method: "DELETE", headers: HEADERS }
   );
 
-  // 3. Delete from users table
+  // 3. Delete administrator entry if present
+  await fetch(
+    `${REST}/administrators?user_id=eq.${encodeURIComponent(userId)}`,
+    { method: "DELETE", headers: HEADERS }
+  );
+
+  // 4. Delete from users table
   await fetch(
     `${REST}/users?id=eq.${encodeURIComponent(userId)}`,
     { method: "DELETE", headers: HEADERS }
   );
 
-  // 4. Delete from Supabase Auth
+  // 5. Delete from Supabase Auth
   await sbAdmin.auth.admin.deleteUser(userId);
 
   toast(`User "${u?.name}" deleted`);
@@ -1600,13 +1913,15 @@ async function deleteUser(userId) {
 function renderInstruments() {
   const tbody = document.getElementById("instruments-tbody");
 
-  // Power users only see their instruments
-  const visible = currentUserIsPowerUser
-    ? allInstruments.filter(i => currentUserPowerInstrIds.includes(i.id))
+  // Curators only see their assigned instruments
+  const visible = currentUserIsCurator
+    ? allInstruments.filter(i => currentUserCuratorInstrIds.includes(i.id))
     : allInstruments;
 
   if (!visible.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${currentUserIsPowerUser ? "No instruments assigned to you." : "No instruments found."}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">${
+      currentUserIsCurator ? "No instruments assigned to you." : "No instruments found."
+    }</td></tr>`;
     return;
   }
 
@@ -1616,8 +1931,8 @@ function renderInstruments() {
       ? `<span style="color:var(--success);font-family:var(--mono);font-size:11px">● Operational</span>`
       : `<span style="color:var(--danger);font-family:var(--mono);font-size:11px">● Offline</span>`;
 
-    // Power users get Report + Edit only; full admins get all three
-    const actionBtns = currentUserIsPowerUser
+    // Curators get Report + Edit only; full admins get all three
+    const actionBtns = currentUserIsCurator
       ? `<button class="btn btn-report btn-sm"
                 onclick="openReport('${esc(i.id)}')">Usage Report</button>
          <button class="btn btn-ghost btn-sm" style="margin-left:6px"
@@ -1638,8 +1953,6 @@ function renderInstruments() {
       </td>
       <td style="color:var(--muted);font-size:12px;max-width:200px">${esc(i.description || "—")}</td>
       <td>${statusBadge}</td>
-      <td style="font-family:var(--mono);font-size:12px">${i.maxslot ?? "—"}</td>
-      <td style="font-family:var(--mono);font-size:12px">${i.advancedays ?? "—"}</td>
       <td style="text-align:right;white-space:nowrap">${actionBtns}</td>
     </tr>`;
   }).join("");
@@ -1658,9 +1971,7 @@ function openAddInstrument() {
   document.getElementById("i-id").value          = "";
   document.getElementById("i-name").value        = "";
   document.getElementById("i-description").value = "";
-  document.getElementById("i-notes").value          = "";
-  document.getElementById("i-maxslot").value     = "";
-  document.getElementById("i-advancedays").value = "";
+  document.getElementById("i-notes").value       = "";
   document.getElementById("i-sortorder").value   = "";
   document.getElementById("i-operational").checked = true;
   updateOperationalLabel();
@@ -1686,11 +1997,9 @@ function openEditInstrument(instrId) {
   document.getElementById("i-id").disabled       = true;
   document.getElementById("i-name").value        = i.name        || "";
   document.getElementById("i-description").value = i.description || "";
-  document.getElementById("i-notes").value          = i.notes          || "";
-  document.getElementById("i-maxslot").value     = i.maxslot     ?? "";
-  document.getElementById("i-advancedays").value = i.advancedays ?? "";
+  document.getElementById("i-notes").value       = i.notes       || "";
   document.getElementById("i-sortorder").value   = i.sortorder   ?? "";
-  document.getElementById("i-operational").checked  = i.operational !== false;
+  document.getElementById("i-operational").checked = i.operational !== false;
   updateOperationalLabel();
 
   setModalAlert("modal-instr-alert", "");
@@ -1708,8 +2017,6 @@ async function saveInstrument() {
   const description = document.getElementById("i-description").value.trim();
   const notes       = document.getElementById("i-notes").value.trim();
   const operational = document.getElementById("i-operational").checked;
-  const maxslot     = document.getElementById("i-maxslot").value;
-  const advancedays = document.getElementById("i-advancedays").value;
   const sortorder   = document.getElementById("i-sortorder").value;
   const btn         = document.getElementById("i-save-btn");
 
@@ -1724,9 +2031,7 @@ async function saveInstrument() {
     description: description || null,
     notes:       notes       || null,
     operational,
-    maxslot:     maxslot     ? parseInt(maxslot)     : null,
-    advancedays: advancedays ? parseInt(advancedays) : null,
-    sortorder:   sortorder   ? parseInt(sortorder)   : null,
+    sortorder:   sortorder ? parseInt(sortorder) : null,
   };
 
   btn.disabled = true; btn.textContent = "Saving…";
@@ -1771,8 +2076,8 @@ function confirmDeleteInstrument(instrId) {
 
   document.getElementById("confirm-title").textContent   = "Delete Instrument";
   document.getElementById("confirm-message").textContent =
-    `Are you sure you want to delete "${i.name}"? All user permissions for this instrument will ` +
-    `also be removed. Existing bookings will remain. This cannot be undone.`;
+    `Are you sure you want to delete "${i.name}"? All user permissions and curator assignments for ` +
+    `this instrument will also be removed. Existing bookings will remain. This cannot be undone.`;
 
   document.getElementById("confirm-ok-btn").onclick = () => deleteInstrument(instrId);
   openModal("modal-confirm");
@@ -1781,10 +2086,17 @@ function confirmDeleteInstrument(instrId) {
 async function deleteInstrument(instrId) {
   const i = allInstruments.find(x => x.id === instrId);
 
+  // Remove all permissions for this instrument
   await fetch(
     `${REST}/permissions?instrument_id=eq.${encodeURIComponent(instrId)}`,
     { method: "DELETE", headers: HEADERS }
   );
+  // Remove all curator assignments for this instrument
+  await fetch(
+    `${REST}/curators?instrument_id=eq.${encodeURIComponent(instrId)}`,
+    { method: "DELETE", headers: HEADERS }
+  );
+  // Delete the instrument itself
   await fetch(
     `${REST}/instruments?id=eq.${encodeURIComponent(instrId)}`,
     { method: "DELETE", headers: HEADERS }
@@ -1813,7 +2125,6 @@ function openReport(instrId) {
   document.getElementById("report-title").textContent = `Usage Report — ${instr?.name ?? instrId}`;
   document.getElementById("report-alert").innerHTML = "";
 
-  // Default date range: start of current year → today
   const now   = new Date();
   const today = now.toISOString().split("T")[0];
   const jan1  = `${now.getFullYear()}-01-01`;
@@ -1828,7 +2139,6 @@ function getReportRows() {
   const to     = document.getElementById("report-to").value;
   const instr  = allInstruments.find(i => i.id === reportInstrId);
 
-  // Filter bookings for this instrument within date range
   const rows = allBookings
     .filter(b => {
       if (b.instrument !== reportInstrId) return false;
@@ -1851,7 +2161,6 @@ async function generateReport(format) {
   const alertEl = document.getElementById("report-alert");
   alertEl.innerHTML = "";
 
-  // Fetch fresh bookings for accuracy
   const fresh = await fetch(`${REST}/bookings?select=*&instrument=eq.${encodeURIComponent(reportInstrId)}`, { headers: HEADERS });
   allBookings = await fresh.json();
 
@@ -1872,7 +2181,6 @@ async function generateReport(format) {
 }
 
 function generateCSV(rows, instr, from, to, filename) {
-  // Build per-user summary
   const userTotals = {};
   rows.forEach(r => { userTotals[r.user] = (userTotals[r.user] || 0) + 1; });
 
@@ -1907,7 +2215,6 @@ function generatePDF(rows, instr, from, to, filename) {
   const pageW  = doc.internal.pageSize.getWidth();
   const margin = 18;
 
-  // Header
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.text(`Usage Report: ${instr?.name ?? reportInstrId}`, margin, 22);
@@ -1919,7 +2226,6 @@ function generatePDF(rows, instr, from, to, filename) {
   doc.text(`Generated: ${new Date().toLocaleString("en-GB")}`, margin, 35);
   doc.setTextColor(0, 0, 0);
 
-  // Booking table
   doc.autoTable({
     startY: 42,
     head:   [["Date", "Day", "Time", "User"]],
@@ -1930,7 +2236,6 @@ function generatePDF(rows, instr, from, to, filename) {
     margin: { left: margin, right: margin },
   });
 
-  // Summary by user
   const userTotals = {};
   rows.forEach(r => { userTotals[r.user] = (userTotals[r.user] || 0) + 1; });
   const summaryRows = Object.entries(userTotals).sort((a,b)=>b[1]-a[1]).map(([u,n])=>[u, n]);
@@ -1966,6 +2271,18 @@ function openUserReport(userId) {
   document.getElementById("user-report-title").textContent = `Usage Report — ${u?.name ?? "User"}`;
   document.getElementById("user-report-alert").innerHTML = "";
 
+  // Curator: show which instruments this report covers
+  const scopeEl = document.getElementById("user-report-scope");
+  if (currentUserIsCurator) {
+    const instrNames = currentUserCuratorInstrIds
+      .map(id => allInstruments.find(i => i.id === id)?.name ?? id)
+      .join(", ");
+    scopeEl.textContent = `Filtered to your managed instrument${currentUserCuratorInstrIds.length !== 1 ? "s" : ""}: ${instrNames}`;
+    scopeEl.style.display = "";
+  } else {
+    scopeEl.style.display = "none";
+  }
+
   const now   = new Date();
   const today = now.toISOString().split("T")[0];
   const jan1  = `${now.getFullYear()}-01-01`;
@@ -1983,6 +2300,8 @@ function getUserReportRows() {
   const rows = allBookings
     .filter(b => {
       if (b.name !== u?.name) return false;
+      // Curators only see bookings on their managed instruments
+      if (currentUserIsCurator && !currentUserCuratorInstrIds.includes(b.instrument)) return false;
       if (from && b.date < from) return false;
       if (to   && b.date > to)   return false;
       return true;
@@ -2005,14 +2324,12 @@ async function generateUserReport(format) {
   const alertEl = document.getElementById("user-report-alert");
   alertEl.innerHTML = "";
 
-  // Fetch fresh bookings for this user
   const u = allUsers.find(x => x.id === reportUserId);
   const fresh = await fetch(
     `${REST}/bookings?select=*&name=eq.${encodeURIComponent(u?.name ?? "")}`,
     { headers: HEADERS }
   );
   const userBookings = await fresh.json();
-  // Temporarily merge into allBookings for the row builder
   const saved = allBookings;
   allBookings = userBookings;
 
@@ -2038,10 +2355,15 @@ function generateUserCSV(rows, user, from, to, filename) {
   const instrTotals = {};
   rows.forEach(r => { instrTotals[r.instrument] = (instrTotals[r.instrument] || 0) + 1; });
 
+  const scopeLine = currentUserIsCurator
+    ? [`Instruments: ${currentUserCuratorInstrIds.map(id => allInstruments.find(i=>i.id===id)?.name ?? id).join(", ")}`]
+    : [];
+
   const lines = [
     [`Usage Report — ${user?.name ?? "User"}`],
     [`Period: ${from} to ${to}`],
     [`Total bookings: ${rows.length}`],
+    ...scopeLine.map(s => [s]),
     [],
     ["Date", "Day", "Time", "Instrument"],
     ...rows.map(r => [r.date, r.day, r.time, r.instrument]),
@@ -2075,11 +2397,18 @@ function generateUserPDF(rows, user, from, to, filename) {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(120, 120, 140);
   doc.text(`Period: ${from}  →  ${to}     Total bookings: ${rows.length}`, margin, 30);
-  doc.text(`Generated: ${new Date().toLocaleString("en-GB")}`, margin, 35);
+  if (currentUserIsCurator) {
+    const names = currentUserCuratorInstrIds
+      .map(id => allInstruments.find(i => i.id === id)?.name ?? id).join(", ");
+    doc.text(`Instruments: ${names}`, margin, 35);
+    doc.text(`Generated: ${new Date().toLocaleString("en-GB")}`, margin, 40);
+  } else {
+    doc.text(`Generated: ${new Date().toLocaleString("en-GB")}`, margin, 35);
+  }
   doc.setTextColor(0, 0, 0);
 
   doc.autoTable({
-    startY: 42,
+    startY: currentUserIsCurator ? 47 : 42,
     head:   [["Date", "Day", "Time", "Instrument"]],
     body:   rows.map(r => [r.date, r.day, r.time, r.instrument]),
     styles: { fontSize: 9, cellPadding: 3 },
@@ -2132,26 +2461,30 @@ function esc(str) {
     const rows = await res.json();
     if (rows.length) {
       const userRow = rows[0];
-      if (userRow.admin) {
-        // Full admin
-        currentUserIsPowerUser   = false;
-        currentUserPowerInstrIds = [];
+
+      // Check administrators table
+      const adminRes  = await fetch(`${REST}/administrators?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`, { headers: HEADERS });
+      const adminRows = await adminRes.json();
+
+      if (adminRows.length) {
+        currentUserIsCurator       = false;
+        currentUserCuratorInstrIds = [];
         currentAdminUser = { ...userRow, email: session.user.email };
         document.getElementById("topbar-user").innerHTML =
-          `Logged in as <strong>${esc(currentAdminUser.name)}</strong>`;
+          `Logged in as <strong>${esc(currentAdminUser.name)}</strong> <span class="badge-admin">Admin</span>`;
         document.getElementById("login-screen").style.display = "none";
         await loadAll();
         applyRoleUI();
       } else {
-        // Check power user
-        const puRes  = await fetch(`${REST}/powerusers?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`, { headers: HEADERS });
-        const puRows = await puRes.json();
-        if (puRows.length) {
-          currentUserIsPowerUser   = true;
-          currentUserPowerInstrIds = puRows.map(r => r.instrument_id);
+        // Check curators table
+        const curRes  = await fetch(`${REST}/curators?user_id=eq.${encodeURIComponent(userRow.id)}&select=*`, { headers: HEADERS });
+        const curRows = await curRes.json();
+        if (curRows.length) {
+          currentUserIsCurator       = true;
+          currentUserCuratorInstrIds = curRows.map(r => r.instrument_id);
           currentAdminUser = { ...userRow, email: session.user.email };
           document.getElementById("topbar-user").innerHTML =
-            `Logged in as <strong>${esc(currentAdminUser.name)}</strong> <span class="badge-poweruser">Power User</span>`;
+            `Logged in as <strong>${esc(currentAdminUser.name)}</strong> <span class="badge-curator">Curator</span>`;
           document.getElementById("login-screen").style.display = "none";
           await loadAll();
           applyRoleUI();

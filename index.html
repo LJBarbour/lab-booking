@@ -709,15 +709,20 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let instruments=[], bookings=[], permissions=[], powerUsers=[];
+let instruments=[], bookings=[], permissions=[], curators=[], administrators=[];
 let currentUser=null, currentUserID=null, currentUserEmail=null;
 let currentUserIsAdmin=false;
-let powerUserInstrIds=[];  // instrument IDs where this user has power-user privileges
+let curatorInstrIds=[];  // instrument IDs where this user has curator privileges
 let currentInstr=null, weekOffset=0;
 
-// True when the current user has admin-level access to the given instrument
-function isPowerUserFor(instrId){
-  return currentUserIsAdmin || powerUserInstrIds.includes(instrId);
+// True when the current user has curator-or-admin-level access to the given instrument
+function isCuratorFor(instrId){
+  return currentUserIsAdmin || curatorInstrIds.includes(instrId);
+}
+
+// Returns the permissions row for the current user on the given instrument, or null
+function getUserPermission(instrId){
+  return permissions.find(p => p.user_id === currentUserID && p.instrument_id === instrId) || null;
 }
 
 // ═══════════════════════════════════════════
@@ -751,18 +756,21 @@ function tryAddDragSlot(hour, date, booking, el) {
     // Don't book in the past
     const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
     if (slotTime < new Date()) return;
-    // Non-admins/non-power-users: respect advancedays
-    if (!isPowerUserFor(currentInstr.id) && currentInstr.advancedays != null) {
-      const maxDate = new Date();
-      maxDate.setDate(maxDate.getDate() + currentInstr.advancedays);
-      if (slotTime > maxDate) return;
+    // Curators/admins bypass advancedays; regular users respect their per-permission limit
+    if (!isCuratorFor(currentInstr.id)) {
+      const perm = getUserPermission(currentInstr.id);
+      if (perm && perm.advancedays != null) {
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + perm.advancedays);
+        if (slotTime > maxDate) return;
+      }
     }
   }
 
   if (dragMode === 'delete') {
     if (!booking) return;
     const mine = norm(booking.name) === norm(currentUser);
-    if (!mine && !isPowerUserFor(currentInstr.id)) return;
+    if (!mine && !isCuratorFor(currentInstr.id)) return;
   }
 
   dragKeys.add(key);
@@ -783,16 +791,19 @@ async function endDrag() {
   if (!slots.length) return;
 
   if (dragMode === 'book') {
-    // Non-admins/non-power-users: check maxslot across the whole batch before committing
-    if (!isPowerUserFor(currentInstr.id) && currentInstr.maxslot != null) {
-      const now = new Date();
-      const existing = bookings.filter(b => {
-        const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
-        return norm(b.name)===norm(currentUser) && b.instrument===currentInstr.id && t>=now;
-      }).length;
-      if (existing + slots.length > currentInstr.maxslot) {
-        alert(`Booking limit reached — you can have at most ${currentInstr.maxslot} active bookings for this instrument.`);
-        return;
+    // Curators/admins bypass maxslot; regular users respect their per-permission limit
+    if (!isCuratorFor(currentInstr.id)) {
+      const perm = getUserPermission(currentInstr.id);
+      if (perm && perm.maxslot != null) {
+        const now = new Date();
+        const existing = bookings.filter(b => {
+          const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
+          return norm(b.name)===norm(currentUser) && b.instrument===currentInstr.id && t>=now;
+        }).length;
+        if (existing + slots.length > perm.maxslot) {
+          alert(`Booking limit reached — you can have at most ${perm.maxslot} active bookings for this instrument.`);
+          return;
+        }
       }
     }
     const base = Date.now();
@@ -910,10 +921,10 @@ async function doLogin(){
   currentUser        = rows[0].name;
   currentUserID      = rows[0].id;
   currentUserEmail   = data.user.email;
-  currentUserIsAdmin = rows[0].admin || false;
-  powerUserInstrIds  = powerUsers
-    .filter(p => p.user_id === rows[0].id)
-    .map(p => p.instrument_id);
+  currentUserIsAdmin = administrators.some(a => a.user_id === rows[0].id);
+  curatorInstrIds    = curators
+    .filter(c => c.user_id === rows[0].id)
+    .map(c => c.instrument_id);
   closeModal("login-modal");
   render();
 }
@@ -924,7 +935,7 @@ async function doLogout(){
   currentUserID      = null;
   currentUserEmail   = null;
   currentUserIsAdmin = false;
-  powerUserInstrIds  = [];
+  curatorInstrIds    = [];
   currentInstr       = instruments[0] || null;
   render();
 }
@@ -985,19 +996,21 @@ async function doChangePassword(){
 async function load(){
   showError("");
   try {
-    const [i, b, p, pu] = await Promise.all([
-      fetch(`${REST}/instruments?select=*`, {headers:HEADERS}).then(r=>r.json()),
-      fetch(`${REST}/bookings?select=*`,    {headers:HEADERS}).then(r=>r.json()),
-      fetch(`${REST}/permissions?select=*`, {headers:HEADERS}).then(r=>r.json()),
-      fetch(`${REST}/powerusers?select=*`,  {headers:HEADERS}).then(r=>r.json()),
+    const [i, b, p, cu, ad] = await Promise.all([
+      fetch(`${REST}/instruments?select=*`,     {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/bookings?select=*`,         {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/permissions?select=*`,      {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/curators?select=*`,         {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/administrators?select=*`,   {headers:HEADERS}).then(r=>r.json()),
     ]);
     if(i.code || b.code || p.code)
       throw new Error(i.message || b.message || p.message || "Database error");
-    instruments  = i;
-    bookings     = b;
-    permissions  = p;
-    powerUsers   = Array.isArray(pu) ? pu : [];
-    currentInstr = instruments[0] || null;
+    instruments    = i;
+    bookings       = b;
+    permissions    = p;
+    curators       = Array.isArray(cu) ? cu : [];
+    administrators = Array.isArray(ad) ? ad : [];
+    currentInstr   = instruments[0] || null;
   } catch(err){
     showError("Could not load data: " + err.message);
   }
@@ -1019,13 +1032,16 @@ function renderUserArea(){
   if(currentUser){
     const badge = currentUserIsAdmin
       ? '<span class="badge-admin-inline">ADMIN</span>'
-      : powerUserInstrIds.length
-        ? '<span class="badge-pu-inline">⚡ POWER USER</span>'
+      : curatorInstrIds.length
+        ? '<span class="badge-pu-inline">🔧 CURATOR</span>'
         : '';
     el.innerHTML = `
-      <div id="user-badge">
-        <span>${currentUser}${badge}</span>
-        <button id="logout-btn" onclick="doLogout()">Logout</button>
+      <div id="user-badge" style="flex-direction:column;align-items:stretch;gap:5px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span>${currentUser}</span>
+          <button id="logout-btn" onclick="doLogout()">Logout</button>
+        </div>
+        ${badge ? `<div style="align-self:flex-start">${badge}</div>` : ''}
       </div>
       <button id="change-pw-link" onclick="openModal('pw-modal')">🔑 Change password</button>`;
   } else {
@@ -1045,7 +1061,7 @@ function renderInstr(){
     ? instruments
     : instruments.filter(i =>
         permissions.some(p => p.user_id===currentUserID && p.instrument_id===i.id) ||
-        powerUserInstrIds.includes(i.id)
+        curatorInstrIds.includes(i.id)
       )
   ).slice().sort((a, b) => {
     const aHas = a.sortorder != null;
@@ -1065,10 +1081,10 @@ function renderInstr(){
   }
 
   el.innerHTML = visible.map(i => {
-    const isPU      = !currentUserIsAdmin && powerUserInstrIds.includes(i.id);
+    const isPU      = !currentUserIsAdmin && curatorInstrIds.includes(i.id);
     const isActive  = currentInstr && i.id===currentInstr.id;
     const classes   = [isActive ? 'active' : '', isPU ? 'pu-access' : ''].filter(Boolean).join(' ');
-    const puMark    = isPU ? ' ⚡' : '';
+    const puMark    = isPU ? ' 🔧' : '';
     return `<button class="${classes}" onclick="selectInstr('${i.id}')">${i.name}${puMark}</button>`;
   }).join("");
 }
@@ -1088,8 +1104,8 @@ function renderInstrInfo(){
     descEl.textContent  = currentInstr.description || "";
     notesEl.textContent = currentInstr.notes        || "";
     const op = currentInstr.operational !== false;
-    const puPill = (!currentUserIsAdmin && powerUserInstrIds.includes(currentInstr.id))
-      ? `<span class="status-pu">⚡ Power User Access</span>`
+    const puPill = (!currentUserIsAdmin && curatorInstrIds.includes(currentInstr.id))
+      ? `<span class="status-pu">🔧 Curator Access</span>`
       : '';
     statusEl.innerHTML  = (op
       ? `<span class="status-ok">● Operational</span>`
@@ -1161,9 +1177,9 @@ function renderCalendar(){
 
       if(b){
         // ── Booked cell ──
-        const mine      = currentUser && norm(b.name)===norm(currentUser);
-        const puLevel   = isPowerUserFor(currentInstr.id);
-        const canDelete = !isPast && (mine || puLevel);
+        const mine       = currentUser && norm(b.name)===norm(currentUser);
+        const curLevel   = isCuratorFor(currentInstr.id);
+        const canDelete  = !isPast && (mine || curLevel);
         const boxCls    = ["booking-box",
                            mine ? "mine" : "",
                            isPast ? "past" : "",
@@ -1184,10 +1200,13 @@ function renderCalendar(){
       } else if(!isPast){
         // ── Empty future cell ──
         if(currentUser){
-          // Power users and admins bypass advancedays on their instruments
-          const withinWindow = isPowerUserFor(currentInstr.id)
-            || currentInstr.advancedays == null
-            || slotTime <= new Date(new Date().setDate(now.getDate()+currentInstr.advancedays));
+          // Curators and admins bypass advancedays on their instruments
+          let withinWindow = isCuratorFor(currentInstr.id);
+          if(!withinWindow){
+            const perm = getUserPermission(currentInstr.id);
+            withinWindow = !perm || perm.advancedays == null
+              || slotTime <= new Date(new Date().setDate(now.getDate() + perm.advancedays));
+          }
 
           if(withinWindow){
             c.classList.add("clickable");
@@ -1225,10 +1244,10 @@ function renderCalendar(){
       currentUser        = rows[0].name;
       currentUserID      = rows[0].id;
       currentUserEmail   = session.user.email;
-      currentUserIsAdmin = rows[0].admin || false;
-      powerUserInstrIds  = powerUsers
-        .filter(p => p.user_id === rows[0].id)
-        .map(p => p.instrument_id);
+      currentUserIsAdmin = administrators.some(a => a.user_id === rows[0].id);
+      curatorInstrIds    = curators
+        .filter(c => c.user_id === rows[0].id)
+        .map(c => c.instrument_id);
     }
   }
   render();
