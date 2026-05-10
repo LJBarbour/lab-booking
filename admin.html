@@ -1300,8 +1300,9 @@ function renderUsers() {
           : "";
       }).join("");
 
-      // User-level permissions (blue), including those a curator holds on other instruments
-      const userPerms = allPermissions.filter(p => p.user_id === u.id);
+      // User-level permissions (blue) — exclude instruments already covered by curator role
+      const curatedSet = new Set(curatorInstrs.map(c => c.instrument_id));
+      const userPerms = allPermissions.filter(p => p.user_id === u.id && !curatedSet.has(p.instrument_id));
       const permTags = userPerms.map(p => {
         const ins = allInstruments.find(i => i.id === p.instrument_id);
         if (!ins) return "";
