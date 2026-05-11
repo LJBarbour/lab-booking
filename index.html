@@ -214,6 +214,18 @@ main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 #instr-status { font-size: 12px; font-weight: 500; }
 
+#instr-curator {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+#instr-curator a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+#instr-curator a:hover { color: var(--accent); }
+
 .status-ok {
   color: var(--green-dark);
   background: var(--green-soft);
@@ -693,8 +705,9 @@ button.pu-access.active {
       <img id="instr-image" src="" alt="">
       <div id="instr-info-text">
         <div id="instr-description"></div>
-        <div id="instr-notes"></div>
         <div id="instr-status"></div>
+        <div id="instr-curator"></div>
+        <div id="instr-notes"></div>
       </div>
     </div>
     <div class="week-nav">
@@ -720,7 +733,7 @@ const HEADERS = {
   "Content-Type": "application/json"
 };
 
-let instruments=[], bookings=[], permissions=[], curators=[], administrators=[];
+let instruments=[], bookings=[], permissions=[], curators=[], administrators=[], users=[];
 let currentUser=null, currentUserID=null, currentUserEmail=null;
 let currentUserIsAdmin=false;
 let curatorInstrIds=[];  // instrument IDs where this user has curator privileges
@@ -1008,12 +1021,13 @@ async function doChangePassword(){
 async function load(){
   showError("");
   try {
-    const [i, b, p, cu, ad] = await Promise.all([
+    const [i, b, p, cu, ad, us] = await Promise.all([
       fetch(`${REST}/instruments?select=*`,     {headers:HEADERS}).then(r=>r.json()),
       fetch(`${REST}/bookings?select=*`,         {headers:HEADERS}).then(r=>r.json()),
       fetch(`${REST}/permissions?select=*`,      {headers:HEADERS}).then(r=>r.json()),
       fetch(`${REST}/curators?select=*`,         {headers:HEADERS}).then(r=>r.json()),
       fetch(`${REST}/administrators?select=*`,   {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/users?select=*`,            {headers:HEADERS}).then(r=>r.json()),
     ]);
     if(i.code || b.code || p.code)
       throw new Error(i.message || b.message || p.message || "Database error");
@@ -1022,6 +1036,7 @@ async function load(){
     permissions    = p;
     curators       = Array.isArray(cu) ? cu : [];
     administrators = Array.isArray(ad) ? ad : [];
+    users          = Array.isArray(us) ? us : [];
     currentInstr   = instruments[0] || null;
   } catch(err){
     showError("Could not load data: " + err.message);
@@ -1104,10 +1119,11 @@ function renderInstr(){
 function selectInstr(id){ currentInstr = instruments.find(i=>i.id===id); render(); }
 
 function renderInstrInfo(){
-  const img      = document.getElementById("instr-image");
-  const descEl   = document.getElementById("instr-description");
-  const notesEl  = document.getElementById("instr-notes");
-  const statusEl = document.getElementById("instr-status");
+  const img       = document.getElementById("instr-image");
+  const descEl    = document.getElementById("instr-description");
+  const notesEl   = document.getElementById("instr-notes");
+  const statusEl  = document.getElementById("instr-status");
+  const curatorEl = document.getElementById("instr-curator");
 
   if(currentInstr){
     img.src = currentInstr.id + ".png";
@@ -1124,11 +1140,37 @@ function renderInstrInfo(){
     statusEl.innerHTML  = (op
       ? `<span class="status-ok">● Operational</span>`
       : `<span class="status-off">⚠ Offline / Unavailable</span>`) + puPill;
+
+    // ── Curator contact ──
+    // Find the curator for this instrument (skip if the logged-in user IS the curator or admin for it)
+    const curatorRow  = curators.find(c => c.instrument_id === currentInstr.id);
+    const curatorUser = curatorRow ? users.find(u => u.id === curatorRow.user_id) : null;
+
+    // Fall back to first administrator if no curator assigned
+    const adminRow  = !curatorUser && administrators.length
+      ? administrators[0] : null;
+    const adminUser = adminRow ? users.find(u => u.id === adminRow.user_id) : null;
+
+    const contactUser = curatorUser || adminUser;
+
+    // Hide the line if the logged-in user IS the contact person (they don't need to email themselves)
+    const isSelf = contactUser && contactUser.id === currentUserID;
+
+    if(contactUser && !isSelf){
+      const label = curatorUser ? "Curator" : "Administrator";
+      const link  = contactUser.email
+        ? `<a href="mailto:${contactUser.email}">${contactUser.name}</a>`
+        : contactUser.name;
+      curatorEl.innerHTML = `${label}: ${link}`;
+    } else {
+      curatorEl.innerHTML = "";
+    }
   } else {
     img.style.display    = "none";
     descEl.textContent   = "";
     notesEl.textContent  = "";
     statusEl.textContent = "";
+    curatorEl.innerHTML  = "";
   }
 }
 

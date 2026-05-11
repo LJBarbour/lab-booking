@@ -1594,7 +1594,7 @@ async function saveUser() {
     const insertRes = await fetch(`${REST}/users`, {
       method:  "POST",
       headers: HEADERS,
-      body:    JSON.stringify({ id: authId, name })
+      body:    JSON.stringify({ id: authId, name, email })
     });
 
     if (!insertRes.ok) {
