@@ -1933,18 +1933,18 @@ function renderInstruments() {
       ? `<span style="color:var(--success);font-family:var(--mono);font-size:11px">● Operational</span>`
       : `<span style="color:var(--danger);font-family:var(--mono);font-size:11px">● Offline</span>`;
 
-    // Curators get Report + Edit only; full admins get all three
+    // Curators get Edit + Report; full admins get all three
     const actionBtns = currentUserIsCurator
-      ? `<button class="btn btn-report btn-sm"
-                onclick="openReport('${esc(i.id)}')">Usage Report</button>
-         <button class="btn btn-ghost btn-sm" style="margin-left:6px"
-                onclick="openEditInstrument('${esc(i.id)}')">Edit</button>`
-      : `<button class="btn btn-report btn-sm"
-                onclick="openReport('${esc(i.id)}')">Usage Report</button>
-         <button class="btn btn-ghost btn-sm" style="margin-left:6px"
+      ? `<button class="btn btn-ghost btn-sm"
+                onclick="openEditInstrument('${esc(i.id)}')">Edit</button>
+         <button class="btn btn-report btn-sm" style="margin-left:6px"
+                onclick="openReport('${esc(i.id)}')">Usage Report</button>`
+      : `<button class="btn btn-ghost btn-sm"
                 onclick="openEditInstrument('${esc(i.id)}')">Edit</button>
          <button class="btn btn-danger btn-sm" style="margin-left:6px"
-                onclick="confirmDeleteInstrument('${esc(i.id)}')">Delete</button>`;
+                onclick="confirmDeleteInstrument('${esc(i.id)}')">Delete</button>
+         <button class="btn btn-report btn-sm" style="margin-left:6px"
+                onclick="openReport('${esc(i.id)}')">Usage Report</button>`;
 
     return `
     <tr>

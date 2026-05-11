@@ -515,6 +515,17 @@ button.pu-access.active {
   margin-left: 6px;
 }
 
+/* ── Info-bar administrator status pill ── */
+.status-admin {
+  color: #5b21b6;
+  background: rgba(124,92,252,.25);
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid rgba(124,92,252,.3);
+  display: inline-block;
+  margin-left: 6px;
+}
+
 /* ── Booking box: deletable by power user (amber outline) ── */
 .booking-box.pu-del {
   cursor: pointer;
@@ -769,7 +780,7 @@ function tryAddDragSlot(hour, date, booking, el) {
 
   if (dragMode === 'delete') {
     if (!booking) return;
-    const mine = norm(booking.name) === norm(currentUser);
+    const mine = booking.user_id === currentUserID;
     if (!mine && !isCuratorFor(currentInstr.id)) return;
   }
 
@@ -798,7 +809,7 @@ async function endDrag() {
         const now = new Date();
         const existing = bookings.filter(b => {
           const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
-          return norm(b.name)===norm(currentUser) && b.instrument===currentInstr.id && t>=now;
+          return b.user_id === currentUserID && b.instrument===currentInstr.id && t>=now;
         }).length;
         if (existing + slots.length > perm.maxslot) {
           alert(`Booking limit reached — you can have at most ${perm.maxslot} active bookings for this instrument.`);
@@ -814,6 +825,7 @@ async function endDrag() {
           id: `${base}${idx}`,
           instrument: currentInstr.id,
           date, hour,
+          user_id: currentUserID,
           name: currentUser
         })
       })
@@ -822,7 +834,7 @@ async function endDrag() {
   } else if (dragMode === 'delete') {
     await Promise.all(slots.map(({booking: b}) =>
       fetch(
-        `${REST}/bookings?instrument=eq.${b.instrument}&hour=eq.${b.hour}&date=eq.${b.date}&name=eq.${encodeURIComponent(b.name)}`,
+        `${REST}/bookings?id=eq.${b.id}`,
         { method: "DELETE", headers: HEADERS }
       )
     ));
@@ -1104,9 +1116,11 @@ function renderInstrInfo(){
     descEl.textContent  = currentInstr.description || "";
     notesEl.textContent = currentInstr.notes        || "";
     const op = currentInstr.operational !== false;
-    const puPill = (!currentUserIsAdmin && curatorInstrIds.includes(currentInstr.id))
-      ? `<span class="status-pu">🔧 Curator Access</span>`
-      : '';
+    const puPill = currentUserIsAdmin
+      ? `<span class="status-admin">⭐ Administrator Access</span>`
+      : curatorInstrIds.includes(currentInstr.id)
+        ? `<span class="status-pu">🔧 Curator Access</span>`
+        : '';
     statusEl.innerHTML  = (op
       ? `<span class="status-ok">● Operational</span>`
       : `<span class="status-off">⚠ Offline / Unavailable</span>`) + puPill;
@@ -1177,7 +1191,7 @@ function renderCalendar(){
 
       if(b){
         // ── Booked cell ──
-        const mine       = currentUser && norm(b.name)===norm(currentUser);
+        const mine       = currentUser && b.user_id === currentUserID;
         const curLevel   = isCuratorFor(currentInstr.id);
         const canDelete  = !isPast && (mine || curLevel);
         const boxCls    = ["booking-box",
