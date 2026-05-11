@@ -747,11 +747,12 @@ a.mailto-link:hover { text-decoration: underline; }
             <th>Name</th>
             <th>Description</th>
             <th>Status</th>
+            <th>Curator</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="instruments-tbody">
-          <tr><td colspan="5" class="empty-state">Loading…</td></tr>
+          <tr><td colspan="6" class="empty-state">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1946,6 +1947,29 @@ function renderInstruments() {
          <button class="btn btn-report btn-sm" style="margin-left:6px"
                 onclick="openReport('${esc(i.id)}')">Usage Report</button>`;
 
+    // Curator cell: first curator for this instrument, else first administrator, else —
+    const curatorEntry  = allCurators.find(c => c.instrument_id === i.id);
+    let curatorCell;
+    if (curatorEntry) {
+      const cu    = allUsers.find(u => u.id === curatorEntry.user_id);
+      const email = cu ? (cu.email || getAuthEmail(cu.id)) : null;
+      const name  = cu?.name ?? "Curator";
+      curatorCell = email
+        ? `<a class="mailto-link" href="mailto:${esc(email)}">${esc(name)}</a>`
+        : `<span style="font-size:13px">${esc(name)}</span>`;
+    } else {
+      // Fall back to first administrator
+      const adminEntry = allAdministrators[0];
+      const au    = adminEntry ? allUsers.find(u => u.id === adminEntry.user_id) : null;
+      const email = au ? (au.email || getAuthEmail(au.id)) : null;
+      const name  = au?.name ?? "Administrator";
+      curatorCell = au
+        ? (email
+            ? `<a class="mailto-link" href="mailto:${esc(email)}">${esc(name)}</a>`
+            : `<span style="font-size:13px">${esc(name)}</span>`)
+        : `<span class="tag-none">—</span>`;
+    }
+
     return `
     <tr>
       <td style="color:var(--muted);font-family:var(--mono);font-size:12px">${i.sortorder ?? "—"}</td>
@@ -1955,6 +1979,7 @@ function renderInstruments() {
       </td>
       <td style="color:var(--muted);font-size:12px;max-width:200px">${esc(i.description || "—")}</td>
       <td>${statusBadge}</td>
+      <td>${curatorCell}</td>
       <td style="text-align:right;white-space:nowrap">${actionBtns}</td>
     </tr>`;
   }).join("");
