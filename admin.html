@@ -1013,6 +1013,52 @@ a.mailto-link:hover { text-decoration: underline; }
   </div>
 </div>
 
+<!-- ── Modal: Curator — Add New User ── -->
+<div id="modal-curator-add-user" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add User</h2>
+      <button class="modal-close" onclick="closeModal('modal-curator-add-user')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-curator-add-user-alert"></div>
+      <p class="perm-scope-note" id="curator-add-user-scope"></p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Display Name</label>
+          <input id="cau-name" type="text" placeholder="Dr. Smith" />
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input id="cau-email" type="email" placeholder="smith@lab.ac.uk" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input id="cau-password" type="password" placeholder="Min 8 characters" />
+        <div class="form-hint">Required. The user can change this after logging in.</div>
+      </div>
+
+      <hr class="form-divider">
+
+      <div class="form-group" style="margin-bottom:0">
+        <label>Instrument Access
+          <span style="font-family:var(--sans);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px">
+            — tick to grant access to your managed instruments
+          </span>
+        </label>
+        <div id="cau-permissions" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-curator-add-user')">Cancel</button>
+      <button class="btn btn-primary" id="cau-save-btn" onclick="saveCuratorUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Modal: Confirm Delete ── -->
 <div id="modal-confirm" class="modal-backdrop">
   <div class="modal" style="width:420px">
@@ -1197,19 +1243,17 @@ function switchPage(page) {
 function applyRoleUI() {
   const isCurator = currentUserIsCurator;
 
-  // Curators can see both pages; they land on Instruments
-  if (isCurator) {
-    switchPage("instruments");
-    document.querySelector('[data-page="users"]').style.display  = "";
-    document.querySelector('[data-page="instruments"]').style.display = "";
-  } else {
-    document.querySelector('[data-page="users"]').style.display  = "";
-    document.querySelector('[data-page="instruments"]').style.display = "";
-  }
+  // Both roles can see both pages; curators land on Users so they can manage them
+  switchPage("users");
+  document.querySelector('[data-page="users"]').style.display      = "";
+  document.querySelector('[data-page="instruments"]').style.display = "";
 
-  // "Add User" button — hidden for curators
+  // "Add User" button — curators get a restricted version of the flow
   const addUserBtn = document.querySelector('#page-users .btn-primary');
-  if (addUserBtn) addUserBtn.style.display = isCurator ? "none" : "";
+  if (addUserBtn) {
+    addUserBtn.style.display = "";
+    addUserBtn.setAttribute("onclick", isCurator ? "openCuratorAddUser()" : "openAddUser()");
+  }
 
   // "Add Instrument" button — hidden for curators
   const addInstrBtn = document.querySelector('#page-instruments .btn-primary');
@@ -1910,6 +1954,91 @@ async function deleteUser(userId) {
 }
 
 // ═══════════════════════════════════════════
+//  CURATOR — ADD NEW USER
+// ═══════════════════════════════════════════
+
+function openCuratorAddUser() {
+  const instrNames = currentUserCuratorInstrIds
+    .map(id => allInstruments.find(i => i.id === id)?.name ?? id)
+    .join(", ");
+  const plural = currentUserCuratorInstrIds.length !== 1;
+  document.getElementById("curator-add-user-scope").textContent =
+    `Creates a standard researcher account. You can grant the new user access to your managed ` +
+    `instrument${plural ? "s" : ""}: ${instrNames}. ` +
+    `Access to other instruments can be added later by the relevant curator.`;
+
+  document.getElementById("cau-name").value     = "";
+  document.getElementById("cau-email").value    = "";
+  document.getElementById("cau-password").value = "";
+  document.getElementById("modal-curator-add-user-alert").innerHTML = "";
+  document.getElementById("cau-save-btn").textContent = "Create User";
+  document.getElementById("cau-save-btn").disabled    = false;
+
+  buildPermItemsInto("cau-permissions", null, currentUserCuratorInstrIds, "cau-");
+  openModal("modal-curator-add-user");
+  setTimeout(() => document.getElementById("cau-name").focus(), 60);
+}
+
+async function saveCuratorUser() {
+  const name     = document.getElementById("cau-name").value.trim();
+  const email    = document.getElementById("cau-email").value.trim();
+  const password = document.getElementById("cau-password").value;
+  const btn      = document.getElementById("cau-save-btn");
+
+  setModalAlert("modal-curator-add-user-alert", "");
+
+  if (!name) {
+    setModalAlert("modal-curator-add-user-alert", "Display name is required.");
+    return;
+  }
+  if (!email) {
+    setModalAlert("modal-curator-add-user-alert", "Email address is required.");
+    return;
+  }
+  if (password.length < 8) {
+    setModalAlert("modal-curator-add-user-alert", "Password must be at least 8 characters.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Creating…";
+
+  // Create the Supabase Auth account
+  const { data: created, error: createErr } =
+    await sbAdmin.auth.admin.createUser({ email, password, email_confirm: true });
+
+  if (createErr) {
+    setModalAlert("modal-curator-add-user-alert", `Auth error: ${createErr.message}`);
+    btn.disabled = false; btn.textContent = "Create User"; return;
+  }
+
+  const authId = created.user.id;
+
+  // Insert into the users table as a standard researcher (no role entry = "user")
+  const insertRes = await fetch(`${REST}/users`, {
+    method:  "POST",
+    headers: HEADERS,
+    body:    JSON.stringify({ id: authId, name, email })
+  });
+
+  if (!insertRes.ok) {
+    const err = await insertRes.json().catch(() => ({}));
+    setModalAlert("modal-curator-add-user-alert",
+      `Auth user created but users-table insert failed: ${err.message || "unknown error"}`);
+    btn.disabled = false; btn.textContent = "Create User"; return;
+  }
+
+  // Grant access only to whichever of the curator's instruments were ticked
+  await syncPermissionsFromContainer(authId, "cau-permissions", "cau-", currentUserCuratorInstrIds);
+
+  toast(`User "${name}" created`);
+  btn.disabled = false;
+  btn.textContent = "Create User";
+  closeModal("modal-curator-add-user");
+  await loadAll();
+}
+
+// ═══════════════════════════════════════════
 //  INSTRUMENTS — RENDER
 // ═══════════════════════════════════════════
 
@@ -1973,7 +2102,9 @@ function renderInstruments() {
     return `
     <tr>
       <td style="color:var(--muted);font-family:var(--mono);font-size:12px">${i.sortorder ?? "—"}</td>
-      <td><strong>${esc(i.name)}</strong></td>
+      <td>
+        <strong>${esc(i.name)}</strong>
+      </td>
       <td style="color:var(--muted);font-size:12px;max-width:200px">${esc(i.description || "—")}</td>
       <td>${statusBadge}</td>
       <td style="white-space:nowrap">${curatorCell}</td>
