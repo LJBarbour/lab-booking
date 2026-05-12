@@ -1126,7 +1126,8 @@ function renderInstrInfo(){
   const curatorEl = document.getElementById("instr-curator");
 
   if(currentInstr){
-    img.src = currentInstr.id + ".png";
+//    img.src = "https://mqpvnisphntdwhqoiqlt.supabase.co/storage/v1/object/public/instrument-images/" + currentInstr.id + ".png";
+    img.src = "https://mqpvnisphntdwhqoiqlt.supabase.co/storage/v1/object/public/instrument-images/" + currentInstr.id + ".png?t=" + Date.now();
     img.style.display = "block";
     img.onerror = () => { img.style.display = "none"; };
     descEl.textContent  = currentInstr.description || "";

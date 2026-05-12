@@ -918,6 +918,16 @@ a.mailto-link:hover { text-decoration: underline; }
         <input id="i-sortorder" type="number" min="1" placeholder="e.g. 1" />
         <div class="form-hint">Lower numbers appear first</div>
       </div>
+
+      <div class="form-group">
+        <label>Instrument Image <span style="font-family:var(--sans);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px">— PNG only</span></label>
+        <input id="i-image" type="file" accept=".png,image/png"
+               style="width:100%;background:var(--bg);border:1px solid var(--border);
+                      border-radius:8px;color:var(--text);font-family:var(--sans);
+                      font-size:13px;padding:9px 14px;cursor:pointer;" />
+        <div class="form-hint" id="i-image-hint"></div>
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-instrument')">Cancel</button>
@@ -2179,6 +2189,8 @@ function openAddInstrument() {
   document.getElementById("i-sortorder").value   = "";
   document.getElementById("i-operational").checked = true;
   updateOperationalLabel();
+  document.getElementById("i-image").value   = "";
+  document.getElementById("i-image-hint").textContent = "";
 
   setModalAlert("modal-instr-alert", "");
   openModal("modal-instrument");
@@ -2205,10 +2217,35 @@ function openEditInstrument(instrId) {
   document.getElementById("i-sortorder").value   = i.sortorder   ?? "";
   document.getElementById("i-operational").checked = i.operational !== false;
   updateOperationalLabel();
+  document.getElementById("i-image").value = "";
+  document.getElementById("i-image-hint").textContent = "Leave empty to keep the existing image.";
 
   setModalAlert("modal-instr-alert", "");
   openModal("modal-instrument");
   setTimeout(() => document.getElementById("i-name").focus(), 60);
+}
+
+// ═══════════════════════════════════════════
+//  INSTRUMENTS — IMAGE UPLOAD
+// ═══════════════════════════════════════════
+
+async function uploadInstrumentImage(instrId) {
+  const fileInput = document.getElementById("i-image");
+  const file = fileInput.files[0];
+  if (!file) return;   // no file chosen — leave existing image untouched
+
+  const { error } = await sbAdmin.storage
+    .from("instrument-images")
+    .upload(`${instrId}.png`, file, {
+      contentType: "image/png",
+      upsert: true          // overwrites if an image already exists
+    });
+
+  if (error) {
+    // Non-fatal: instrument was saved; just warn about the image
+    setModalAlert("modal-instr-alert",
+      `Instrument saved, but image upload failed: ${error.message}`);
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -2250,6 +2287,7 @@ async function saveInstrument() {
       setModalAlert("modal-instr-alert", err.message || "Failed to create instrument.");
       btn.disabled = false; btn.textContent = "Create Instrument"; return;
     }
+    await uploadInstrumentImage(id);
     toast(`Instrument "${name}" created`);
   } else {
     const res = await fetch(
@@ -2261,6 +2299,7 @@ async function saveInstrument() {
       setModalAlert("modal-instr-alert", err.message || "Failed to update instrument.");
       btn.disabled = false; btn.textContent = "Save Changes"; return;
     }
+    await uploadInstrumentImage(editingInstrId);
     toast(`Instrument "${name}" updated`);
   }
 
