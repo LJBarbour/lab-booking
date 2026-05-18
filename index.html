@@ -645,6 +645,58 @@ button.pu-access.active {
   text-align: center;
   padding: 40px;
 }
+
+/* ═══════════════════════════════════════════
+   BOOK-AS SECTION
+═══════════════════════════════════════════ */
+#book-as-select {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px;
+  color: rgba(255,255,255,.85);
+  font-family: var(--sans);
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,.4)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  transition: border-color .15s, background-color .15s;
+  margin-bottom: 6px;
+}
+#book-as-select:hover {
+  border-color: rgba(255,255,255,.25);
+  background-color: rgba(255,255,255,.11);
+}
+#book-as-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(74,108,247,.25);
+}
+#book-as-select option {
+  background: #1a1f35;
+  color: rgba(255,255,255,.85);
+}
+
+.book-as-active-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(251,191,36,.12);
+  border: 1px solid rgba(251,191,36,.3);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #fde68a;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+.book-as-active-pill .pill-icon { font-size: 13px; flex-shrink: 0; }
+.book-as-active-pill strong { font-weight: 600; color: #fbbf24; }
 </style>
 </head>
 <body>
@@ -696,6 +748,10 @@ button.pu-access.active {
   <div id="error-banner"></div>
   <h3>Instruments</h3>
   <div id="instr"></div>
+  <div id="book-as-section" style="display:none">
+    <h3>Book as</h3>
+    <div id="book-as-area"></div>
+  </div>
 </aside>
 
 <main>
@@ -738,6 +794,7 @@ let currentUser=null, currentUserID=null, currentUserEmail=null;
 let currentUserIsAdmin=false;
 let curatorInstrIds=[];  // instrument IDs where this user has curator privileges
 let currentInstr=null, weekOffset=0;
+let bookAsUserID=null, bookAsUserName=null;  // null = book as self
 
 // True when the current user has curator-or-admin-level access to the given instrument
 function isCuratorFor(instrId){
@@ -831,6 +888,8 @@ async function endDrag() {
       }
     }
     const base = Date.now();
+    const effectiveUserID   = bookAsUserID   || currentUserID;
+    const effectiveUserName = bookAsUserName || currentUser;
     await Promise.all(slots.map(({hour, date}, idx) =>
       fetch(`${REST}/bookings`, {
         method: "POST", headers: HEADERS,
@@ -838,8 +897,8 @@ async function endDrag() {
           id: `${base}${idx}`,
           instrument: currentInstr.id,
           date, hour,
-          user_id: currentUserID,
-          name: currentUser
+          user_id: effectiveUserID,
+          name: effectiveUserName
         })
       })
     ));
@@ -961,6 +1020,8 @@ async function doLogout(){
   currentUserEmail   = null;
   currentUserIsAdmin = false;
   curatorInstrIds    = [];
+  bookAsUserID       = null;
+  bookAsUserName     = null;
   currentInstr       = instruments[0] || null;
   render();
 }
@@ -1051,6 +1112,64 @@ function render(){
   renderUserArea();
   renderInstr();
   renderInstrInfo();
+  renderBookAsSection();
+  renderCalendar();
+}
+
+function renderBookAsSection(){
+  const section = document.getElementById("book-as-section");
+  const area    = document.getElementById("book-as-area");
+
+  // Only show for curators/admins on the currently selected instrument
+  if(!currentUser || !currentInstr || !isCuratorFor(currentInstr.id)){
+    section.style.display = "none";
+    return;
+  }
+
+  // Collect users who have a permissions row for this instrument (excluding the curator themselves)
+  const instrPerms = permissions.filter(p => p.instrument_id === currentInstr.id);
+  const permUsers  = instrPerms
+    .map(p => users.find(u => u.id === p.user_id))
+    .filter(u => u && u.id !== currentUserID)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if(!permUsers.length){
+    section.style.display = "none";
+    // Reset if no users available for this instrument
+    if(bookAsUserID){ bookAsUserID = null; bookAsUserName = null; }
+    return;
+  }
+
+  section.style.display = "block";
+
+  const activePill = bookAsUserID
+    ? `<div class="book-as-active-pill">
+         <span class="pill-icon">👤</span>
+         <span>Booking as <strong>${bookAsUserName}</strong></span>
+       </div>`
+    : '';
+
+  area.innerHTML = `
+    <select id="book-as-select" onchange="setBookAs(this.value)">
+      <option value="${currentUserID}">${currentUser} (you)</option>
+      ${permUsers.map(u =>
+        `<option value="${u.id}"${u.id === bookAsUserID ? ' selected' : ''}>${u.name}</option>`
+      ).join('')}
+    </select>
+    ${activePill}
+  `;
+}
+
+function setBookAs(userId){
+  if(userId === currentUserID){
+    bookAsUserID   = null;
+    bookAsUserName = null;
+  } else {
+    const u        = users.find(u => u.id === userId);
+    bookAsUserID   = u ? u.id   : null;
+    bookAsUserName = u ? u.name : null;
+  }
+  renderBookAsSection();
   renderCalendar();
 }
 
@@ -1116,7 +1235,12 @@ function renderInstr(){
   }).join("");
 }
 
-function selectInstr(id){ currentInstr = instruments.find(i=>i.id===id); render(); }
+function selectInstr(id){
+  currentInstr   = instruments.find(i=>i.id===id);
+  bookAsUserID   = null;
+  bookAsUserName = null;
+  render();
+}
 
 function renderInstrInfo(){
   const img       = document.getElementById("instr-image");
