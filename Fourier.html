@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D Fourier Transform — Crystallography Teaching Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07090f; --panel:#0d1117; --border:#1c2433; --border2:#263045;
+  --text:#c8d6e5; --muted:#5a7080; --accent:#38bdf8; --accent2:#818cf8;
+  --mono:'Space Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);
+  height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{background:var(--panel);border-bottom:1px solid var(--border);
+  padding:6px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+header h1{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px}
+header p{font-size:10px;color:var(--muted);margin-top:1px}
+.badge{font-family:var(--mono);font-size:9px;color:var(--accent2);
+  background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.2);
+  padding:3px 8px;border-radius:3px;letter-spacing:1px;text-transform:uppercase}
+#app{display:grid;grid-template-columns:280px 1fr;grid-template-rows:1fr 1fr;
+  gap:5px;padding:5px;flex:1;min-height:0}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+  padding:10px;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent2),transparent);opacity:.25}
+.ptitle{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:2px;padding-bottom:7px;margin-bottom:6px;
+  border-bottom:1px solid var(--border);flex-shrink:0}
+canvas{flex:1;min-height:0;display:block;border-radius:3px;cursor:crosshair}
+/* controls */
+.cb{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;overflow:hidden}
+.istrip{background:rgba(56,189,248,.04);border:1px solid rgba(56,189,248,.15);
+  border-radius:4px;padding:5px 9px;font-family:var(--mono);font-size:11px;
+  display:flex;gap:8px;flex-wrap:wrap;color:var(--muted)}
+.istrip .v{color:var(--accent);font-weight:700}
+.frnote{font-family:var(--mono);font-size:9px;color:rgba(251,191,36,.7);
+  background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);
+  border-radius:3px;padding:3px 8px;letter-spacing:.3px;flex-shrink:0}
+.igrid{display:grid;grid-template-columns:22px 1fr 22px 1fr;gap:4px 6px;align-items:center}
+.igrid label{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;font-style:italic}
+.igrid input{background:#0a0e17;border:1px solid var(--border2);color:var(--text);
+  padding:5px 7px;border-radius:4px;font-family:var(--mono);font-size:12px;
+  text-align:right;width:100%;transition:border-color .15s}
+.igrid input:focus{outline:none;border-color:var(--accent);background:#0d1520}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.btn{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;padding:7px 6px;border:none;border-radius:4px;
+  cursor:pointer;transition:opacity .15s,transform .1s}
+.btn:hover{opacity:.85;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.bset{background:#065f46;color:#34d399;border:1px solid #064e3b}
+.bdel{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b}
+.bclr{background:#312e81;color:#a5b4fc;border:1px solid #3730a3}
+.brst{background:#1c2433;color:var(--muted);border:1px solid var(--border2)}
+.sflabel{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;flex-shrink:0}
+.sfscroll{flex:1;min-height:0;overflow-y:auto;border:1px solid var(--border);border-radius:4px;background:#0a0e17}
+.sfscroll::-webkit-scrollbar{width:4px}
+.sfscroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+thead th{color:var(--muted);font-weight:400;padding:4px 8px;text-align:right;
+  border-bottom:1px solid var(--border);position:sticky;top:0;background:#0a0e17}
+tbody td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--border);
+  cursor:pointer;color:var(--text);transition:background .1s}
+tbody tr:hover td{background:rgba(56,189,248,.05)}
+tbody tr.arow td{background:rgba(56,189,248,.09);color:var(--accent)}
+tbody tr.fprow td{color:rgba(251,191,36,.65)}
+tbody tr.fprow.arow td{color:var(--accent)}
+.emptymsg{padding:14px 8px;text-align:center;color:var(--muted);font-size:10px;font-style:italic}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>2D Fourier Transform Explorer &mdash; Single-Crystal X-ray Crystallography</h1>
+    <p>Click a reciprocal lattice spot to select · Drag Argand diagram to set |F| and φ · Friedel pairs (−h,−k) auto-applied on Set SF</p>
+  </div>
+  <span class="badge">Teaching Tool</span>
+</header>
+<div id="app">
+  <!-- TL: Controls -->
+  <div class="panel">
+    <div class="ptitle">Structure Factors</div>
+    <div class="cb">
+      <div class="istrip">
+        <span>h=<span class="v" id="ih">1</span></span>
+        <span>k=<span class="v" id="ik">0</span></span>
+        <span>|F|=<span class="v" id="iF">1.00</span></span>
+        <span>φ=<span class="v" id="iphi">0</span>°</span>
+      </div>
+      <div class="igrid">
+        <label>h</label><input type="number" id="inh"   value="1"    step="1"   min="-5" max="5">
+        <label>k</label><input type="number" id="ink"   value="0"    step="1"   min="-5" max="5">
+        <label>|F|</label><input type="number" id="inF"   value="1.00" step="0.1" min="0"  max="5">
+        <label>φ°</label><input type="number" id="inphi" value="0"    step="5"   min="-180" max="180">
+      </div>
+      <div class="frnote" id="frnote">↔ Friedel mate (−h,−k) will be auto-set: same |F|, φ → −φ</div>
+      <div class="bgrid">
+        <button class="btn bset" id="btnSet">Set SF</button>
+        <button class="btn bdel" id="btnDel">Delete SF</button>
+        <button class="btn bclr" id="btnClr">Clear Map</button>
+        <button class="btn brst" id="btnRst">Reset All</button>
+      </div>
+      <div class="sflabel">Set structure factors</div>
+      <div class="sfscroll">
+        <table><thead><tr><th>h</th><th>k</th><th>|F|</th><th>φ°</th></tr></thead>
+        <tbody id="sftb"><tr><td colspan="4" class="emptymsg">None set yet</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+  <!-- TR: Reciprocal -->
+  <div class="panel">
+    <div class="ptitle">Reciprocal Space — h,k lattice ±5</div>
+    <canvas id="cvR"></canvas>
+  </div>
+  <!-- BL: Argand -->
+  <div class="panel">
+    <div class="ptitle">Argand Diagram — drag to set |F| and φ</div>
+    <canvas id="cvA"></canvas>
+  </div>
+  <!-- BR: Real -->
+  <div class="panel">
+    <div class="ptitle">Real Space — oblique unit cell (γ=103°) with periodic tiling</div>
+    <canvas id="cvP"></canvas>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ── constants ──────────────────────────────────────────────
+const HMAX=5, MAXF=5, GRID=256;
+const GAMMA_DEG=103, GAMMA=GAMMA_DEG*Math.PI/180;
+const A_SCALE=1.25;               // direct cell: a is 25% longer than b
+const GAMMA_STAR=Math.PI-GAMMA;   // reciprocal cell angle = 77°
+
+// ── state ──────────────────────────────────────────────────
+const S={h:1,k:0,F:1,phi:0,refs:[],hovH:null,hovK:null,drag:false};
+
+// ── canvases ───────────────────────────────────────────────
+const cvR=document.getElementById('cvR');
+const cvA=document.getElementById('cvA');
+const cvP=document.getElementById('cvP');
+const offBuf=document.createElement('canvas');
+offBuf.width=offBuf.height=GRID;
+
+// ── math ───────────────────────────────────────────────────
+const rad=d=>d*Math.PI/180, deg=r=>r*180/Math.PI;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const findRef=(h,k)=>S.refs.find(r=>r.h===h&&r.k===k);
+
+// ── Friedel pair operations ────────────────────────────────
+// F(-h,-k) = F*(h,k): same amplitude, negated phase
+function setRefPair(h,k,F,phi){
+  const upsert=(rh,rk,rF,rphi)=>{
+    const i=S.refs.findIndex(r=>r.h===rh&&r.k===rk);
+    const obj={h:rh,k:rk,F:rF,phi:rphi};
+    if(i>=0) S.refs[i]=obj; else S.refs.push(obj);
+  };
+  upsert(h,k,F,phi);
+  if(h!==0||k!==0) upsert(-h,-k,F,-phi);  // Friedel mate
+  invalidateCache();
+}
+function delRefPair(h,k){
+  S.refs=S.refs.filter(r=>!(r.h===h&&r.k===k));
+  if(h!==0||k!==0) S.refs=S.refs.filter(r=>!(r.h===-h&&r.k===-k));
+  invalidateCache();
+}
+// Live-sync partner while dragging/typing (only if it's already in the list)
+function liveSyncFriedel(){
+  const ci=S.refs.findIndex(r=>r.h===S.h&&r.k===S.k);
+  if(ci>=0){S.refs[ci]={h:S.h,k:S.k,F:S.F,phi:S.phi};invalidateCache();}
+  if(S.h!==0||S.k!==0){
+    const fi=S.refs.findIndex(r=>r.h===-S.h&&r.k===-S.k);
+    if(fi>=0){S.refs[fi]={h:-S.h,k:-S.k,F:S.F,phi:-S.phi};invalidateCache();}
+  }
+}
+
+// ── Fourier map ────────────────────────────────────────────
+let _cache=null,_ckey='';
+function invalidateCache(){_cache=null;_ckey='';}
+
+function computeMap(refs){
+  const map=new Float32Array(GRID*GRID);
+  for(const r of refs){
+    const F=r.F, ph=r.phi;
+    const twh=2*Math.PI*r.h, twk=2*Math.PI*r.k;
+    for(let iy=0;iy<GRID;iy++){
+      const ky=twk*iy/GRID;
+      for(let ix=0;ix<GRID;ix++){
+        map[iy*GRID+ix]+=F*Math.cos(twh*ix/GRID+ky-ph);
+      }
+    }
+  }
+  return map;
+}
+
+function getSetMap(){
+  const key=JSON.stringify(S.refs);
+  if(key===_ckey&&_cache) return _cache;
+  _cache=computeMap(S.refs); _ckey=key;
+  return _cache;
+}
+
+function getPreviewContrib(){
+  // single (h,k) cosine wave — what the current settings contribute
+  if(S.h===0&&S.k===0){const m=new Float32Array(GRID*GRID);m.fill(S.F);return m;}
+  return computeMap([{h:S.h,k:S.k,F:S.F,phi:S.phi}]);
+}
+
+// ── colour mapping blue–white–red ─────────────────────────
+// `scale` is the value that maps to full saturation.
+// Using a fixed scale (not auto-normalised) makes colour intensity
+// proportional to actual amplitude rather than always spanning full range.
+function mapToImageData(map, scale){
+  const ctx=offBuf.getContext('2d');
+  const img=ctx.createImageData(GRID,GRID);
+  const amax=Math.max(scale, 1e-9);
+  for(let i=0;i<map.length;i++){
+    const n=clamp(map[i]/amax,-1,1);
+    let r,g,b;
+    if(n>=0){r=255;g=Math.round(255*(1-n));b=Math.round(255*(1-n));}
+    else    {r=Math.round(255*(1+n));g=Math.round(255*(1+n));b=255;}
+    img.data[i*4]=r;img.data[i*4+1]=g;img.data[i*4+2]=b;img.data[i*4+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+}
+
+// ── reciprocal lattice geometry ────────────────────────────
+// Direct cell: a = A_SCALE·L, b = L, angle GAMMA = 103°
+// Reciprocal:  |a*| ∝ 1/a,  |b*| ∝ 1/b,  γ* = π − GAMMA = 77°
+// Screen layout: h axis along +x;  k axis at γ* above +x (going upper-right)
+function recipGeo(cv){
+  const W=cv.width,H=cv.height,margin=18;
+  const asr=1/A_SCALE, bsr=1.0;              // relative reciprocal axis lengths
+  const cgs=Math.cos(GAMMA_STAR), sgs=Math.sin(GAMMA_STAR);
+  // scale so ±HMAX lattice points fit inside the canvas
+  const scX=(W/2-margin)/(HMAX*(asr+bsr*Math.abs(cgs)));
+  const scY=(H/2-margin)/(HMAX*bsr*sgs);
+  const sc=Math.min(scX,scY);
+  const hv=[asr*sc, 0];               // screen Δ per +h step  (along +x)
+  const kv=[bsr*sc*cgs, -bsr*sc*sgs]; // screen Δ per +k step  (up-right)
+  const sp=Math.min(Math.hypot(...hv),Math.hypot(...kv)); // spot-size ref
+  return{hv,kv,cx:W/2,cy:H/2,sp};
+}
+// (h,k) fractional → screen pixel
+function hk2xyR(h,k,g){return[g.cx+h*g.hv[0]+k*g.kv[0], g.cy+h*g.hv[1]+k*g.kv[1]];}
+// screen pixel → nearest (h,k)  [hv[1]=0 simplifies the inverse]
+function xy2hkR(sx,sy,g){
+  const dx=sx-g.cx, dy=sy-g.cy;
+  const k=dy/g.kv[1];
+  const h=(dx-k*g.kv[0])/g.hv[0];
+  return[Math.round(h),Math.round(k)];
+}
+
+// ── argand helpers ─────────────────────────────────────────
+const aSc=cv=>Math.min(cv.width,cv.height)*0.37/MAXF;
+const fp2xy=(F,phi,cv)=>{const sc=aSc(cv);return[cv.width/2+F*Math.cos(phi)*sc,cv.height/2-F*Math.sin(phi)*sc];};
+const xy2fp=(x,y,cv)=>{const sc=aSc(cv),dx=x-cv.width/2,dy=cv.height/2-y;return[Math.min(MAXF,Math.hypot(dx,dy)/sc),Math.atan2(dy,dx)];};
+
+// ── oblique cell geometry ──────────────────────────────────
+// a along +x, b at angle GAMMA from a
+// We pick cell size so it's ~42% of the smaller panel dimension,
+// preserving aspect ratio on resize.
+function cellGeo(W,H){
+  const cellPx=Math.min(W,H)*0.36;  // base = b-axis length
+  const ax=cellPx*A_SCALE, ay=0;    // a is 25% longer than b
+  const bx=cellPx*Math.cos(GAMMA);  // negative for γ>90°
+  const by=-cellPx*Math.sin(GAMMA); // upward on screen
+  const ox=W/2-(ax+bx)/2;
+  const oy=H/2-(ay+by)/2;
+  return {ax,ay,bx,by,ox,oy};
+}
+// fractional → screen
+function f2s(xf,yf,g){return[g.ox+xf*g.ax+yf*g.bx, g.oy+xf*g.ay+yf*g.by];}
+// screen → fractional
+function s2f(sx,sy,g){
+  const dx=sx-g.ox,dy=sy-g.oy;
+  const det=g.ax*g.by-g.ay*g.bx;
+  return[(g.by*dx-g.bx*dy)/det,(-g.ay*dx+g.ax*dy)/det];
+}
+
+// ── arrowhead ─────────────────────────────────────────────
+function arrow(ctx,x,y,ang,sz,col){
+  ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x-sz*Math.cos(ang-.38),y-sz*Math.sin(ang-.38));
+  ctx.lineTo(x-sz*Math.cos(ang+.38),y-sz*Math.sin(ang+.38));
+  ctx.closePath();ctx.fill();
+}
+
+// ── RENDER: reciprocal lattice ─────────────────────────────
+function renderRecip(){
+  const cv=cvR,ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const g=recipGeo(cv);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#05080f';ctx.fillRect(0,0,W,H);
+
+  // ── oblique grid (parallelogram mesh) ──────────────────
+  ctx.strokeStyle='rgba(28,36,51,.9)';ctx.lineWidth=.5;
+  // lines of constant h (parallel to k-direction)
+  for(let h=-HMAX;h<=HMAX;h++){
+    const[x1,y1]=hk2xyR(h,-HMAX,g),[x2,y2]=hk2xyR(h,HMAX,g);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  }
+  // lines of constant k (parallel to h-direction)
+  for(let k=-HMAX;k<=HMAX;k++){
+    const[x1,y1]=hk2xyR(-HMAX,k,g),[x2,y2]=hk2xyR(HMAX,k,g);
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  }
+
+  // ── axes through origin ────────────────────────────────
+  // h axis: extend along hv direction
+  {
+    const[x1,y1]=hk2xyR(-HMAX-1,0,g),[x2,y2]=hk2xyR(HMAX+1,0,g);
+    ctx.strokeStyle='rgba(56,189,248,.30)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  }
+  // k axis: extend along kv direction
+  {
+    const[x1,y1]=hk2xyR(0,-HMAX-1,g),[x2,y2]=hk2xyR(0,HMAX+1,g);
+    ctx.strokeStyle='rgba(129,140,248,.30)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  }
+
+  // ── reciprocal unit cell (dashed parallelogram 0→1) ───
+  ctx.strokeStyle='rgba(129,140,248,.55)';ctx.lineWidth=1.3;ctx.setLineDash([5,4]);
+  ctx.beginPath();
+  [[0,0],[1,0],[1,1],[0,1],[0,0]].forEach(([h,k],i)=>{
+    const[x,y]=hk2xyR(h,k,g);i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  });
+  ctx.stroke();ctx.setLineDash([]);
+
+  // ── axis arrows and labels near origin ────────────────
+  const[ox,oy]=hk2xyR(0,0,g);
+  // a* arrow
+  {
+    const[ax,ay]=hk2xyR(1.7,0,g);
+    ctx.strokeStyle='rgba(56,189,248,.80)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ax,ay);ctx.stroke();
+    arrowHead(ctx,ax,ay,Math.atan2(ay-oy,ax-ox),9,'rgba(56,189,248,.80)');
+    ctx.font="bold 11px 'Space Mono'";ctx.fillStyle='#38bdf8';
+    ctx.fillText('a*',ax+5,ay+4);
+  }
+  // b* arrow
+  {
+    const[bx,by]=hk2xyR(0,1.7,g);
+    ctx.strokeStyle='rgba(129,140,248,.80)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(bx,by);ctx.stroke();
+    arrowHead(ctx,bx,by,Math.atan2(by-oy,bx-ox),9,'rgba(129,140,248,.80)');
+    ctx.font="bold 11px 'Space Mono'";ctx.fillStyle='#818cf8';
+    ctx.fillText('b*',bx+4,by-5);
+  }
+
+  // ── γ* angle arc at origin ─────────────────────────────
+  {
+    const arcR=22;
+    const angH=Math.atan2(g.hv[1],g.hv[0]);  // h-axis direction (=0)
+    const angK=Math.atan2(g.kv[1],g.kv[0]);  // k-axis direction
+    ctx.strokeStyle='rgba(200,180,80,.45)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(ox,oy,arcR,angH,angK,true);ctx.stroke();
+    // label
+    const angMid=(angH+angK)/2;
+    ctx.font="9px 'Space Mono'";ctx.fillStyle='rgba(200,180,80,.65)';
+    ctx.fillText('γ*',ox+arcR*1.35*Math.cos(angMid)-6,oy+arcR*1.35*Math.sin(angMid)+4);
+  }
+
+  // ── index labels along axes ────────────────────────────
+  const labelSz=Math.round(g.sp*.42);
+  ctx.font=`${Math.max(8,labelSz)}px 'Space Mono'`;
+  ctx.fillStyle='rgba(90,112,128,.70)';
+  for(let h=-HMAX;h<=HMAX;h++){
+    if(h===0)continue;
+    const[x,y]=hk2xyR(h,0,g);
+    ctx.fillText(h,x-4,y+14);
+  }
+  for(let k=-HMAX;k<=HMAX;k++){
+    if(k===0)continue;
+    const[x,y]=hk2xyR(0,k,g);
+    ctx.fillText(k,x-16,y+4);
+  }
+
+  // ── Friedel connector ─────────────────────────────────
+  if(S.h!==0||S.k!==0){
+    const[sx,sy]=hk2xyR(S.h,S.k,g),[fx,fy]=hk2xyR(-S.h,-S.k,g);
+    ctx.strokeStyle='rgba(251,191,36,.2)';ctx.lineWidth=1;ctx.setLineDash([2,5]);
+    ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(fx,fy);ctx.stroke();
+    ctx.setLineDash([]);
+    const fref=findRef(-S.h,-S.k);
+    const fr=fref?clamp(fref.F/MAXF*g.sp*.52,3,g.sp*.55)+5:7;
+    ctx.beginPath();ctx.arc(fx,fy,fr,0,Math.PI*2);
+    ctx.strokeStyle='rgba(251,191,36,.35)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+    ctx.stroke();ctx.setLineDash([]);
+  }
+
+  // ── spots ──────────────────────────────────────────────
+  for(let h=-HMAX;h<=HMAX;h++){
+    for(let k=-HMAX;k<=HMAX;k++){
+      const[x,y]=hk2xyR(h,k,g);
+      const ref=findRef(h,k);
+      const isSel=h===S.h&&k===S.k;
+      const isHov=h===S.hovH&&k===S.hovK;
+      const isFP=h===-S.h&&k===-S.k&&(S.h!==0||S.k!==0);
+      if(ref){
+        const r=clamp(ref.F/MAXF*g.sp*.52,3,g.sp*.55);
+        const hue=((deg(ref.phi)%360)+360)%360;
+        ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+        ctx.fillStyle=`hsl(${hue},75%,62%)`;ctx.fill();
+        const grd=ctx.createRadialGradient(x,y,0,x,y,r*1.8);
+        grd.addColorStop(0,`hsla(${hue},75%,62%,.3)`);grd.addColorStop(1,'transparent');
+        ctx.beginPath();ctx.arc(x,y,r*1.8,0,Math.PI*2);ctx.fillStyle=grd;ctx.fill();
+      }else{
+        ctx.beginPath();ctx.arc(x,y,isHov?3.5:2,0,Math.PI*2);
+        ctx.fillStyle=isHov?'#93c5fd':'rgba(56,189,248,.35)';ctx.fill();
+      }
+      if(isSel){
+        const rr=ref?clamp(ref.F/MAXF*g.sp*.52,3,g.sp*.55)+4:7;
+        ctx.beginPath();ctx.arc(x,y,rr,0,Math.PI*2);
+        ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
+      }else if(isHov&&!ref){
+        ctx.beginPath();ctx.arc(x,y,5.5,0,Math.PI*2);
+        ctx.strokeStyle='rgba(147,197,253,.6)';ctx.lineWidth=1;ctx.stroke();
+      }
+      if(isFP&&!isSel){
+        ctx.font="9px 'Space Mono'";ctx.fillStyle='rgba(251,191,36,.65)';
+        ctx.fillText('↔',x+6,y-5);
+      }
+    }
+  }
+
+  // ── hover label ────────────────────────────────────────
+  if(S.hovH!==null){
+    const[hx,hy]=hk2xyR(S.hovH,S.hovK,g);
+    const ref=findRef(S.hovH,S.hovK);
+    ctx.font="10px 'Space Mono'";ctx.fillStyle='#fbbf24';
+    ctx.fillText(ref?`(${S.hovH},${S.hovK}) |F|=${ref.F.toFixed(1)}`:`(${S.hovH},${S.hovK})`,hx+8,hy-7);
+  }
+}
+
+// ── RENDER: Argand diagram ─────────────────────────────────
+function renderArgand(){
+  const cv=cvA,ctx=cv.getContext('2d'),W=cv.width,H=cv.height,cx=W/2,cy=H/2,sc=aSc(cv);
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#05080f';ctx.fillRect(0,0,W,H);
+
+  // circles
+  for(let f=1;f<=MAXF;f++){
+    ctx.beginPath();ctx.arc(cx,cy,f*sc,0,Math.PI*2);
+    ctx.strokeStyle=f%2?'rgba(28,36,51,.6)':'rgba(28,36,51,1)';
+    ctx.lineWidth=f%2?.5:1;ctx.stroke();
+    ctx.font="9px 'Space Mono'";ctx.fillStyle='rgba(90,112,128,.7)';
+    ctx.fillText(f,cx+f*sc+2,cy-2);
+  }
+  // axes
+  ctx.strokeStyle='rgba(56,189,248,.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+  ctx.font="bold 10px 'Space Mono'";ctx.fillStyle='#38bdf8';
+  ctx.fillText('Re',W-22,cy-6);ctx.fillText('Im',cx+5,13);
+  // phase labels
+  const mr=MAXF*sc+14;
+  ctx.font="9px 'Space Mono'";ctx.fillStyle='rgba(90,112,128,.7)';
+  [[0,'0°'],[90,'90°'],[180,'180°'],[-90,'−90°']].forEach(([d,l])=>{
+    const a=rad(d);ctx.fillText(l,cx+mr*Math.cos(a)-12,cy-mr*Math.sin(a)+4);
+  });
+
+  // Friedel conjugate vector (mirror of current, shown faintly)
+  if(S.h!==0||S.k!==0){
+    const[vxf,vyf]=fp2xy(S.F,-S.phi,cv);
+    ctx.strokeStyle='rgba(129,140,248,.28)';ctx.lineWidth=1.2;ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(vxf,vyf);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(vxf,vyf,3.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(129,140,248,.35)';ctx.fill();
+    ctx.font="8px 'Space Mono'";ctx.fillStyle='rgba(129,140,248,.5)';
+    ctx.fillText('(−h,−k)',vxf+5,vyf-4);
+  }
+
+  // other set vectors
+  for(const r of S.refs){
+    if((r.h===S.h&&r.k===S.k)||(r.h===-S.h&&r.k===-S.k&&(S.h!==0||S.k!==0)))continue;
+    const[vx,vy]=fp2xy(r.F,r.phi,cv);
+    const hue=((deg(r.phi)%360)+360)%360;
+    ctx.strokeStyle=`hsla(${hue},70%,60%,.20)`;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(vx,vy);ctx.stroke();
+    ctx.fillStyle=`hsla(${hue},70%,60%,.28)`;
+    ctx.beginPath();ctx.arc(vx,vy,3,0,Math.PI*2);ctx.fill();
+  }
+
+  // current vector
+  if(S.F>0.005){
+    const[vx,vy]=fp2xy(S.F,S.phi,cv);
+    // phase wedge
+    const ar=clamp(S.F*sc*.38,12,38);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+ar,cy);
+    ctx.arc(cx,cy,ar,0,-S.phi,S.phi>0);ctx.closePath();
+    ctx.fillStyle='rgba(251,191,36,.12)';ctx.strokeStyle='rgba(251,191,36,.4)';
+    ctx.lineWidth=1.2;ctx.fill();ctx.stroke();
+    // dashed projections
+    ctx.strokeStyle='rgba(251,191,36,.3)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.moveTo(vx,cy);ctx.lineTo(vx,vy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,vy);ctx.lineTo(vx,vy);ctx.stroke();
+    ctx.setLineDash([]);
+    // component labels
+    ctx.font="9px 'Space Mono'";ctx.fillStyle='rgba(251,191,36,.65)';
+    ctx.fillText((S.F*Math.cos(S.phi)).toFixed(2),vx+(vx>cx?3:-34),cy-4);
+    ctx.fillText((S.F*Math.sin(S.phi)).toFixed(2),cx+(cx<W/2?4:-34),vy+(vy<cy?-4:12));
+    // stem
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(vx,vy);ctx.stroke();
+    // arrowhead
+    const ang=Math.atan2(vy-cy,vx-cx);
+    ctx.fillStyle='#fbbf24';
+    ctx.beginPath();ctx.moveTo(vx,vy);
+    ctx.lineTo(vx-10*Math.cos(ang-.4),vy-10*Math.sin(ang-.4));
+    ctx.lineTo(vx-10*Math.cos(ang+.4),vy-10*Math.sin(ang+.4));
+    ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.arc(vx,vy,4.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+    ctx.beginPath();ctx.arc(vx,vy,3,0,Math.PI*2);ctx.fillStyle='#fbbf24';ctx.fill();
+  }else{
+    ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fillStyle='#fbbf24';ctx.fill();
+  }
+  ctx.font="11px 'Space Mono'";ctx.fillStyle='#fbbf24';
+  ctx.fillText(`|F| = ${S.F.toFixed(2)}    φ = ${Math.round(deg(S.phi))}°`,8,H-8);
+}
+
+// ── RENDER: real space ─────────────────────────────────────
+function renderReal(){
+  const cv=cvP,ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#05080f';ctx.fillRect(0,0,W,H);
+
+  const g=cellGeo(W,H);
+  const{ax,ay,bx,by,ox,oy}=g;
+
+  // ── choose map to display ──────────────────────────────
+  let displayMap;
+  const alreadySet=!!findRef(S.h,S.k);
+  // colourScale must be FIXED (not the map's own max) so that colour
+  // saturation is proportional to |F|.
+  // Preview:      normalise by MAXF  → F=5 full red/blue, F=1 pale pink/blue
+  // Accumulated:  normalise by sum of all contributing |F| values
+  //               (Friedel pairs already doubled in S.refs, matching map amplitude)
+  const refSum=S.refs.reduce((s,r)=>s+r.F,0);
+  let colourScale;
+  if(S.refs.length===0){
+    displayMap=getPreviewContrib();
+    colourScale=MAXF;                       // fixed scale — F/MAXF drives saturation
+  }else if(alreadySet){
+    displayMap=getSetMap();
+    colourScale=Math.max(refSum, 0.1);
+  }else{
+    const sm=getSetMap();
+    const pm=getPreviewContrib();
+    displayMap=new Float32Array(GRID*GRID);
+    for(let i=0;i<GRID*GRID;i++) displayMap[i]=sm[i]+pm[i];
+    colourScale=Math.max(refSum+S.F, 0.1); // preview adds one more F on top
+  }
+  mapToImageData(displayMap, colourScale);
+
+  // ── tile oblique cell across panel ────────────────────
+  // The mapping from offscreen pixel (ix,iy) to screen is an affine transform:
+  // sx = ox + ix*(ax/GRID) + iy*(bx/GRID)
+  // sy = oy + ix*(ay/GRID) + iy*(by/GRID)
+  // We need to cover the whole panel. Work out how many tile repeats needed.
+  ctx.save();
+  ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+
+  for(let n=-4;n<=4;n++){
+    for(let m=-4;m<=4;m++){
+      // corner of this tile
+      const tx=ox+n*ax+m*bx;
+      const ty=oy+n*ay+m*by;
+      // bounding box cull
+      const minX=Math.min(tx,tx+ax,tx+bx,tx+ax+bx);
+      const maxX=Math.max(tx,tx+ax,tx+bx,tx+ax+bx);
+      const minY=Math.min(ty,ty+ay,ty+by,ty+ay+by);
+      const maxY=Math.max(ty,ty+ay,ty+by,ty+ay+by);
+      if(maxX<-2||minX>W+2||maxY<-2||minY>H+2) continue;
+      // set transform so offscreen maps onto this tile
+      ctx.setTransform(ax/GRID, ay/GRID, bx/GRID, by/GRID, tx, ty);
+      ctx.drawImage(offBuf,0,0);
+    }
+  }
+  ctx.restore();
+  ctx.setTransform(1,0,0,1,0,0);
+
+  // ── draw hk planes (dark amber dashed lines) ──────────
+  drawPlanes(ctx,W,H,g,S.h,S.k,S.phi);
+
+  // ── draw sine wave perpendicular to planes ───────────
+  drawSineWave(ctx,W,H,g,S.h,S.k,S.F,S.phi);
+
+  // ── draw cell outlines (tiled, faint neighbours) ─────
+  drawCells(ctx,W,H,g);
+
+  // ── status bar ────────────────────────────────────────
+  const nSet=S.refs.length;
+  ctx.fillStyle='rgba(5,8,15,.82)';ctx.fillRect(0,H-24,W,24);
+  ctx.font="10px 'Space Mono'";ctx.fillStyle='#8b9ab5';
+  const stxt=nSet===0
+    ?`PREVIEW  (${S.h},${S.k})  |F|=${S.F.toFixed(2)}  φ=${Math.round(deg(S.phi))}°`
+    :`FOURIER MAP  —  ${nSet} SF${nSet>1?'s':''} accumulated`;
+  ctx.fillText(stxt,7,H-8);
+
+  // colour bar
+  const bW=72,bH=6,bX=W-bW-8,bY=H-17;
+  const gc=ctx.createLinearGradient(bX,0,bX+bW,0);
+  gc.addColorStop(0,'#1e40af');gc.addColorStop(.5,'#fff');gc.addColorStop(1,'#dc2626');
+  ctx.fillStyle=gc;ctx.fillRect(bX,bY,bW,bH);
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=.5;ctx.strokeRect(bX,bY,bW,bH);
+  ctx.font="8px 'Space Mono'";ctx.fillStyle='#8b9ab5';
+  ctx.fillText('−',bX-6,bY+6);ctx.fillText('+',bX+bW+2,bY+6);
+
+  ctx.font="bold 11px 'Space Mono'";ctx.fillStyle='rgba(251,230,80,.85)';
+  ctx.fillText(`(${S.h},${S.k})`,7,17);
+  ctx.font="9px 'Space Mono'";ctx.fillStyle='rgba(90,112,128,.6)';
+  ctx.fillText(`γ=${GAMMA_DEG}°`,ox+3,oy+12);
+}
+
+// ── draw lattice planes across the oblique cell ────────────
+// Planes satisfy  h·xf + k·yf = integer + phaseOffset
+// We draw them in screen space by converting fractional→screen.
+function drawPlanes(ctx,W,H,g,h,k,phi){
+  if(h===0&&k===0) return;
+  const phOff=phi/(2*Math.PI);
+
+  // find t-range (t = h*xf + k*yf) over the four screen corners
+  const corners=[[0,0],[W,0],[W,H],[0,H]].map(([sx,sy])=>{
+    const[xf,yf]=s2f(sx,sy,g); return h*xf+k*yf;
+  });
+  // Crests of cos(2π(h·xf+k·yf)−φ) are at h·xf+k·yf = n + phOff
+  // so we draw planes there (not n−phOff).
+  const tLo=Math.floor(Math.min(...corners)-phOff)-1;
+  const tHi=Math.ceil(Math.max(...corners)-phOff)+1;
+
+  // Dark amber – more visible against the density map
+  ctx.strokeStyle='rgba(160,100,10,0.90)';
+  ctx.lineWidth=1.8;
+  ctx.setLineDash([7,5]);
+
+  // For each plane n, line is h*xf + k*yf = n + phOff  (crest positions)
+  const REACH=20; // fractional units, guaranteed to go off-screen
+  for(let n=tLo;n<=tHi;n++){
+    const C=n+phOff; // h*xf + k*yf = C  ← matches density maximum
+    let p0,p1;
+    if(Math.abs(h)>=Math.abs(k)){
+      // solve for xf at yf=±REACH
+      p0=f2s((C-k*(-REACH))/h,-REACH,g);
+      p1=f2s((C-k*REACH)/h,   REACH,g);
+    }else{
+      p0=f2s(-REACH,(C-h*(-REACH))/k,g);
+      p1=f2s( REACH,(C-h*REACH)/k,   g);
+    }
+    ctx.beginPath();ctx.moveTo(p0[0],p0[1]);ctx.lineTo(p1[0],p1[1]);ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+// ── draw cosine wave perpendicular to hk planes ────────────
+// cos(2π(h·xf+k·yf)−φ): crests (=1) coincide with the dashed plane lines
+// and with the red (maximum) density shading.
+function drawSineWave(ctx,W,H,g,h,k,F,phi){
+  if((h===0&&k===0)||F<0.005) return;
+
+  // Normal direction in screen space (gradient of h*xf+k*yf wrt screen coords)
+  // d(h*xf+k*yf)/dsx = h*(by) + k*(-ay) ... let's do it properly via chain rule
+  // xf = (by*dx - bx*dy)/det, yf = (-ay*dx + ax*dy)/det  where det=ax*by-ay*bx
+  const det=g.ax*g.by-g.ay*g.bx;
+  // gradient of (h*xf+k*yf) w.r.t. (sx,sy):
+  const gnx=(h*g.by - k*g.ay)/det;  // ∂(h·xf+k·yf)/∂sx
+  const gny=(-h*g.bx + k*g.ax)/det; // ∂(h·xf+k·yf)/∂sy
+  const glen=Math.hypot(gnx,gny);
+  if(glen<1e-8) return;
+  const nnx=gnx/glen, nny=gny/glen;   // unit normal (points in direction of increasing phase)
+  const tnx=-nny, tny=nnx;            // unit tangent (along planes)
+
+  // Period in screen pixels = 1/|gradient| = 1/glen  (one full cycle per screen-pixel unit)
+  // Actually: gradient magnitude = glen means one cycle over 1/glen screen pixels
+  const period_px=1/glen; // pixels per unit fractional — but we want pixels per plane spacing
+  // Plane spacing in screen pixels: moving 1 unit in normal direction changes h*xf+k*yf by glen
+  // So to change by 1 (next plane) you move 1/glen screen pixels. But wait: let's rethink.
+  // The period of cos(2π(h*xf+k*yf)) in screen coords along the normal direction is 1/glen px.
+  // Actually glen has units of (fractional units)/(screen pixel), so period = 1 frac-unit / glen px/frac = 1/glen screen px. That seems too small.
+  // Let me compute explicitly: if we move nnx,nny (1 screen pixel in normal dir),
+  // (h*xf+k*yf) changes by gnx*1+gny*0... no, by gnx*nnx+gny*nny = glen (by definition).
+  // So to change h*xf+k*yf by 1 (= 1 period), we need to move 1/glen screen pixels. That's the period.
+  // For our cell ~200px and h=1,k=0: glen≈1/cellPx, period≈cellPx. ✓
+
+  const pw=period_px;
+  // Amplitude scales with F but keeps a generous minimum so small |F| still
+  // shows a clearly visible wave. Single F/MAXF factor only (no double-scaling).
+  const baseAmp=clamp(pw*0.38, 12, 55);
+  const amp=baseAmp*(0.35+0.65*F/MAXF);
+
+  // Centre of panel in fractional coords
+  const[xcf,ycf]=s2f(W/2,H/2,g);
+  const t0=h*xcf+k*ycf; // phase reference at panel centre
+
+  // Trace along the normal direction from -halfSpan to +halfSpan (screen pixels)
+  const halfSpan=Math.hypot(W,H)*0.55+pw*3;
+  const nPts=Math.max(300,Math.ceil(halfSpan*4/pw));
+
+  // Helper: screen coords of wave point at parameter s (signed screen px from centre)
+  const wavePt=(s)=>{
+    const t=t0+s*glen;
+    const disp=-amp*Math.cos(2*Math.PI*t-phi); // negate: crest toward red density
+    return[W/2+s*nnx+disp*tnx, H/2+s*nny+disp*tny];
+  };
+
+  // Filled lobes (positive=warm, negative=cool)
+  for(const sign of[1,-1]){
+    ctx.beginPath();
+    let first=true;
+    for(let i=0;i<=nPts;i++){
+      const s=-halfSpan+i*2*halfSpan/nPts;
+      const t=t0+s*glen;
+      const raw=-Math.cos(2*Math.PI*t-phi); // negated: positive lobe at density crest
+      const disp=(sign>0?Math.max(0,raw):Math.min(0,raw))*amp;
+      const sx=W/2+s*nnx+disp*tnx, sy=H/2+s*nny+disp*tny;
+      if(first){ctx.moveTo(sx,sy);first=false;}else ctx.lineTo(sx,sy);
+    }
+    // return along the zero-line
+    for(let i=nPts;i>=0;i--){
+      const s=-halfSpan+i*2*halfSpan/nPts;
+      ctx.lineTo(W/2+s*nnx, H/2+s*nny);
+    }
+    ctx.closePath();
+    ctx.fillStyle=sign>0?'rgba(251,191,36,.15)':'rgba(96,165,250,.12)';
+    ctx.fill();
+  }
+
+  // Zero baseline (dashed, faint)
+  ctx.strokeStyle='rgba(251,191,36,.20)';ctx.lineWidth=.8;ctx.setLineDash([4,5]);
+  ctx.beginPath();
+  ctx.moveTo(W/2-halfSpan*nnx,H/2-halfSpan*nny);
+  ctx.lineTo(W/2+halfSpan*nnx,H/2+halfSpan*nny);
+  ctx.stroke();ctx.setLineDash([]);
+
+  // Wave curve
+  ctx.strokeStyle='rgba(251,191,36,.90)';ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.beginPath();
+  let first=true;
+  for(let i=0;i<=nPts;i++){
+    const s=-halfSpan+i*2*halfSpan/nPts;
+    const[sx,sy]=wavePt(s);
+    if(first){ctx.moveTo(sx,sy);first=false;}else ctx.lineTo(sx,sy);
+  }
+  ctx.stroke();
+}
+
+// ── draw oblique cell outlines ─────────────────────────────
+function drawCells(ctx,W,H,g){
+  const{ax,ay,bx,by,ox,oy}=g;
+  for(let n=-3;n<=3;n++){
+    for(let m=-3;m<=3;m++){
+      const tx=ox+n*ax+m*bx, ty=oy+n*ay+m*by;
+      // corners
+      const xs=[tx,tx+ax,tx+ax+bx,tx+bx];
+      const ys=[ty,ty+ay,ty+ay+by,ty+by];
+      const minX=Math.min(...xs),maxX=Math.max(...xs);
+      const minY=Math.min(...ys),maxY=Math.max(...ys);
+      if(maxX<-4||minX>W+4||maxY<-4||minY>H+4) continue;
+      const isPrimary=n===0&&m===0;
+      ctx.strokeStyle=isPrimary?'rgba(255,255,255,.75)':'rgba(255,255,255,.12)';
+      ctx.lineWidth=isPrimary?1.8:.6;
+      ctx.setLineDash(isPrimary?[]:[3,5]);
+      ctx.beginPath();
+      ctx.moveTo(xs[0],ys[0]);ctx.lineTo(xs[1],ys[1]);
+      ctx.lineTo(xs[2],ys[2]);ctx.lineTo(xs[3],ys[3]);
+      ctx.closePath();ctx.stroke();
+    }
+  }
+  ctx.setLineDash([]);
+
+  // origin dot
+  ctx.beginPath();ctx.arc(ox,oy,3,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,.8)';ctx.fill();
+
+  // a-axis arrow
+  const[ax1,ay1]=[ox+ax,oy+ay];
+  ctx.strokeStyle='rgba(56,189,248,.9)';ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ax1,ay1);ctx.stroke();
+  arrowHead(ctx,ax1,ay1,Math.atan2(ay1-oy,ax1-ox),10,'rgba(56,189,248,.9)');
+  ctx.font="bold 12px 'Space Mono'";ctx.fillStyle='#38bdf8';
+  ctx.fillText('a',ax1+6,ay1+4);
+
+  // b-axis arrow
+  const[bx1,by1]=[ox+bx,oy+by];
+  ctx.strokeStyle='rgba(129,140,248,.9)';ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(bx1,by1);ctx.stroke();
+  arrowHead(ctx,bx1,by1,Math.atan2(by1-oy,bx1-ox),10,'rgba(129,140,248,.9)');
+  ctx.font="bold 12px 'Space Mono'";ctx.fillStyle='#818cf8';
+  ctx.fillText('b',bx1-18,by1-4);
+}
+function arrowHead(ctx,x,y,ang,sz,col){
+  ctx.fillStyle=col;
+  ctx.beginPath();ctx.moveTo(x,y);
+  ctx.lineTo(x-sz*Math.cos(ang-.38),y-sz*Math.sin(ang-.38));
+  ctx.lineTo(x-sz*Math.cos(ang+.38),y-sz*Math.sin(ang+.38));
+  ctx.closePath();ctx.fill();
+}
+
+// ── UI sync ────────────────────────────────────────────────
+function updateStrip(){
+  document.getElementById('ih').textContent=S.h;
+  document.getElementById('ik').textContent=S.k;
+  document.getElementById('iF').textContent=S.F.toFixed(2);
+  document.getElementById('iphi').textContent=Math.round(deg(S.phi));
+  document.getElementById('frnote').style.display=(S.h!==0||S.k!==0)?'':'none';
+}
+function syncInputs(){
+  document.getElementById('inh').value=S.h;
+  document.getElementById('ink').value=S.k;
+  document.getElementById('inF').value=S.F.toFixed(2);
+  document.getElementById('inphi').value=Math.round(deg(S.phi));
+}
+function readInputs(){
+  S.h=clamp(Math.round(+document.getElementById('inh').value||0),-HMAX,HMAX);
+  S.k=clamp(Math.round(+document.getElementById('ink').value||0),-HMAX,HMAX);
+  S.F=clamp(+document.getElementById('inF').value||0,0,MAXF);
+  S.phi=rad(+document.getElementById('inphi').value||0);
+}
+function updateTable(){
+  const tb=document.getElementById('sftb');
+  if(!S.refs.length){tb.innerHTML='<tr><td colspan="4" class="emptymsg">None set yet</td></tr>';return;}
+  const shown=new Set();
+  let html='';
+  for(const r of S.refs){
+    const key=`${r.h},${r.k}`;
+    if(shown.has(key))continue;shown.add(key);
+    const isFP=(r.h!==0||r.k!==0)&&shown.has(`${-r.h},${-r.k}`);
+    const selCls=(r.h===S.h&&r.k===S.k)?'arow':isFP?'fprow':'';
+    html+=`<tr class="${selCls}" data-h="${r.h}" data-k="${r.k}">
+      <td>${r.h}</td><td>${r.k}</td><td>${r.F.toFixed(2)}</td><td>${Math.round(deg(r.phi))}°</td>
+    </tr>`;
+  }
+  tb.innerHTML=html;
+  tb.querySelectorAll('tr[data-h]').forEach(tr=>{
+    tr.addEventListener('click',()=>{
+      const ref=findRef(+tr.dataset.h,+tr.dataset.k);
+      if(ref){S.h=ref.h;S.k=ref.k;S.F=ref.F;S.phi=ref.phi;syncInputs();update();}
+    });
+  });
+}
+function update(){updateStrip();updateTable();renderRecip();renderArgand();renderReal();}
+
+// ── resize ────────────────────────────────────────────────
+function resizeAll(){
+  [cvR,cvA,cvP].forEach(cv=>{
+    const p=cv.parentElement;
+    const t=p.querySelector('.ptitle');
+    const usedH=t?t.offsetHeight+6+20:26;
+    cv.width=Math.max(80,p.clientWidth-20);
+    cv.height=Math.max(80,p.clientHeight-usedH);
+  });
+  invalidateCache();update();
+}
+
+// ── events ────────────────────────────────────────────────
+['inh','ink','inF','inphi'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input',()=>{readInputs();liveSyncFriedel();update();});
+  el.addEventListener('change',()=>{readInputs();liveSyncFriedel();syncInputs();update();});
+});
+
+document.getElementById('btnSet').addEventListener('click',()=>{
+  setRefPair(S.h,S.k,S.F,S.phi);update();
+});
+document.getElementById('btnDel').addEventListener('click',()=>{
+  delRefPair(S.h,S.k);update();
+});
+document.getElementById('btnClr').addEventListener('click',()=>{
+  S.refs=[];invalidateCache();update();
+});
+document.getElementById('btnRst').addEventListener('click',()=>{
+  S.h=1;S.k=0;S.F=1;S.phi=0;S.refs=[];invalidateCache();syncInputs();update();
+});
+
+// reciprocal lattice click
+cvR.addEventListener('click',e=>{
+  const rect=cvR.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const g=recipGeo(cvR);
+  const[h,k]=xy2hkR(mx,my,g);
+  if(Math.abs(h)>HMAX||Math.abs(k)>HMAX)return;
+  const[sx,sy]=hk2xyR(h,k,g);
+  if(Math.hypot(mx-sx,my-sy)>g.sp*.6)return;
+  S.h=h;S.k=k;
+  const ref=findRef(h,k);
+  if(ref){S.F=ref.F;S.phi=ref.phi;}
+  syncInputs();update();
+});
+cvR.addEventListener('mousemove',e=>{
+  const rect=cvR.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const g=recipGeo(cvR);
+  const[h,k]=xy2hkR(mx,my,g);
+  if(Math.abs(h)<=HMAX&&Math.abs(k)<=HMAX){
+    const[sx,sy]=hk2xyR(h,k,g);
+    const close=Math.hypot(mx-sx,my-sy)<g.sp*.6;
+    const nh=close?h:null,nk=close?k:null;
+    if(nh!==S.hovH||nk!==S.hovK){S.hovH=nh;S.hovK=nk;renderRecip();}
+  }else if(S.hovH!==null){S.hovH=null;S.hovK=null;renderRecip();}
+  cvR.style.cursor=S.hovH!==null?'pointer':'crosshair';
+});
+cvR.addEventListener('mouseleave',()=>{
+  if(S.hovH!==null){S.hovH=null;S.hovK=null;renderRecip();}
+});
+
+// Argand drag
+function argandPt(cx,cy){
+  const rect=cvA.getBoundingClientRect();
+  const[F,phi]=xy2fp(cx-rect.left,cy-rect.top,cvA);
+  S.F=F;S.phi=phi;
+  liveSyncFriedel();syncInputs();updateStrip();
+  renderArgand();renderReal();
+}
+cvA.addEventListener('mousedown',e=>{S.drag=true;argandPt(e.clientX,e.clientY);});
+cvA.addEventListener('mousemove',e=>{if(S.drag)argandPt(e.clientX,e.clientY);cvA.style.cursor=S.drag?'grabbing':'crosshair';});
+cvA.addEventListener('mouseup',()=>{S.drag=false;cvA.style.cursor='crosshair';});
+cvA.addEventListener('mouseleave',()=>{S.drag=false;});
+cvA.addEventListener('touchstart',e=>{e.preventDefault();S.drag=true;argandPt(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+cvA.addEventListener('touchmove',e=>{e.preventDefault();if(S.drag)argandPt(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+cvA.addEventListener('touchend',()=>{S.drag=false;});
+
+// ── init ──────────────────────────────────────────────────
+let _rt;
+window.addEventListener('resize',()=>{clearTimeout(_rt);_rt=setTimeout(resizeAll,80);});
+window.addEventListener('load',()=>setTimeout(resizeAll,60));
+resizeAll();
+</script>
+</body>
+</html>
