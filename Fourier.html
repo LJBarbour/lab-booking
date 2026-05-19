@@ -667,6 +667,12 @@ function drawPlanes(ctx,W,H,g,h,k,phi){
 function drawSineWave(ctx,W,H,g,h,k,F,phi){
   if((h===0&&k===0)||F<0.005) return;
 
+  // Canonicalise to the positive half-plane so the normal (and therefore the
+  // transverse tangent) always points in the same direction relative to the
+  // density crests.  cos(2π(−h·xf−k·yf)−(−φ)) = cos(2π(h·xf+k·yf)−φ),
+  // so negating h,k,φ together leaves the physical wave unchanged.
+  if(h<0||(h===0&&k<0)){ h=-h; k=-k; phi=-phi; }
+
   // Normal direction in screen space (gradient of h*xf+k*yf wrt screen coords)
   // d(h*xf+k*yf)/dsx = h*(by) + k*(-ay) ... let's do it properly via chain rule
   // xf = (by*dx - bx*dy)/det, yf = (-ay*dx + ax*dy)/det  where det=ax*by-ay*bx
@@ -692,10 +698,12 @@ function drawSineWave(ctx,W,H,g,h,k,F,phi){
   // For our cell ~200px and h=1,k=0: glen≈1/cellPx, period≈cellPx. ✓
 
   const pw=period_px;
-  // Amplitude scales with F but keeps a generous minimum so small |F| still
-  // shows a clearly visible wave. Single F/MAXF factor only (no double-scaling).
-  const baseAmp=clamp(pw*0.38, 12, 55);
-  const amp=baseAmp*(0.35+0.65*F/MAXF);
+  // Amplitude is FIXED in screen pixels — independent of h,k resolution.
+  // Pure multiplicative scaling: amp=0 when F=0, amp=BASE when F=MAXF.
+  // A multiplier of 2.5 is applied so mid-range |F| values are clearly visible.
+  const BASE_AMP=40;           // pixels at full scale (F=MAXF)
+  const AMP_BOOST=2.5;         // multiplicative exaggeration factor
+  const amp=clamp(BASE_AMP * AMP_BOOST * F/MAXF, 0, BASE_AMP*AMP_BOOST);
 
   // Centre of panel in fractional coords
   const[xcf,ycf]=s2f(W/2,H/2,g);
