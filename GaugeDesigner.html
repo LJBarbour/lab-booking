@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gauge Designer</title>
+<style>
+:root{
+  --bg:#f5f7fb;
+  --panel:rgba(255,255,255,.96);
+  --line:#dde3ea;
+  --text:#101828;
+  --muted:#667085;
+  --blue:#2563eb;
+}
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family:Inter, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.app{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  min-height:100vh;
+}
+.sidebar{
+  padding:12px;
+  background:var(--panel);
+  border-right:1px solid var(--line);
+  overflow:auto;
+  box-shadow:0 10px 30px rgba(15,23,42,.04);
+}
+.stage{
+  display:grid;
+  place-items:center;
+  padding:10px;
+}
+.gauge-wrap{
+  width:640px;
+  aspect-ratio:1;
+  transition:width .15s ease;
+}
+svg{
+  width:100%;
+  height:auto;
+  display:block;
+}
+h1{
+  margin:0 0 6px;
+  font-size:20px;
+  letter-spacing:-.2px;
+}
+.sub{
+  margin:0 0 8px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+}
+.section{
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px solid #e8edf3;
+}
+.section h2{
+  margin:0 0 6px;
+  font-size:12px;
+}
+.field{ margin-bottom:6px; }
+label{
+  display:block;
+  margin:0 0 2px;
+  font-size:10px;
+  font-weight:700;
+  color:#475467;
+}
+input, select, button{
+  font:inherit;
+}
+input[type="text"],
+input[type="number"],
+select{
+  width:100%;
+  padding:6px 8px;
+  border:1px solid #d7dde5;
+  border-radius:10px;
+  background:#fff;
+  font-size:11px;
+  outline:none;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus{
+  border-color:#9db7ff;
+  box-shadow:0 0 0 3px rgba(37,99,235,.10);
+}
+input[type="range"]{ width:100%; margin:2px 0 0; }
+input[type="checkbox"]{ transform:scale(1.05); }
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+.buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+button{
+  border:0;
+  border-radius:10px;
+  padding:8px 9px;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary{
+  background:linear-gradient(to bottom,#3b82f6,#2563eb);
+  color:#fff;
+  box-shadow:0 8px 18px rgba(37,99,235,.16);
+}
+.secondary{
+  background:#eef2ff;
+  color:#1d4ed8;
+}
+.checkbox-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:4px 0 6px;
+  font-size:11px;
+  color:#334155;
+}
+.small-note{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.3;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h1>Gauge Designer</h1>
+    <p class="sub">Compact controls with working bezel and needle selection, slider sync, export, and clipboard copy.</p>
+
+    <div class="section">
+      <h2>Scale</h2>
+
+      <div class="field">
+        <label for="units">Units</label>
+        <input id="units" type="text" value="bar">
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="minVal">Min</label>
+          <input id="minVal" type="number" value="0" step="0.01">
+        </div>
+        <div class="field">
+          <label for="maxVal">Max</label>
+          <input id="maxVal" type="number" value="10" step="0.01">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="currentValue">Current</label>
+        <input id="currentValue" type="number" value="6.75" step="0.01">
+      </div>
+
+      <div class="field">
+        <input id="slider" type="range" min="0" max="10" value="6.75" step="0.01">
+      </div>
+
+      <div class="checkbox-row">
+        <input id="showValue" type="checkbox" checked>
+        <label for="showValue" style="margin:0;">Show value</label>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="numberInc">Increment</label>
+          <input id="numberInc" type="number" value="2" step="0.01">
+        </div>
+        <div class="field">
+          <label for="decimals">Decimals</label>
+          <select id="decimals">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="majorTick">Major tick</label>
+          <input id="majorTick" type="number" value="2" step="0.01">
+        </div>
+        <div class="field">
+          <label for="semiTick">Semi tick</label>
+          <input id="semiTick" type="number" value="1" step="0.01">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="minorTick">Minor tick</label>
+        <input id="minorTick" type="number" value="0.2" step="0.01">
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Appearance</h2>
+
+      <div class="row">
+        <div class="field">
+          <label for="fontSize">Number size</label>
+          <input id="fontSize" type="number" value="54">
+        </div>
+        <div class="field">
+          <label for="unitsFontSize">Units size</label>
+          <input id="unitsFontSize" type="number" value="54">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="valueFontSize">Value size</label>
+          <input id="valueFontSize" type="number" value="64">
+        </div>
+        <div class="field">
+          <label for="size">Gauge size</label>
+          <select id="size">
+            <option value="420">420</option>
+            <option value="520">520</option>
+            <option value="640" selected>640</option>
+            <option value="760">760</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="needleType">Needle</label>
+          <select id="needleType">
+            <option value="1">Type 1</option>
+            <option value="2">Type 2</option>
+            <option value="3" selected>Type 3</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bezelType">Bezel</label>
+          <select id="bezelType">
+            <option value="1">Type 1</option>
+            <option value="2">Type 2</option>
+            <option value="3">Type 3</option>
+            <option value="4">Type 4</option>
+            <option value="5" selected>Type 5</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="tickColor">Tick color</label>
+          <input id="tickColor" type="color" value="#111111">
+        </div>
+        <div class="field">
+          <label for="needleColor">Needle color</label>
+          <input id="needleColor" type="color" value="#222222">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Export</h2>
+      <div class="buttons">
+        <button class="primary" id="downloadBtn">Download PNG</button>
+        <button class="secondary" id="copyBtn">Copy PNG</button>
+      </div>
+      <div class="small-note">Copy writes an image to the clipboard. No success popup.</div>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <div class="gauge-wrap" id="gaugeWrap">
+      <svg id="gauge" viewBox="0 0 1000 1000" role="img" aria-label="Gauge preview"></svg>
+    </div>
+  </main>
+</div>
+
+<script>
+const svg = document.getElementById("gauge");
+const wrap = document.getElementById("gaugeWrap");
+
+const units = document.getElementById("units");
+const minVal = document.getElementById("minVal");
+const maxVal = document.getElementById("maxVal");
+const currentValue = document.getElementById("currentValue");
+const slider = document.getElementById("slider");
+const showValue = document.getElementById("showValue");
+const numberInc = document.getElementById("numberInc");
+const decimals = document.getElementById("decimals");
+const majorTick = document.getElementById("majorTick");
+const semiTick = document.getElementById("semiTick");
+const minorTick = document.getElementById("minorTick");
+const fontSize = document.getElementById("fontSize");
+const unitsFontSize = document.getElementById("unitsFontSize");
+const valueFontSize = document.getElementById("valueFontSize");
+const size = document.getElementById("size");
+const needleType = document.getElementById("needleType");
+const bezelType = document.getElementById("bezelType");
+const tickColor = document.getElementById("tickColor");
+const needleColor = document.getElementById("needleColor");
+
+const cx = 500, cy = 500;
+const startAngle = 225;
+const endAngle = 495;
+
+function polar(r, a){
+  const rad = (a - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+function make(tag, attrs = {}){
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for(const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  return el;
+}
+function clearSVG(){ while(svg.firstChild) svg.removeChild(svg.firstChild); }
+function fmtScale(v, d){
+  return Number(v).toFixed(d).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
+}
+function fmtValue(v, d){ return Number(v).toFixed(d); }
+
+function buildToroid(outerR, innerR, fillId){
+  return make("path",{
+    d:`
+      M ${cx + outerR} ${cy}
+      A ${outerR} ${outerR} 0 1 0 ${cx - outerR} ${cy}
+      A ${outerR} ${outerR} 0 1 0 ${cx + outerR} ${cy}
+      Z
+
+      M ${cx + innerR} ${cy}
+      A ${innerR} ${innerR} 0 1 1 ${cx - innerR} ${cy}
+      A ${innerR} ${innerR} 0 1 1 ${cx + innerR} ${cy}
+      Z
+    `,
+    fill:`url(#${fillId})`,
+    "fill-rule":"evenodd",
+    filter:"url(#shadow)"
+  });
+}
+
+function draw(){
+  clearSVG();
+
+  const min = parseFloat(minVal.value);
+  const max = parseFloat(maxVal.value);
+  const current = parseFloat(currentValue.value);
+  const dec = parseInt(decimals.value, 10);
+  const inc = parseFloat(numberInc.value);
+  const major = parseFloat(majorTick.value);
+  const semi = parseFloat(semiTick.value);
+  let minor = parseFloat(minorTick.value);
+
+  if(!isFinite(minor) || minor <= 0) minor = 0.01;
+  if(minor < 0.01) minor = 0.01;
+
+  const low = Math.min(min, max);
+  const high = Math.max(min, max);
+  const value = Math.max(low, Math.min(high, isFinite(current) ? current : low));
+
+  slider.min = low;
+  slider.max = high;
+  slider.value = value;
+  wrap.style.width = size.value + "px";
+
+  const t = (value - low) / (high - low);
+  const angle = startAngle + (endAngle - startAngle) * t;
+
+  const defs = make("defs");
+  defs.innerHTML = `
+    <radialGradient id="faceGrad" cx="35%" cy="28%" r="75%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#ececec"/>
+    </radialGradient>
+
+    <radialGradient id="bezel1" cx="30%" cy="20%" r="82%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="14%" stop-color="#f8f9fa"/>
+      <stop offset="34%" stop-color="#d9dde2"/>
+      <stop offset="56%" stop-color="#9ea4ab"/>
+      <stop offset="78%" stop-color="#656b73"/>
+      <stop offset="100%" stop-color="#31353b"/>
+    </radialGradient>
+
+    <radialGradient id="bezel2" cx="34%" cy="22%" r="82%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="18%" stop-color="#f7f8f9"/>
+      <stop offset="38%" stop-color="#d7dbe0"/>
+      <stop offset="60%" stop-color="#a5abb2"/>
+      <stop offset="80%" stop-color="#676d75"/>
+      <stop offset="100%" stop-color="#34383e"/>
+    </radialGradient>
+
+    <radialGradient id="bezel3" cx="32%" cy="22%" r="80%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="16%" stop-color="#fafbfc"/>
+      <stop offset="36%" stop-color="#e4e8eb"/>
+      <stop offset="58%" stop-color="#afb5bc"/>
+      <stop offset="80%" stop-color="#6d737b"/>
+      <stop offset="100%" stop-color="#3b4047"/>
+    </radialGradient>
+
+    <radialGradient id="bezel4" cx="32%" cy="22%" r="82%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="10%" stop-color="#fdfdfd"/>
+      <stop offset="24%" stop-color="#f0f1f3"/>
+      <stop offset="40%" stop-color="#cfd4da"/>
+      <stop offset="58%" stop-color="#9ea4ab"/>
+      <stop offset="76%" stop-color="#656b73"/>
+      <stop offset="100%" stop-color="#3f444c"/>
+    </radialGradient>
+
+    <radialGradient id="bezel4Inner" cx="38%" cy="28%" r="75%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="16%" stop-color="#fbfbfb"/>
+      <stop offset="32%" stop-color="#dfe3e7"/>
+      <stop offset="50%" stop-color="#b3bac1"/>
+      <stop offset="70%" stop-color="#7a8189"/>
+      <stop offset="100%" stop-color="#535961"/>
+    </radialGradient>
+
+    <radialGradient id="bezel5" cx="30%" cy="20%" r="84%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="10%" stop-color="#ffffff"/>
+      <stop offset="20%" stop-color="#f8f9fa"/>
+      <stop offset="34%" stop-color="#dde1e6"/>
+      <stop offset="52%" stop-color="#aeb5bc"/>
+      <stop offset="72%" stop-color="#6f767e"/>
+      <stop offset="100%" stop-color="#31353b"/>
+    </radialGradient>
+
+    <linearGradient id="needleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#111"/>
+      <stop offset="50%" stop-color="${needleColor.value}"/>
+      <stop offset="100%" stop-color="#000"/>
+    </linearGradient>
+
+    <radialGradient id="hubGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#666"/>
+      <stop offset="100%" stop-color="#111"/>
+    </radialGradient>
+
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-opacity=".20"/>
+    </filter>
+  `;
+  svg.appendChild(defs);
+
+  const bezel = bezelType.value;
+  if(bezel === "1"){
+    svg.appendChild(make("circle",{cx,cy,r:392,fill:"url(#bezel1)",filter:"url(#shadow)"}));
+    svg.appendChild(make("circle",{cx,cy,r:386,fill:"none",stroke:"rgba(255,255,255,.35)","stroke-width":"8"}));
+  } else if(bezel === "2"){
+    svg.appendChild(make("circle",{cx,cy,r:398,fill:"url(#bezel2)",filter:"url(#shadow)"}));
+    svg.appendChild(make("circle",{cx,cy,r:383,fill:"none",stroke:"rgba(255,255,255,.40)","stroke-width":"9"}));
+  } else if(bezel === "3"){
+    svg.appendChild(buildToroid(398,352,"bezel3"));
+    svg.appendChild(make("ellipse",{cx:405,cy:338,rx:300,ry:240,fill:"rgba(255,255,255,.14)"}));
+  } else if(bezel === "4"){
+    svg.appendChild(make("circle",{cx,cy,r:402,fill:"url(#bezel4)",filter:"url(#shadow)"}));
+    svg.appendChild(buildToroid(374,336,"bezel4Inner"));
+    svg.appendChild(make("ellipse",{cx:410,cy:338,rx:286,ry:228,fill:"rgba(255,255,255,.14)"}));
+  } else {
+    svg.appendChild(buildToroid(398,314,"bezel5"));
+    svg.appendChild(make("ellipse",{cx:405,cy:340,rx:310,ry:250,fill:"rgba(255,255,255,.14)"}));
+    svg.appendChild(make("ellipse",{cx:600,cy:640,rx:320,ry:260,fill:"rgba(0,0,0,.18)"}));
+    svg.appendChild(make("circle",{cx,cy,r:334,fill:"none",stroke:"rgba(255,255,255,.20)","stroke-width":"8"}));
+  }
+
+  svg.appendChild(make("circle",{cx,cy,r:350,fill:"url(#faceGrad)"}));
+
+  const total = Math.min(2000, Math.floor((high - low) / minor));
+  for(let i=0;i<=total;i++){
+    const v = low + i * minor;
+    const tt = (v - low) / (high - low);
+    const a = startAngle + (endAngle - startAngle) * tt;
+
+    const isMajor = Math.abs((v / major) - Math.round(v / major)) < 0.0001;
+    const isSemi = Math.abs((v / semi) - Math.round(v / semi)) < 0.0001;
+
+    const p1 = polar(334, a);
+    const p2 = polar(isMajor ? 262 : (isSemi ? 278 : 294), a);
+
+    svg.appendChild(make("line",{
+      x1:p1.x, y1:p1.y,
+      x2:p2.x, y2:p2.y,
+      stroke:tickColor.value,
+      "stroke-width": isMajor ? 5 : (isSemi ? 3 : 2),
+      "stroke-linecap":"round"
+    }));
+  }
+
+  for(let n=low; n<=high+0.0001; n+=inc){
+    const tt = (n - low) / (high - low);
+    const a = startAngle + (endAngle - startAngle) * tt;
+    const p = polar(228, a);
+
+    const text = make("text",{
+      x:p.x, y:p.y + 12,
+      "text-anchor":"middle",
+      "font-size":fontSize.value,
+      "font-family":"Helvetica,Arial,sans-serif",
+      fill:"#111"
+    });
+    text.textContent = fmtScale(n, dec);
+    svg.appendChild(text);
+  }
+
+  const rear = polar(26, angle + 180);
+
+  if(needleType.value === "1"){
+    const tip = polar(245, angle);
+    const lb = polar(13, angle + 90);
+    const rb = polar(13, angle - 90);
+    const base = polar(76, angle);
+
+    svg.appendChild(make("path",{
+      d:`M ${lb.x} ${lb.y}
+      Q ${base.x} ${base.y} ${tip.x} ${tip.y}
+      Q ${base.x} ${base.y} ${rb.x} ${rb.y}
+      Q ${cx} ${cy} ${rear.x} ${rear.y}
+      Q ${cx} ${cy} ${lb.x} ${lb.y}`,
+      fill:"url(#needleGrad)",
+      stroke:"#111",
+      "stroke-width":"1.2",
+      filter:"url(#shadow)"
+    }));
+  } else if(needleType.value === "2"){
+    const lb = polar(13, angle + 90);
+    const rb = polar(13, angle - 90);
+    const lw = polar(11, angle + 38);
+    const rw = polar(11, angle - 38);
+    const lt = polar(236, angle + 2.2);
+    const rt = polar(236, angle - 2.2);
+    const nose = polar(245, angle);
+
+    svg.appendChild(make("path",{
+      d:`M ${lb.x} ${lb.y}
+      C ${lw.x} ${lw.y} ${lt.x} ${lt.y} ${nose.x} ${nose.y}
+      C ${rt.x} ${rt.y} ${rw.x} ${rw.y} ${rb.x} ${rb.y}
+      Q ${cx} ${cy} ${rear.x} ${rear.y}
+      Q ${cx} ${cy} ${lb.x} ${lb.y}
+      Z`,
+      fill:"url(#needleGrad)",
+      stroke:"#111",
+      "stroke-width":"1.2",
+      filter:"url(#shadow)"
+    }));
+  } else {
+    const lb = polar(13, angle + 90);
+    const rb = polar(13, angle - 90);
+    const lw = polar(9.5, angle + 40);
+    const rw = polar(9.5, angle - 40);
+    const lt = polar(236, angle + 3.2);
+    const rt = polar(236, angle - 3.2);
+    const nose = polar(244, angle);
+
+    svg.appendChild(make("path",{
+      d:`M ${lb.x} ${lb.y}
+      C ${lw.x} ${lw.y} ${lt.x} ${lt.y} ${nose.x} ${nose.y}
+      C ${rt.x} ${rt.y} ${rw.x} ${rw.y} ${rb.x} ${rb.y}
+      Q ${cx} ${cy} ${rear.x} ${rear.y}
+      Q ${cx} ${cy} ${lb.x} ${lb.y}
+      Z`,
+      fill:"url(#needleGrad)",
+      stroke:"rgba(0,0,0,.55)",
+      "stroke-width":"0.7",
+      filter:"url(#shadow)"
+    }));
+  }
+
+  svg.appendChild(make("circle",{cx,cy,r:24,fill:"url(#hubGrad)",stroke:"#111","stroke-width":"3"}));
+  svg.appendChild(make("circle",{cx,cy,r:8,fill:"#666"}));
+
+  const ut = make("text",{
+    x:500, y:690,
+    "text-anchor":"middle",
+    "font-size":unitsFontSize.value,
+    "font-family":"Helvetica,Arial,sans-serif",
+    fill:"#111"
+  });
+  ut.textContent = units.value;
+  svg.appendChild(ut);
+
+  if(showValue.checked){
+    const vt = make("text",{
+      x:500, y:775,
+      "text-anchor":"middle",
+      "font-size":valueFontSize.value,
+      "font-family":"Helvetica,Arial,sans-serif",
+      fill:"#111"
+    });
+    vt.textContent = fmtValue(value, dec);
+    svg.appendChild(vt);
+  }
+}
+
+function svgToCanvas(){
+  return new Promise((resolve, reject)=>{
+    const xml = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([xml], {type:"image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement("canvas");
+      canvas.width = 2000;
+      canvas.height = 2000;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0,0,2000,2000);
+      ctx.drawImage(img,0,0,2000,2000);
+      URL.revokeObjectURL(url);
+      resolve(canvas);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+async function downloadPNG(){
+  try{
+    draw();
+    const canvas = await svgToCanvas();
+    const a = document.createElement("a");
+    a.download = "dial-gauge.png";
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  }catch(err){
+    console.error(err);
+  }
+}
+
+async function copyPNG(){
+  try{
+    draw();
+    const canvas = await svgToCanvas();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    if(!blob) return;
+    if(!navigator.clipboard || !window.ClipboardItem) return;
+    await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);
+  }catch(err){
+    console.error(err);
+  }
+}
+
+slider.addEventListener("input", ()=>{
+  currentValue.value = slider.value;
+  draw();
+});
+currentValue.addEventListener("input", ()=>{
+  slider.value = currentValue.value;
+  draw();
+});
+
+document.querySelectorAll("input,select").forEach(el=>{
+  el.addEventListener("input", draw);
+  el.addEventListener("change", draw);
+});
+
+downloadBtn.addEventListener("click", downloadPNG);
+copyBtn.addEventListener("click", copyPNG);
+
+draw();
+</script>
+</body>
+</html>
