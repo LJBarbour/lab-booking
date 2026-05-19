@@ -21,7 +21,7 @@ header p{font-size:10px;color:var(--muted);margin-top:1px}
 .badge{font-family:var(--mono);font-size:9px;color:var(--accent2);
   background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.2);
   padding:3px 8px;border-radius:3px;letter-spacing:1px;text-transform:uppercase}
-#app{display:grid;grid-template-columns:280px 1fr;grid-template-rows:1fr 1fr;
+#app{display:grid;grid-template-columns:360px 1fr;grid-template-rows:1fr 1fr;
   gap:5px;padding:5px;flex:1;min-height:0}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;
   padding:10px;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative}
@@ -55,7 +55,8 @@ canvas{flex:1;min-height:0;display:block;border-radius:3px;cursor:crosshair}
 .bset{background:#065f46;color:#34d399;border:1px solid #064e3b}
 .bdel{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b}
 .bclr{background:#312e81;color:#a5b4fc;border:1px solid #3730a3}
-.brst{background:#1c2433;color:var(--muted);border:1px solid var(--border2)}
+.brand{background:#1e3a5f;color:#7dd3fc;border:1px solid #1e4976;font-size:9.5px;letter-spacing:.2px}
+.brand2{background:#1a3348;color:#93c5fd;border:1px solid #1e4060;font-size:9.5px;letter-spacing:.2px}
 .sflabel{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;flex-shrink:0}
 .sfscroll{flex:1;min-height:0;overflow-y:auto;border:1px solid var(--border);border-radius:4px;background:#0a0e17}
 .sfscroll::-webkit-scrollbar{width:4px}
@@ -92,17 +93,18 @@ tbody tr.fprow.arow td{color:var(--accent)}
         <span>φ=<span class="v" id="iphi">0</span>°</span>
       </div>
       <div class="igrid">
-        <label>h</label><input type="number" id="inh"   value="1"    step="1"   min="-5" max="5">
+        <label>h</label><input type="number" id="inh"   value="0"    step="1"   min="-5" max="5">
         <label>k</label><input type="number" id="ink"   value="0"    step="1"   min="-5" max="5">
-        <label>|F|</label><input type="number" id="inF"   value="1.00" step="0.1" min="0"  max="5">
+        <label>|F|</label><input type="number" id="inF"   value="0.00" step="0.1" min="0"  max="5">
         <label>φ°</label><input type="number" id="inphi" value="0"    step="5"   min="-180" max="180">
       </div>
       <div class="frnote" id="frnote">↔ Friedel mate (−h,−k) will be auto-set: same |F|, φ → −φ</div>
       <div class="bgrid">
         <button class="btn bset" id="btnSet">Set SF</button>
         <button class="btn bdel" id="btnDel">Delete SF</button>
-        <button class="btn bclr" id="btnClr">Clear Map</button>
-        <button class="btn brst" id="btnRst">Reset All</button>
+        <button class="btn brand"  id="btnRand">Random (any φ)</button>
+        <button class="btn brand2" id="btnRand2">Random (φ=0° or 180°)</button>
+        <button class="btn bclr" id="btnClr" style="grid-column:1/-1">Clear Map</button>
       </div>
       <div class="sflabel">Set structure factors</div>
       <div class="sfscroll">
@@ -137,7 +139,7 @@ const A_SCALE=1.25;               // direct cell: a is 25% longer than b
 const GAMMA_STAR=Math.PI-GAMMA;   // reciprocal cell angle = 77°
 
 // ── state ──────────────────────────────────────────────────
-const S={h:1,k:0,F:1,phi:0,refs:[],hovH:null,hovK:null,drag:false};
+const S={h:0,k:0,F:0,phi:0,refs:[],hovH:null,hovK:null,drag:false};
 
 // ── canvases ───────────────────────────────────────────────
 const cvR=document.getElementById('cvR');
@@ -866,18 +868,47 @@ function resizeAll(){
   el.addEventListener('change',()=>{readInputs();liveSyncFriedel();syncInputs();update();});
 });
 
+// Reset selection to the (0,0) origin after any bulk action
+function selectOrigin(){
+  S.h=0;S.k=0;S.F=0;S.phi=0;syncInputs();
+}
+
 document.getElementById('btnSet').addEventListener('click',()=>{
-  setRefPair(S.h,S.k,S.F,S.phi);update();
+  setRefPair(S.h,S.k,S.F,S.phi);selectOrigin();update();
 });
 document.getElementById('btnDel').addEventListener('click',()=>{
-  delRefPair(S.h,S.k);update();
+  delRefPair(S.h,S.k);selectOrigin();update();
 });
 document.getElementById('btnClr').addEventListener('click',()=>{
-  S.refs=[];invalidateCache();update();
+  S.refs=[];invalidateCache();selectOrigin();update();
 });
-document.getElementById('btnRst').addEventListener('click',()=>{
-  S.h=1;S.k=0;S.F=1;S.phi=0;S.refs=[];invalidateCache();syncInputs();update();
-});
+
+// ── random fill helpers ────────────────────────────────────
+function fillRandom(phaseMode){
+  // phaseMode 'any'     → φ uniform in [−π, π)
+  // phaseMode 'binary'  → φ is 0 or π (0° or 180°)
+  S.refs=[];
+  for(let h=-HMAX;h<=HMAX;h++){
+    for(let k=-HMAX;k<=HMAX;k++){
+      if(h===0&&k===0) continue;        // skip the dc term
+      // Only iterate over one half-plane to avoid double-setting via Friedel
+      // convention: skip if (h<0) or (h===0&&k<0)
+      if(h<0||(h===0&&k<0)) continue;
+      const F=+(0.3+Math.random()*MAXF*0.7).toFixed(2); // 0.3–5, avoids near-zero
+      let phi;
+      if(phaseMode==='binary'){
+        phi=Math.random()<0.5?0:Math.PI;
+      }else{
+        phi=(Math.random()*2-1)*Math.PI;
+      }
+      setRefPair(h,k,F,phi);
+    }
+  }
+  selectOrigin();update();
+}
+
+document.getElementById('btnRand').addEventListener('click',()=>fillRandom('any'));
+document.getElementById('btnRand2').addEventListener('click',()=>fillRandom('binary'));
 
 // reciprocal lattice click
 cvR.addEventListener('click',e=>{
