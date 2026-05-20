@@ -131,9 +131,9 @@
           <option value="knurled">Knurled Ring</option>
         </select>
       </div>
-      <div class="field"><label>Bezel Width</label>
+      <div class="field">
+        <label>Bezel Width: <span id="disp-bezelWidth">28</span></label>
         <input type="range" id="val-bezelWidth" min="4" max="60" step="1" value="28">
-        <div class="val-display" id="disp-bezelWidth">28</div>
       </div>
       <div class="field"><label>Bezel Base Colour</label><input type="color" id="val-bezelColor" value="#b0b0b0"></div>
     </div>
@@ -144,16 +144,15 @@
     <div class="section-header collapsed" data-target="sec-dial">Dial Face <span class="arrow">▾</span></div>
     <div class="section-body hidden" id="sec-dial">
       <div class="field"><label>Face Colour</label><input type="color" id="val-faceColor" value="#ffffff"></div>
-      <div class="field"><label>Face Opacity</label>
+      <div class="field">
+        <label>Face Opacity: <span id="disp-faceOpacity">1.00</span></label>
         <input type="range" id="val-faceOpacity" min="0" max="1" step="0.01" value="1">
-        <div class="val-display" id="disp-faceOpacity">1.00</div>
-      </div>
-      <div class="field"><label>Shadow Blur</label>
-        <input type="range" id="val-shadowBlur" min="0" max="60" step="1" value="18">
-        <div class="val-display" id="disp-shadowBlur">18</div>
       </div>
       <div class="toggle-row"><label>Glass Sheen</label>
         <label class="toggle"><input type="checkbox" id="val-glassSheen" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row"><label>Drop Shadow</label>
+        <label class="toggle"><input type="checkbox" id="val-shadow" checked><span class="toggle-slider"></span></label>
       </div>
     </div>
   </div>
@@ -165,23 +164,19 @@
       <div class="toggle-row"><label>Show Track Ring</label>
         <label class="toggle"><input type="checkbox" id="val-showTrack" checked><span class="toggle-slider"></span></label>
       </div>
-      <div class="field"><label>Track Width</label>
-        <input type="range" id="val-trackWidth" min="0" max="40" step="1" value="10">
-        <div class="val-display" id="disp-trackWidth">10</div>
+      <div class="field"><label>Track Colour</label><input type="color" id="val-trackColor" value="#e0e0e0"></div>
+      <div class="field">
+        <label>Track Width: <span id="disp-trackWidth">8</span></label>
+        <input type="range" id="val-trackWidth" min="0" max="40" step="1" value="8">
       </div>
-      <div class="field"><label>Track Colour</label><input type="color" id="val-trackColor" value="#cccccc"></div>
       <div class="toggle-row"><label>Show Progress Arc</label>
         <label class="toggle"><input type="checkbox" id="val-showProgress" checked><span class="toggle-slider"></span></label>
       </div>
-      <div class="field"><label>Progress Width</label>
-        <input type="range" id="val-progressWidth" min="0" max="40" step="1" value="10">
-        <div class="val-display" id="disp-progressWidth">10</div>
+      <div class="field"><label>Progress Colour</label><input type="color" id="val-progressColor" value="#cc0000"></div>
+      <div class="field">
+        <label>Progress Width: <span id="disp-progressWidth">8</span></label>
+        <input type="range" id="val-progressWidth" min="0" max="40" step="1" value="8">
       </div>
-      <div class="field"><label>Progress Colour</label><input type="color" id="val-progressColor" value="#e94560"></div>
-      <div class="toggle-row"><label>Progress Gradient</label>
-        <label class="toggle"><input type="checkbox" id="val-progressGradient"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="field"><label>Progress Gradient End</label><input type="color" id="val-progressColorEnd" value="#ff9f43"></div>
       <div class="field"><label>Line Cap</label>
         <select id="val-lineCap">
           <option value="butt">Butt</option>
@@ -198,24 +193,30 @@
     <div class="section-body hidden" id="sec-needle">
       <div class="field"><label>Needle Style</label>
         <select id="val-needleStyle">
-          <option value="tapered" selected>Tapered</option>
-          <option value="arrow">Arrow</option>
-          <option value="line">Line</option>
+          <option value="tapered">Tapered (classic)</option>
+          <option value="tapered-tail">Tapered with Tail</option>
+          <option value="rod">Rod (uniform width)</option>
+          <option value="rod-tail">Rod with Tail</option>
+          <option value="wedge">Wedge</option>
         </select>
       </div>
-      <div class="field"><label>Needle Colour</label><input type="color" id="val-needleColor" value="#c0392b"></div>
-      <div class="field"><label>Needle Length (%)</label>
-        <input type="range" id="val-needleLength" min="30" max="95" step="1" value="75">
-        <div class="val-display" id="disp-needleLength">75</div>
+      <div class="field"><label>Needle Colour</label><input type="color" id="val-needleColor" value="#cc0000"></div>
+      <div class="field">
+        <label>Needle Length (%): <span id="disp-needleLength">78</span></label>
+        <input type="range" id="val-needleLength" min="20" max="100" step="1" value="78">
       </div>
-      <div class="field"><label>Needle Width</label>
-        <input type="range" id="val-needleWidth" min="1" max="20" step="1" value="4">
-        <div class="val-display" id="disp-needleWidth">4</div>
+      <div class="field">
+        <label>Tail Length (%): <span id="disp-tailLength">15</span></label>
+        <input type="range" id="val-tailLength" min="0" max="40" step="1" value="15">
+      </div>
+      <div class="field">
+        <label>Needle Width: <span id="disp-needleWidth">3</span></label>
+        <input type="range" id="val-needleWidth" min="1" max="20" step="0.5" value="3">
       </div>
       <div class="field"><label>Hub Colour</label><input type="color" id="val-hubColor" value="#888888"></div>
-      <div class="field"><label>Hub Radius</label>
-        <input type="range" id="val-hubRadius" min="3" max="30" step="1" value="10">
-        <div class="val-display" id="disp-hubRadius">10</div>
+      <div class="field">
+        <label>Hub Radius: <span id="disp-hubRadius">8</span></label>
+        <input type="range" id="val-hubRadius" min="2" max="30" step="1" value="8">
       </div>
     </div>
   </div>
@@ -225,59 +226,27 @@
     <div class="section-header collapsed" data-target="sec-ticks">Ticks <span class="arrow">▾</span></div>
     <div class="section-body hidden" id="sec-ticks">
       <div class="field"><label>Tick Colour</label><input type="color" id="val-tickColor" value="#000000"></div>
-      <!-- Major -->
-      <div style="font-size:0.7rem;color:#a0c4ff;font-weight:700;margin-top:4px;">MAJOR TICKS</div>
-      <div class="field"><label>Count</label>
-        <input type="range" id="val-majorCount" min="2" max="20" step="1" value="11">
-        <div class="val-display" id="disp-majorCount">11</div>
+      <p style="font-size:0.7rem;color:#a0c4ff;font-weight:700;margin-top:4px;">Major Ticks</p>
+      <div class="row3">
+        <div class="field"><label>Count</label><input type="number" id="val-majorCount" value="10" min="1" max="100" step="1"></div>
+        <div class="field"><label>Length</label><input type="number" id="val-majorLen" value="18" min="1" max="60" step="1"></div>
+        <div class="field"><label>Width</label><input type="number" id="val-majorWidth" value="2.5" min="0.5" max="10" step="0.5"></div>
       </div>
-      <div class="row2">
-        <div class="field"><label>Length</label>
-          <input type="range" id="val-majorLen" min="4" max="40" step="1" value="18">
-          <div class="val-display" id="disp-majorLen">18</div>
-        </div>
-        <div class="field"><label>Width</label>
-          <input type="range" id="val-majorWidth" min="1" max="8" step="1" value="2">
-          <div class="val-display" id="disp-majorWidth">2</div>
-        </div>
+      <div class="toggle-row" style="margin-top:6px;"><label>Semi-Major Ticks</label>
+        <label class="toggle"><input type="checkbox" id="val-showSemi" checked><span class="toggle-slider"></span></label>
       </div>
-      <!-- Semi-Major -->
-      <div style="font-size:0.7rem;color:#a0c4ff;font-weight:700;margin-top:4px;">SEMI-MAJOR TICKS</div>
-      <div class="toggle-row"><label>Show Semi-Major</label>
-        <label class="toggle"><input type="checkbox" id="val-showSemiMajor" checked><span class="toggle-slider"></span></label>
+      <div class="row3">
+        <div class="field"><label>Per Gap</label><input type="number" id="val-semiPer" value="2" min="2" max="20" step="1"></div>
+        <div class="field"><label>Length</label><input type="number" id="val-semiLen" value="12" min="1" max="60" step="1"></div>
+        <div class="field"><label>Width</label><input type="number" id="val-semiWidth" value="1.5" min="0.5" max="10" step="0.5"></div>
       </div>
-      <div class="field"><label>Per Major Gap (divisor)</label>
-        <input type="range" id="val-semiMajorDiv" min="2" max="10" step="1" value="2">
-        <div class="val-display" id="disp-semiMajorDiv">2</div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Length</label>
-          <input type="range" id="val-semiMajorLen" min="4" max="35" step="1" value="12">
-          <div class="val-display" id="disp-semiMajorLen">12</div>
-        </div>
-        <div class="field"><label>Width</label>
-          <input type="range" id="val-semiMajorWidth" min="1" max="6" step="1" value="1">
-          <div class="val-display" id="disp-semiMajorWidth">1</div>
-        </div>
-      </div>
-      <!-- Minor -->
-      <div style="font-size:0.7rem;color:#a0c4ff;font-weight:700;margin-top:4px;">MINOR TICKS</div>
-      <div class="toggle-row"><label>Show Minor</label>
+      <div class="toggle-row" style="margin-top:6px;"><label>Minor Ticks</label>
         <label class="toggle"><input type="checkbox" id="val-showMinor" checked><span class="toggle-slider"></span></label>
       </div>
-      <div class="field"><label>Per Major Gap (divisor)</label>
-        <input type="range" id="val-minorDiv" min="2" max="20" step="1" value="10">
-        <div class="val-display" id="disp-minorDiv">10</div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Length</label>
-          <input type="range" id="val-minorLen" min="2" max="25" step="1" value="7">
-          <div class="val-display" id="disp-minorLen">7</div>
-        </div>
-        <div class="field"><label>Width</label>
-          <input type="range" id="val-minorWidth" min="1" max="4" step="1" value="1">
-          <div class="val-display" id="disp-minorWidth">1</div>
-        </div>
+      <div class="row3">
+        <div class="field"><label>Per Gap</label><input type="number" id="val-minorPer" value="5" min="2" max="50" step="1"></div>
+        <div class="field"><label>Length</label><input type="number" id="val-minorLen" value="7" min="1" max="40" step="1"></div>
+        <div class="field"><label>Width</label><input type="number" id="val-minorWidth" value="1" min="0.5" max="10" step="0.5"></div>
       </div>
     </div>
   </div>
@@ -298,61 +267,40 @@
           <option value="'Courier New'">Courier New</option>
           <option value="'Times New Roman'">Times New Roman</option>
           <option value="Impact">Impact</option>
+          <option value="'Segoe UI'" selected>Segoe UI</option>
         </select>
       </div>
-      <div class="field"><label>Font Size</label>
-        <input type="range" id="val-labelSize" min="8" max="36" step="1" value="18">
-        <div class="val-display" id="disp-labelSize">18</div>
+      <div class="row2">
+        <div class="field"><label>Font Size (px)</label><input type="number" id="val-labelSize" value="22" min="6" max="72" step="1"></div>
+        <div class="field"><label>Decimals</label><input type="number" id="val-labelDecimals" value="0" min="0" max="6" step="1"></div>
       </div>
-      <div class="field"><label>Decimal Places</label>
-        <input type="range" id="val-labelDecimals" min="0" max="3" step="1" value="0">
-        <div class="val-display" id="disp-labelDecimals">0</div>
-      </div>
-      <div class="field"><label>Offset from Rim</label>
-        <input type="range" id="val-labelOffset" min="5" max="80" step="1" value="28">
-        <div class="val-display" id="disp-labelOffset">28</div>
+      <div class="field">
+        <label>Label Offset: <span id="disp-labelOffset">18</span></label>
+        <input type="range" id="val-labelOffset" min="0" max="60" step="1" value="18">
       </div>
     </div>
   </div>
 
   <!-- TITLE & VALUE DISPLAY -->
   <div class="section">
-    <div class="section-header collapsed" data-target="sec-text">Title &amp; Value Display <span class="arrow">▾</span></div>
-    <div class="section-body hidden" id="sec-text">
-      <!-- Title -->
-      <div style="font-size:0.7rem;color:#a0c4ff;font-weight:700;">TITLE</div>
-      <div class="toggle-row"><label>Show Title</label>
-        <label class="toggle"><input type="checkbox" id="val-showTitle" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div class="field"><label>Title Text</label><input type="text" id="val-titleText" value="PRESSURE"></div>
+    <div class="section-header collapsed" data-target="sec-title">Title &amp; Value Display <span class="arrow">▾</span></div>
+    <div class="section-body hidden" id="sec-title">
+      <div class="field"><label>Title Text</label><input type="text" id="val-title" value="PRESSURE"></div>
       <div class="field"><label>Title Colour</label><input type="color" id="val-titleColor" value="#000000"></div>
-      <div class="field"><label>Title Font Size</label>
-        <input type="range" id="val-titleSize" min="8" max="40" step="1" value="20">
-        <div class="val-display" id="disp-titleSize">20</div>
+      <div class="row2">
+        <div class="field"><label>Title Font Size</label><input type="number" id="val-titleSize" value="22" min="6" max="72" step="1"></div>
+        <div class="field"><label>Title Y Offset (%)</label><input type="number" id="val-titleY" value="30" min="-100" max="100" step="1"></div>
       </div>
-      <div class="field"><label>Title Y Offset (% of radius)</label>
-        <input type="range" id="val-titleY" min="-100" max="100" step="1" value="55">
-        <div class="val-display" id="disp-titleY">55</div>
-      </div>
-      <!-- Value Display -->
-      <div style="font-size:0.7rem;color:#a0c4ff;font-weight:700;margin-top:6px;">VALUE DISPLAY</div>
       <div class="toggle-row"><label>Show Value</label>
         <label class="toggle"><input type="checkbox" id="val-showValue" checked><span class="toggle-slider"></span></label>
       </div>
       <div class="field"><label>Value Colour</label><input type="color" id="val-valueColor" value="#000000"></div>
-      <div class="field"><label>Value Font Size</label>
-        <input type="range" id="val-valueSize" min="8" max="60" step="1" value="28">
-        <div class="val-display" id="disp-valueSize">28</div>
+      <div class="row3">
+        <div class="field"><label>Value Font Size</label><input type="number" id="val-valueSize" value="26" min="6" max="96" step="1"></div>
+        <div class="field"><label>Decimals</label><input type="number" id="val-valueDecimals" value="1" min="0" max="6" step="1"></div>
+        <div class="field"><label>Value Y Offset (%)</label><input type="number" id="val-valueY" value="55" min="-100" max="100" step="1"></div>
       </div>
-      <div class="field"><label>Value Decimals</label>
-        <input type="range" id="val-valueDecimals" min="0" max="4" step="1" value="1">
-        <div class="val-display" id="disp-valueDecimals">1</div>
-      </div>
-      <div class="field"><label>Value Suffix</label><input type="text" id="val-valueSuffix" value=" bar"></div>
-      <div class="field"><label>Value Y Offset (% of radius)</label>
-        <input type="range" id="val-valueY" min="-100" max="100" step="1" value="75">
-        <div class="val-display" id="disp-valueY">75</div>
-      </div>
+      <div class="field"><label>Value Suffix</label><input type="text" id="val-suffix" value=" bar"></div>
     </div>
   </div>
 
@@ -371,10 +319,9 @@
     <div class="section-body hidden" id="sec-export">
       <button class="action-btn" id="copy-btn">📋 Copy as PNG</button>
       <button class="action-btn" id="download-btn">⬇️ Download PNG</button>
-      <div style="border-top:1px solid #1a1a2e;margin:6px 0;"></div>
       <button class="action-btn" id="save-settings-btn">💾 Save Settings to File</button>
       <button class="action-btn" id="load-settings-btn">📂 Load Settings from File</button>
-      <input type="file" id="load-settings-input" accept=".json" style="display:none;">
+      <input type="file" id="load-file-input" accept=".json" style="display:none">
       <div class="copy-toast" id="copy-toast"></div>
     </div>
   </div>
@@ -397,582 +344,640 @@ document.querySelectorAll('.section-header').forEach(hdr => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const el = id => document.getElementById(id);
-const num = id => parseFloat(el(id).value);
+const num = id => parseFloat(el(id).value) || 0;
+const int = id => parseInt(el(id).value) || 0;
 const chk = id => el(id).checked;
-const str = id => el(id).value;
+const col = id => el(id).value;
+const sel = id => el(id).value;
 
-function linkRangeDisplay(rangeId, dispId, fmt) {
-  const r = el(rangeId), d = el(dispId);
-  const update = () => { d.textContent = fmt ? fmt(r.value) : r.value; };
-  r.addEventListener('input', update);
-  update();
+function syncDisp(sliderId, dispId, decimals = 0) {
+  const slider = el(sliderId);
+  const disp = el(dispId);
+  if (!slider || !disp) return;
+  disp.textContent = parseFloat(slider.value).toFixed(decimals);
+  slider.addEventListener('input', () => {
+    disp.textContent = parseFloat(slider.value).toFixed(decimals);
+    drawGauge();
+  });
 }
 
-// ── Value slider ↔ number box sync ───────────────────────────────────────────
+// ── Value slider <-> number box sync ─────────────────────────────────────────
 function syncValueControls() {
-  const minV = num('val-min'), maxV = num('val-max');
   const slider = el('val-value-slider');
-  slider.min = minV; slider.max = maxV;
+  const box = el('val-value');
+  const disp = el('disp-value');
+
+  function updateFromSlider() {
+    const dec = int('val-valueDecimals');
+    box.value = parseFloat(slider.value).toFixed(dec);
+    disp.textContent = parseFloat(slider.value).toFixed(dec);
+    drawGauge();
+  }
+  function updateFromBox() {
+    slider.value = box.value;
+    const dec = int('val-valueDecimals');
+    disp.textContent = parseFloat(box.value).toFixed(dec);
+    drawGauge();
+  }
+  slider.addEventListener('input', updateFromSlider);
+  box.addEventListener('input', updateFromBox);
+
+  // Update slider range when min/max change
+  el('val-min').addEventListener('input', () => {
+    slider.min = el('val-min').value;
+    drawGauge();
+  });
+  el('val-max').addEventListener('input', () => {
+    slider.max = el('val-max').value;
+    drawGauge();
+  });
 }
 
-el('val-value-slider').addEventListener('input', () => {
-  el('val-value').value = el('val-value-slider').value;
-  el('disp-value').textContent = parseFloat(el('val-value-slider').value).toFixed(2).replace(/\.?0+$/, '') || '0';
-  draw();
-});
-el('val-value').addEventListener('input', () => {
-  el('val-value-slider').value = el('val-value').value;
-  el('disp-value').textContent = el('val-value').value;
-  draw();
-});
-['val-min','val-max'].forEach(id => el(id).addEventListener('input', () => { syncValueControls(); draw(); }));
+// ── Wire all controls to redraw ───────────────────────────────────────────────
+function wireAll() {
+  document.querySelectorAll('#sidebar input, #sidebar select').forEach(inp => {
+    if (inp.id === 'val-value-slider' || inp.id === 'val-value' ||
+        inp.id === 'val-min' || inp.id === 'val-max' ||
+        inp.id === 'load-file-input') return;
+    inp.addEventListener('input', drawGauge);
+    inp.addEventListener('change', drawGauge);
+  });
+}
 
-// ── Range display links ───────────────────────────────────────────────────────
-linkRangeDisplay('val-size',         'disp-size',         v => Math.round(v));
-linkRangeDisplay('val-bezelWidth',   'disp-bezelWidth',   v => Math.round(v));
-linkRangeDisplay('val-faceOpacity',  'disp-faceOpacity',  v => parseFloat(v).toFixed(2));
-linkRangeDisplay('val-shadowBlur',   'disp-shadowBlur',   v => Math.round(v));
-linkRangeDisplay('val-trackWidth',   'disp-trackWidth',   v => Math.round(v));
-linkRangeDisplay('val-progressWidth','disp-progressWidth',v => Math.round(v));
-linkRangeDisplay('val-needleLength', 'disp-needleLength', v => Math.round(v));
-linkRangeDisplay('val-needleWidth',  'disp-needleWidth',  v => Math.round(v));
-linkRangeDisplay('val-hubRadius',    'disp-hubRadius',    v => Math.round(v));
-linkRangeDisplay('val-majorCount',   'disp-majorCount',   v => Math.round(v));
-linkRangeDisplay('val-majorLen',     'disp-majorLen',     v => Math.round(v));
-linkRangeDisplay('val-majorWidth',   'disp-majorWidth',   v => Math.round(v));
-linkRangeDisplay('val-semiMajorDiv', 'disp-semiMajorDiv', v => Math.round(v));
-linkRangeDisplay('val-semiMajorLen', 'disp-semiMajorLen', v => Math.round(v));
-linkRangeDisplay('val-semiMajorWidth','disp-semiMajorWidth',v => Math.round(v));
-linkRangeDisplay('val-minorDiv',     'disp-minorDiv',     v => Math.round(v));
-linkRangeDisplay('val-minorLen',     'disp-minorLen',     v => Math.round(v));
-linkRangeDisplay('val-minorWidth',   'disp-minorWidth',   v => Math.round(v));
-linkRangeDisplay('val-labelSize',    'disp-labelSize',    v => Math.round(v));
-linkRangeDisplay('val-labelDecimals','disp-labelDecimals',v => Math.round(v));
-linkRangeDisplay('val-labelOffset',  'disp-labelOffset',  v => Math.round(v));
-linkRangeDisplay('val-titleSize',    'disp-titleSize',    v => Math.round(v));
-linkRangeDisplay('val-titleY',       'disp-titleY',       v => Math.round(v));
-linkRangeDisplay('val-valueSize',    'disp-valueSize',    v => Math.round(v));
-linkRangeDisplay('val-valueDecimals','disp-valueDecimals',v => Math.round(v));
-linkRangeDisplay('val-valueY',       'disp-valueY',       v => Math.round(v));
+// ── Slider display sync ───────────────────────────────────────────────────────
+function initDisplays() {
+  syncDisp('val-size', 'disp-size');
+  syncDisp('val-bezelWidth', 'disp-bezelWidth');
+  syncDisp('val-faceOpacity', 'disp-faceOpacity', 2);
+  syncDisp('val-trackWidth', 'disp-trackWidth');
+  syncDisp('val-progressWidth', 'disp-progressWidth');
+  syncDisp('val-needleLength', 'disp-needleLength');
+  syncDisp('val-tailLength', 'disp-tailLength');
+  syncDisp('val-needleWidth', 'disp-needleWidth');
+  syncDisp('val-hubRadius', 'disp-hubRadius');
+  syncDisp('val-labelOffset', 'disp-labelOffset');
+}
 
-// ── Auto-redraw on any input change ──────────────────────────────────────────
-document.querySelectorAll('#sidebar input, #sidebar select').forEach(inp => {
-  inp.addEventListener('input', draw);
-  inp.addEventListener('change', draw);
-});
-
-// ── Zones ─────────────────────────────────────────────────────────────────────
+// ── Colour zones ──────────────────────────────────────────────────────────────
 let zones = [];
 function addZone(z) {
   const id = Date.now() + Math.random();
-  const zone = z || { start: 0, end: 30, color: '#27ae60' };
-  zones.push({ id, ...zone });
+  zones.push({ id, from: z?.from ?? 60, to: z?.to ?? 80, color: z?.color ?? '#ff9800' });
   renderZones();
 }
-function removeZone(id) { zones = zones.filter(z => z.id !== id); renderZones(); draw(); }
 function renderZones() {
-  const c = el('zones-container'); c.innerHTML = '';
+  const c = el('zones-container');
+  c.innerHTML = '';
   zones.forEach(z => {
     const row = document.createElement('div');
-    row.className = 'zone-row'; row.dataset.id = z.id;
+    row.className = 'zone-row';
+    row.style.marginBottom = '6px';
     row.innerHTML = `
-      <div class="field"><label>Start</label><input type="number" class="z-start" value="${z.start}"></div>
-      <div class="field"><label>End</label><input type="number" class="z-end" value="${z.end}"></div>
-      <div class="field"><label>Colour</label><input type="color" class="z-color" value="${z.color}"></div>
-      <button class="z-del" title="Remove">✕</button>`;
-    row.querySelector('.z-del').addEventListener('click', () => removeZone(z.id));
-    row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
-      z.start = parseFloat(row.querySelector('.z-start').value);
-      z.end   = parseFloat(row.querySelector('.z-end').value);
-      z.color = row.querySelector('.z-color').value;
-      draw();
-    }));
+      <div class="field"><label>From</label><input type="number" value="${z.from}" data-zid="${z.id}" data-zprop="from"></div>
+      <div class="field"><label>To</label><input type="number" value="${z.to}" data-zid="${z.id}" data-zprop="to"></div>
+      <div class="field"><label>Colour</label><input type="color" value="${z.color}" data-zid="${z.id}" data-zprop="color"></div>
+      <button data-zid="${z.id}" title="Remove">✕</button>`;
     c.appendChild(row);
-  });
-}
-el('add-zone-btn').addEventListener('click', () => { addZone(); draw(); });
-
-// ── Save / Load settings ──────────────────────────────────────────────────────
-const SAVEABLE_IDS = [
-  'val-value','val-min','val-max','val-startAngle','val-endAngle',
-  'val-size',
-  'val-bezelStyle','val-bezelWidth','val-bezelColor',
-  'val-faceColor','val-faceOpacity','val-shadowBlur','val-glassSheen',
-  'val-showTrack','val-trackWidth','val-trackColor',
-  'val-showProgress','val-progressWidth','val-progressColor','val-progressGradient','val-progressColorEnd','val-lineCap',
-  'val-needleStyle','val-needleColor','val-needleLength','val-needleWidth','val-hubColor','val-hubRadius',
-  'val-tickColor',
-  'val-majorCount','val-majorLen','val-majorWidth',
-  'val-showSemiMajor','val-semiMajorDiv','val-semiMajorLen','val-semiMajorWidth',
-  'val-showMinor','val-minorDiv','val-minorLen','val-minorWidth',
-  'val-showLabels','val-labelColor','val-labelFont','val-labelSize','val-labelDecimals','val-labelOffset',
-  'val-showTitle','val-titleText','val-titleColor','val-titleSize','val-titleY',
-  'val-showValue','val-valueColor','val-valueSize','val-valueDecimals','val-valueSuffix','val-valueY'
-];
-
-function gatherSettings() {
-  const s = {};
-  SAVEABLE_IDS.forEach(id => {
-    const e = el(id);
-    if (!e) return;
-    if (e.type === 'checkbox') s[id] = e.checked;
-    else s[id] = e.value;
-  });
-  s['__zones'] = zones.map(z => ({ start: z.start, end: z.end, color: z.color }));
-  return s;
-}
-
-function applySettings(s) {
-  SAVEABLE_IDS.forEach(id => {
-    if (!(id in s)) return;
-    const e = el(id);
-    if (!e) return;
-    if (e.type === 'checkbox') e.checked = s[id];
-    else e.value = s[id];
-  });
-  // Sync slider with number box
-  el('val-value-slider').value = s['val-value'] || 65;
-  el('disp-value').textContent = s['val-value'] || 65;
-  // Sync size display
-  el('disp-size').textContent = s['val-size'] || 500;
-  // Refresh all range displays
-  document.querySelectorAll('[id^="disp-"]').forEach(d => {
-    const rangeId = 'val-' + d.id.replace('disp-','');
-    const r = el(rangeId);
-    if (r && r.type === 'range') d.textContent = r.value;
-  });
-  // Restore zones
-  zones = [];
-  if (s['__zones']) s['__zones'].forEach(z => addZone(z));
-  else renderZones();
-  syncValueControls();
-  draw();
-}
-
-el('save-settings-btn').addEventListener('click', () => {
-  const data = JSON.stringify(gatherSettings(), null, 2);
-  const blob = new Blob([data], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'dial-gauge-settings.json';
-  a.click();
-  showToast('Settings saved!');
-});
-
-el('load-settings-btn').addEventListener('click', () => el('load-settings-input').click());
-el('load-settings-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const s = JSON.parse(ev.target.result);
-      applySettings(s);
-      showToast('Settings loaded!');
-    } catch { showToast('Error reading settings file.'); }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-});
-
-// ── Toast ─────────────────────────────────────────────────────────────────────
-function showToast(msg) {
-  const t = el('copy-toast'); t.textContent = msg; t.style.opacity = 1;
-  setTimeout(() => { t.style.opacity = 0; }, 2500);
-}
-
-// ── Copy / Download ───────────────────────────────────────────────────────────
-el('copy-btn').addEventListener('click', async () => {
-  try {
-    const canvas = el('gauge-canvas');
-    canvas.toBlob(async blob => {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      showToast('Copied to clipboard!');
+    row.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const zone = zones.find(x => x.id == inp.dataset.zid);
+        if (zone) { zone[inp.dataset.zprop] = inp.type === 'color' ? inp.value : parseFloat(inp.value); drawGauge(); }
+      });
     });
-  } catch { showToast('Copy failed — try Download instead.'); }
-});
-el('download-btn').addEventListener('click', () => {
-  const a = document.createElement('a');
-  a.download = 'dial-gauge.png';
-  a.href = el('gauge-canvas').toDataURL('image/png');
-  a.click();
-});
+    row.querySelector('button').addEventListener('click', e => {
+      zones = zones.filter(x => x.id != e.target.dataset.zid);
+      renderZones(); drawGauge();
+    });
+  });
+}
+el('add-zone-btn').addEventListener('click', () => { addZone(); drawGauge(); });
 
-// ── Draw ──────────────────────────────────────────────────────────────────────
-function draw() {
-  const canvas = el('gauge-canvas');
-  const size   = Math.round(num('val-size'));
+// ── Drawing ───────────────────────────────────────────────────────────────────
+const canvas = el('gauge-canvas');
+const ctx = canvas.getContext('2d');
+
+function degToRad(d) { return d * Math.PI / 180; }
+
+function drawBezel(cx, cy, outerR, innerR, style, baseColor) {
+  const bw = outerR - innerR;
+
+  if (style === 'flat-metallic') {
+    const grad = ctx.createRadialGradient(cx - outerR*0.2, cy - outerR*0.2, innerR*0.5, cx, cy, outerR);
+    grad.addColorStop(0, lighten(baseColor, 80));
+    grad.addColorStop(0.3, lighten(baseColor, 30));
+    grad.addColorStop(0.6, baseColor);
+    grad.addColorStop(0.85, darken(baseColor, 30));
+    grad.addColorStop(1, darken(baseColor, 60));
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.arc(cx, cy, innerR, 0, Math.PI*2, true);
+    ctx.fillStyle = grad; ctx.fill();
+    // inner edge highlight
+    const ig = ctx.createRadialGradient(cx, cy, innerR-2, cx, cy, innerR+4);
+    ig.addColorStop(0, 'rgba(255,255,255,0.5)');
+    ig.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, innerR+4, 0, Math.PI*2);
+    ctx.arc(cx, cy, innerR-2, 0, Math.PI*2, true);
+    ctx.fillStyle = ig; ctx.fill();
+
+  } else if (style === 'brushed-steel') {
+    // Base ring
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.arc(cx, cy, innerR, 0, Math.PI*2, true);
+    ctx.clip();
+    // Brushed stripes
+    const stripeGrad = ctx.createLinearGradient(cx - outerR, cy, cx + outerR, cy);
+    const c1 = lighten(baseColor, 40), c2 = darken(baseColor, 10), c3 = lighten(baseColor, 60);
+    for (let i = 0; i <= 20; i++) {
+      stripeGrad.addColorStop(i/20, i%2===0 ? c1 : c2);
+    }
+    ctx.fillStyle = stripeGrad;
+    ctx.fillRect(cx - outerR, cy - outerR, outerR*2, outerR*2);
+    // Overlay radial shading
+    const ov = ctx.createRadialGradient(cx, cy - outerR*0.3, innerR*0.3, cx, cy, outerR);
+    ov.addColorStop(0, 'rgba(255,255,255,0.25)');
+    ov.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+    ov.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = ov;
+    ctx.fillRect(cx - outerR, cy - outerR, outerR*2, outerR*2);
+    ctx.restore();
+    // Edge rings
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  } else if (style === 'deep-chrome') {
+    const grad = ctx.createRadialGradient(cx - outerR*0.25, cy - outerR*0.25, 0, cx, cy, outerR);
+    grad.addColorStop(0,   '#ffffff');
+    grad.addColorStop(0.15, lighten(baseColor, 70));
+    grad.addColorStop(0.3,  lighten(baseColor, 20));
+    grad.addColorStop(0.5,  darken(baseColor, 10));
+    grad.addColorStop(0.7,  darken(baseColor, 40));
+    grad.addColorStop(0.85, lighten(baseColor, 10));
+    grad.addColorStop(1,    darken(baseColor, 60));
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.arc(cx, cy, innerR, 0, Math.PI*2, true);
+    ctx.fillStyle = grad; ctx.fill();
+    // Specular hotspot
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.arc(cx, cy, innerR, 0, Math.PI*2, true); ctx.clip();
+    const spot = ctx.createRadialGradient(cx - outerR*0.3, cy - outerR*0.4, 0, cx - outerR*0.3, cy - outerR*0.4, outerR*0.4);
+    spot.addColorStop(0, 'rgba(255,255,255,0.7)');
+    spot.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = spot; ctx.fillRect(cx-outerR, cy-outerR, outerR*2, outerR*2);
+    ctx.restore();
+
+  } else if (style === 'toroidal') {
+    // Simulate a torus cross-section: the ring appears rounded/tubular
+    const steps = 120;
+    for (let i = 0; i < steps; i++) {
+      const a0 = (i / steps) * Math.PI * 2;
+      const a1 = ((i + 1) / steps) * Math.PI * 2;
+      const midA = (a0 + a1) / 2;
+      // Light comes from top-left
+      const lightAngle = -Math.PI * 0.6;
+      const diff = Math.cos(midA - lightAngle);
+      const t = (diff + 1) / 2; // 0..1
+      const bright = Math.round(80 + t * 140);
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a0)*outerR, cy + Math.sin(a0)*outerR);
+      ctx.arc(cx, cy, outerR, a0, a1);
+      ctx.arc(cx, cy, innerR, a1, a0, true);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${bright},${bright},${bright})`;
+      ctx.fill();
+    }
+    // Specular highlight arc (top-left)
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.arc(cx, cy, innerR, 0, Math.PI*2, true); ctx.clip();
+    const midR = (outerR + innerR) / 2;
+    const spec = ctx.createRadialGradient(
+      cx + Math.cos(-2.0)*midR*0.8, cy + Math.sin(-2.0)*midR*0.8, 0,
+      cx + Math.cos(-2.0)*midR*0.8, cy + Math.sin(-2.0)*midR*0.8, bw*1.2);
+    spec.addColorStop(0, 'rgba(255,255,255,0.85)');
+    spec.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = spec; ctx.fillRect(cx-outerR, cy-outerR, outerR*2, outerR*2);
+    ctx.restore();
+
+  } else if (style === 'knurled') {
+    const facets = 72;
+    for (let i = 0; i < facets; i++) {
+      const a0 = (i / facets) * Math.PI * 2;
+      const a1 = ((i + 1) / facets) * Math.PI * 2;
+      const bright = i % 2 === 0 ? lighten(baseColor, 35) : darken(baseColor, 25);
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a0)*outerR, cy + Math.sin(a0)*outerR);
+      ctx.arc(cx, cy, outerR, a0, a1);
+      ctx.arc(cx, cy, innerR, a1, a0, true);
+      ctx.closePath();
+      ctx.fillStyle = bright; ctx.fill();
+    }
+    // Groove lines
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.arc(cx, cy, innerR, 0, Math.PI*2, true); ctx.clip();
+    for (let i = 0; i < facets; i++) {
+      const a = (i / facets) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a)*innerR, cy + Math.sin(a)*innerR);
+      ctx.lineTo(cx + Math.cos(a)*outerR, cy + Math.sin(a)*outerR);
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    // Radial sheen
+    const sheen = ctx.createRadialGradient(cx, cy - outerR*0.4, innerR*0.2, cx, cy, outerR);
+    sheen.addColorStop(0, 'rgba(255,255,255,0.2)');
+    sheen.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+    sheen.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.fillStyle = sheen; ctx.fillRect(cx-outerR, cy-outerR, outerR*2, outerR*2);
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+}
+
+function lighten(hex, amt) { return shiftColor(hex, amt); }
+function darken(hex, amt)  { return shiftColor(hex, -amt); }
+function shiftColor(hex, amt) {
+  let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  r = Math.max(0,Math.min(255,r+amt)); g = Math.max(0,Math.min(255,g+amt)); b = Math.max(0,Math.min(255,b+amt));
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+function drawNeedle(ctx, cx, cy, radius, angleRad, style, color, lengthPct, tailPct, widthPx, hubR) {
+  const tipR   = radius * lengthPct / 100;
+  const tailR  = radius * tailPct  / 100;
+  const cos = Math.cos(angleRad), sin = Math.sin(angleRad);
+  const pcos = Math.cos(angleRad + Math.PI/2), psin = Math.sin(angleRad + Math.PI/2);
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+
+  if (style === 'tapered') {
+    // Classic tapered: wide at hub, sharp at tip, no tail
+    const baseW = widthPx * 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + cos*tipR, cy + sin*tipR);
+    ctx.lineTo(cx + pcos*baseW/2, cy + psin*baseW/2);
+    ctx.lineTo(cx - pcos*baseW/2, cy - psin*baseW/2);
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+
+  } else if (style === 'tapered-tail') {
+    // Tapered with a short tail behind hub
+    const baseW = widthPx * 2.5;
+    const tailTipW = widthPx * 0.8;
+    ctx.beginPath();
+    ctx.moveTo(cx + cos*tipR, cy + sin*tipR); // tip
+    ctx.lineTo(cx + pcos*baseW/2, cy + psin*baseW/2); // base left
+    ctx.lineTo(cx - cos*tailR + pcos*tailTipW/2, cy - sin*tailR + psin*tailTipW/2); // tail left
+    ctx.lineTo(cx - cos*tailR - pcos*tailTipW/2, cy - sin*tailR - psin*tailTipW/2); // tail right
+    ctx.lineTo(cx - pcos*baseW/2, cy - psin*baseW/2); // base right
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+
+  } else if (style === 'rod') {
+    // Uniform width rod, no tail
+    const hw = widthPx / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx + pcos*hw, cy + psin*hw);
+    ctx.lineTo(cx + cos*tipR + pcos*hw, cy + sin*tipR + psin*hw);
+    ctx.lineTo(cx + cos*tipR - pcos*hw, cy + sin*tipR - psin*hw);
+    ctx.lineTo(cx - pcos*hw, cy - psin*hw);
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+
+  } else if (style === 'rod-tail') {
+    // Rod with tail behind hub
+    const hw = widthPx / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx + pcos*hw, cy + psin*hw);
+    ctx.lineTo(cx + cos*tipR + pcos*hw, cy + sin*tipR + psin*hw);
+    ctx.lineTo(cx + cos*tipR - pcos*hw, cy + sin*tipR - psin*hw);
+    ctx.lineTo(cx - pcos*hw, cy - psin*hw);
+    ctx.lineTo(cx - cos*tailR - pcos*hw, cy - sin*tailR - psin*hw);
+    ctx.lineTo(cx - cos*tailR + pcos*hw, cy - sin*tailR + psin*hw);
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+
+  } else if (style === 'wedge') {
+    // Wedge: wide at tip, narrow at hub — like a knife blade
+    const tipW = widthPx * 1.2;
+    const baseW = widthPx * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(cx + cos*tipR + pcos*tipW/2, cy + sin*tipR + psin*tipW/2);
+    ctx.lineTo(cx + cos*tipR - pcos*tipW/2, cy + sin*tipR - psin*tipW/2);
+    ctx.lineTo(cx + pcos*baseW/2, cy + psin*baseW/2);
+    ctx.lineTo(cx - pcos*baseW/2, cy - psin*baseW/2);
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+  }
+
+  ctx.restore();
+
+  // Hub
+  const hubGrad = ctx.createRadialGradient(cx - hubR*0.3, cy - hubR*0.3, 0, cx, cy, hubR);
+  hubGrad.addColorStop(0, '#ffffff');
+  hubGrad.addColorStop(0.4, col('val-hubColor'));
+  hubGrad.addColorStop(1, darken(col('val-hubColor'), 50));
+  ctx.beginPath(); ctx.arc(cx, cy, hubR, 0, Math.PI*2);
+  ctx.fillStyle = hubGrad; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function drawGauge() {
+  const size       = num('val-size');
+  const minVal     = num('val-min');
+  const maxVal     = num('val-max');
+  const curVal     = num('val-value');
+  const startAngle = num('val-startAngle');
+  const endAngle   = num('val-endAngle');
+  const valDec     = int('val-valueDecimals');
+
+  // Update value display with correct decimals
+  el('disp-value').textContent = curVal.toFixed(valDec);
+
   canvas.width  = size;
   canvas.height = size;
-  const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, size, size);
 
   const cx = size / 2, cy = size / 2;
-  const bezelW   = num('val-bezelWidth');
-  const outerR   = size / 2 - 4;
-  const innerR   = outerR - bezelW;
+  const bezelW  = num('val-bezelWidth');
+  const outerR  = size / 2 - 4;
+  const innerR  = outerR - bezelW;
+  const faceR   = innerR - 2;
 
-  const minV     = num('val-min');
-  const maxV     = num('val-max');
-  const value    = Math.min(maxV, Math.max(minV, num('val-value')));
-  const startDeg = num('val-startAngle');
-  const endDeg   = num('val-endAngle');
-  const startRad = (startDeg - 90) * Math.PI / 180;
-  const endRad   = (endDeg   - 90) * Math.PI / 180;
-  const totalRad = endRad - startRad;
-  const valueRad = startRad + (value - minV) / (maxV - minV) * totalRad;
+  // ── Bezel ──
+  drawBezel(cx, cy, outerR, innerR, sel('val-bezelStyle'), col('val-bezelColor'));
 
   // ── Face ──
-  const faceColor   = str('val-faceColor');
-  const faceOpacity = num('val-faceOpacity');
   ctx.save();
-  ctx.globalAlpha = faceOpacity;
-  const faceGrad = ctx.createRadialGradient(cx, cy - innerR * 0.15, innerR * 0.05, cx, cy, innerR);
-  const fc = faceColor;
-  faceGrad.addColorStop(0, lightenHex(fc, 30));
-  faceGrad.addColorStop(0.7, fc);
-  faceGrad.addColorStop(1, darkenHex(fc, 25));
-  ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+  if (chk('val-shadow')) {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 18; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 4;
+  }
+  const faceGrad = ctx.createRadialGradient(cx, cy - faceR*0.2, faceR*0.1, cx, cy, faceR);
+  const faceHex = col('val-faceColor');
+  const faceOpacity = num('val-faceOpacity');
+  faceGrad.addColorStop(0, hexToRgba(lighten(faceHex, 20), faceOpacity));
+  faceGrad.addColorStop(1, hexToRgba(darken(faceHex, 15), faceOpacity));
+  ctx.beginPath(); ctx.arc(cx, cy, faceR, 0, Math.PI*2);
   ctx.fillStyle = faceGrad; ctx.fill();
   ctx.restore();
 
-  // ── Shadow under face ──
-  const shadowBlur = num('val-shadowBlur');
-  if (shadowBlur > 0) {
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.55)';
-    ctx.shadowBlur  = shadowBlur;
-    ctx.shadowOffsetY = shadowBlur * 0.3;
-    ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0,0,0,0)'; ctx.fill();
-    ctx.restore();
+  // ── Angle helpers ──
+  // Convert degrees (0=right, clockwise) to canvas radians
+  // Our convention: 0° = top (12 o'clock), clockwise positive
+  // Canvas: 0 rad = right, so we subtract 90°
+  const totalAngle = endAngle - startAngle;
+  function valueToAngleRad(v) {
+    const frac = (v - minVal) / (maxVal - minVal);
+    const deg  = startAngle + frac * totalAngle;
+    return degToRad(deg - 90);
   }
 
-  // ── Colour Zones ──
+  const arcStartRad = degToRad(startAngle - 90);
+  const arcEndRad   = degToRad(endAngle   - 90);
+
+  // ── Colour zones ──
   zones.forEach(z => {
-    const zStart = startRad + (z.start - minV) / (maxV - minV) * totalRad;
-    const zEnd   = startRad + (z.end   - minV) / (maxV - minV) * totalRad;
-    const zR     = innerR - 6;
-    ctx.beginPath(); ctx.arc(cx, cy, zR, zStart, zEnd);
-    ctx.strokeStyle = z.color; ctx.lineWidth = 12; ctx.lineCap = 'butt'; ctx.stroke();
+    const zStart = valueToAngleRad(z.from);
+    const zEnd   = valueToAngleRad(z.to);
+    const trackW = num('val-trackWidth') || 10;
+    ctx.beginPath();
+    ctx.arc(cx, cy, faceR - trackW/2 - 2, zStart, zEnd);
+    ctx.strokeStyle = z.color;
+    ctx.lineWidth = trackW;
+    ctx.lineCap = sel('val-lineCap');
+    ctx.stroke();
   });
 
-  // ── Arc Track ──
-  const showTrack = chk('val-showTrack');
-  const trackW    = num('val-trackWidth');
-  if (showTrack && trackW > 0) {
-    const tR = innerR - bezelW * 0.18 - trackW / 2 - 2;
-    ctx.beginPath(); ctx.arc(cx, cy, tR, startRad, endRad);
-    ctx.strokeStyle = str('val-trackColor');
-    ctx.lineWidth   = trackW;
-    ctx.lineCap     = str('val-lineCap');
+  // ── Arc track ──
+  if (chk('val-showTrack') && num('val-trackWidth') > 0) {
+    const tw = num('val-trackWidth');
+    ctx.beginPath();
+    ctx.arc(cx, cy, faceR - tw/2 - 2, arcStartRad, arcEndRad);
+    ctx.strokeStyle = col('val-trackColor');
+    ctx.lineWidth = tw;
+    ctx.lineCap = sel('val-lineCap');
     ctx.stroke();
   }
 
-  // ── Progress Arc ──
-  const showProgress = chk('val-showProgress');
-  const progressW    = num('val-progressWidth');
-  if (showProgress && progressW > 0) {
-    const pR = innerR - bezelW * 0.18 - progressW / 2 - 2;
-    let pStyle;
-    if (chk('val-progressGradient')) {
-      const pg = ctx.createLinearGradient(cx - pR, cy, cx + pR, cy);
-      pg.addColorStop(0, str('val-progressColor'));
-      pg.addColorStop(1, str('val-progressColorEnd'));
-      pStyle = pg;
-    } else { pStyle = str('val-progressColor'); }
-    ctx.beginPath(); ctx.arc(cx, cy, pR, startRad, valueRad);
-    ctx.strokeStyle = pStyle; ctx.lineWidth = progressW;
-    ctx.lineCap = str('val-lineCap'); ctx.stroke();
+  // ── Progress arc ──
+  if (chk('val-showProgress') && num('val-progressWidth') > 0) {
+    const pw = num('val-progressWidth');
+    const progEndRad = valueToAngleRad(curVal);
+    ctx.beginPath();
+    ctx.arc(cx, cy, faceR - pw/2 - 2, arcStartRad, progEndRad);
+    ctx.strokeStyle = col('val-progressColor');
+    ctx.lineWidth = pw;
+    ctx.lineCap = sel('val-lineCap');
+    ctx.stroke();
   }
 
   // ── Ticks ──
-  const tickColor   = str('val-tickColor');
-  const majorCount  = Math.round(num('val-majorCount'));
-  const majorLen    = num('val-majorLen');
-  const majorW      = num('val-majorWidth');
-  const showSemi    = chk('val-showSemiMajor');
-  const semiDiv     = Math.round(num('val-semiMajorDiv'));
-  const semiLen     = num('val-semiMajorLen');
-  const semiW       = num('val-semiMajorWidth');
-  const showMinor   = chk('val-showMinor');
-  const minorDiv    = Math.round(num('val-minorDiv'));
-  const minorLen    = num('val-minorLen');
-  const minorW      = num('val-minorWidth');
-  const tickR       = innerR - 4;
+  const majorCount = int('val-majorCount');
+  const majorLen   = num('val-majorLen');
+  const majorW     = num('val-majorWidth');
+  const showSemi   = chk('val-showSemi');
+  const semiPer    = int('val-semiPer');
+  const semiLen    = num('val-semiLen');
+  const semiW      = num('val-semiWidth');
+  const showMinor  = chk('val-showMinor');
+  const minorPer   = int('val-minorPer');
+  const minorLen   = num('val-minorLen');
+  const minorW     = num('val-minorWidth');
+  const tickColor  = col('val-tickColor');
+  const tickR      = faceR - 4;
 
-  const totalMinorSteps = (majorCount - 1) * minorDiv;
-  for (let i = 0; i <= totalMinorSteps; i++) {
-    const isMajor     = i % minorDiv === 0;
-    const isSemiMajor = !isMajor && showSemi && (minorDiv % semiDiv === 0) && (i % (minorDiv / semiDiv) === 0);
-    const isMinor     = !isMajor && !isSemiMajor;
+  const totalMinorDivs = majorCount * minorPer;
+  for (let i = 0; i <= totalMinorDivs; i++) {
+    const frac = i / totalMinorDivs;
+    const a = degToRad(startAngle + frac * totalAngle - 90);
+    const isMajor = (i % minorPer === 0);
+    const isSemi  = showSemi && !isMajor && (i % Math.round(minorPer / semiPer) === 0);
+    const isMinor = !isMajor && !isSemi;
 
-    if (isMinor && !showMinor) continue;
+    let len = 0, lw = 0;
+    if (isMajor)       { len = majorLen; lw = majorW; }
+    else if (isSemi)   { if (showSemi) { len = semiLen; lw = semiW; } }
+    else if (isMinor)  { if (showMinor) { len = minorLen; lw = minorW; } }
 
-    let len, lw;
-    if (isMajor)          { len = majorLen; lw = majorW; }
-    else if (isSemiMajor) { len = semiLen;  lw = semiW; }
-    else                  { len = minorLen; lw = minorW; }
-
-    const angle = startRad + (i / totalMinorSteps) * totalRad;
-    const cos = Math.cos(angle), sin = Math.sin(angle);
+    if (len === 0) continue;
     ctx.beginPath();
-    ctx.moveTo(cx + cos * tickR, cy + sin * tickR);
-    ctx.lineTo(cx + cos * (tickR - len), cy + sin * (tickR - len));
+    ctx.moveTo(cx + Math.cos(a)*(tickR), cy + Math.sin(a)*(tickR));
+    ctx.lineTo(cx + Math.cos(a)*(tickR - len), cy + Math.sin(a)*(tickR - len));
     ctx.strokeStyle = tickColor; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
   }
 
   // ── Labels ──
   if (chk('val-showLabels')) {
-    const labelOffset  = num('val-labelOffset');
-    const labelR       = tickR - majorLen - labelOffset;
-    const labelSize    = num('val-labelSize');
-    const labelFont    = str('val-labelFont');
-    const labelDecimals= Math.round(num('val-labelDecimals'));
-    ctx.fillStyle   = str('val-labelColor');
-    ctx.font        = `bold ${labelSize}px ${labelFont}`;
-    ctx.textAlign   = 'center';
-    ctx.textBaseline= 'middle';
-    for (let i = 0; i < majorCount; i++) {
-      const angle = startRad + (i / (majorCount - 1)) * totalRad;
-      const lx = cx + Math.cos(angle) * labelR;
-      const ly = cy + Math.sin(angle) * labelR;
-      const labelVal = minV + (i / (majorCount - 1)) * (maxV - minV);
-      ctx.fillText(labelVal.toFixed(labelDecimals), lx, ly);
+    const labelOffset = num('val-labelOffset');
+    const labelR = tickR - majorLen - labelOffset;
+    const labelSize = int('val-labelSize');
+    const labelDec  = int('val-labelDecimals');
+    ctx.fillStyle = col('val-labelColor');
+    ctx.font = `bold ${labelSize}px ${sel('val-labelFont')}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (let i = 0; i <= majorCount; i++) {
+      const frac = i / majorCount;
+      const v = minVal + frac * (maxVal - minVal);
+      const a = degToRad(startAngle + frac * totalAngle - 90);
+      const lx = cx + Math.cos(a) * labelR;
+      const ly = cy + Math.sin(a) * labelR;
+      ctx.fillText(v.toFixed(labelDec), lx, ly);
     }
   }
 
-  // ── Needle ──
-  const needleStyle  = str('val-needleStyle');
-  const needleColor  = str('val-needleColor');
-  const needleLength = num('val-needleLength') / 100 * innerR;
-  const needleWidth  = num('val-needleWidth');
-  const hubRadius    = num('val-hubRadius');
-  const cos = Math.cos(valueRad), sin = Math.sin(valueRad);
-
-  ctx.save();
-  if (needleStyle === 'tapered') {
-    ctx.beginPath();
-    const perp = valueRad + Math.PI / 2;
-    const hw = needleWidth / 2;
-    ctx.moveTo(cx + Math.cos(perp) * hw, cy + Math.sin(perp) * hw);
-    ctx.lineTo(cx + cos * needleLength, cy + sin * needleLength);
-    ctx.lineTo(cx - Math.cos(perp) * hw, cy - Math.sin(perp) * hw);
-    ctx.lineTo(cx - cos * (hubRadius * 0.6), cy - sin * (hubRadius * 0.6));
-    ctx.closePath();
-    ctx.fillStyle = needleColor;
-    ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
-    ctx.fill();
-  } else if (needleStyle === 'arrow') {
-    const arrowHead = needleWidth * 3;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + cos * (needleLength - arrowHead), cy + sin * (needleLength - arrowHead));
-    ctx.strokeStyle = needleColor; ctx.lineWidth = needleWidth; ctx.lineCap = 'round'; ctx.stroke();
-    const perp = valueRad + Math.PI / 2;
-    ctx.beginPath();
-    ctx.moveTo(cx + cos * needleLength, cy + sin * needleLength);
-    ctx.lineTo(cx + cos * (needleLength - arrowHead) + Math.cos(perp) * arrowHead,
-               cy + sin * (needleLength - arrowHead) + Math.sin(perp) * arrowHead);
-    ctx.lineTo(cx + cos * (needleLength - arrowHead) - Math.cos(perp) * arrowHead,
-               cy + sin * (needleLength - arrowHead) - Math.sin(perp) * arrowHead);
-    ctx.closePath(); ctx.fillStyle = needleColor; ctx.fill();
-  } else {
-    ctx.beginPath();
-    ctx.moveTo(cx - cos * hubRadius, cy - sin * hubRadius);
-    ctx.lineTo(cx + cos * needleLength, cy + sin * needleLength);
-    ctx.strokeStyle = needleColor; ctx.lineWidth = needleWidth; ctx.lineCap = 'round'; ctx.stroke();
-  }
-  ctx.restore();
-
-  // ── Hub ──
-  const hubGrad = ctx.createRadialGradient(cx - hubRadius * 0.3, cy - hubRadius * 0.3, 1, cx, cy, hubRadius);
-  hubGrad.addColorStop(0, '#ffffff');
-  hubGrad.addColorStop(0.4, str('val-hubColor'));
-  hubGrad.addColorStop(1, darkenHex(str('val-hubColor'), 40));
-  ctx.beginPath(); ctx.arc(cx, cy, hubRadius, 0, Math.PI * 2);
-  ctx.fillStyle = hubGrad; ctx.fill();
-  ctx.beginPath(); ctx.arc(cx, cy, hubRadius * 0.3, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fill();
-
   // ── Title ──
-  if (chk('val-showTitle')) {
-    const titleY = cy + num('val-titleY') / 100 * innerR;
-    ctx.fillStyle   = str('val-titleColor');
-    ctx.font        = `bold ${num('val-titleSize')}px ${str('val-labelFont')}`;
-    ctx.textAlign   = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(str('val-titleText'), cx, titleY);
+  if (el('val-title').value.trim()) {
+    const titleY = cy + (num('val-titleY') / 100) * faceR;
+    ctx.fillStyle = col('val-titleColor');
+    ctx.font = `bold ${int('val-titleSize')}px ${sel('val-labelFont')}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(el('val-title').value, cx, titleY);
   }
 
-  // ── Value Display ──
+  // ── Value display ──
   if (chk('val-showValue')) {
-    const valueY = cy + num('val-valueY') / 100 * innerR;
-    const decimals = Math.round(num('val-valueDecimals'));
-    ctx.fillStyle   = str('val-valueColor');
-    ctx.font        = `bold ${num('val-valueSize')}px ${str('val-labelFont')}`;
-    ctx.textAlign   = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(value.toFixed(decimals) + str('val-valueSuffix'), cx, valueY);
+    const valueY = cy + (num('val-valueY') / 100) * faceR;
+    const suffix = el('val-suffix').value;
+    ctx.fillStyle = col('val-valueColor');
+    ctx.font = `bold ${int('val-valueSize')}px ${sel('val-labelFont')}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(curVal.toFixed(valDec) + suffix, cx, valueY);
   }
 
-  // ── Bezel ──
-  drawBezel(ctx, cx, cy, outerR, innerR, bezelW, str('val-bezelStyle'), str('val-bezelColor'));
+  // ── Needle ──
+  const needleAngleRad = valueToAngleRad(curVal);
+  drawNeedle(ctx, cx, cy, faceR,
+    needleAngleRad,
+    sel('val-needleStyle'),
+    col('val-needleColor'),
+    num('val-needleLength'),
+    num('val-tailLength'),
+    num('val-needleWidth'),
+    num('val-hubRadius')
+  );
 
   // ── Glass sheen ──
   if (chk('val-glassSheen')) {
-    const sheen = ctx.createRadialGradient(cx - innerR * 0.2, cy - innerR * 0.35, innerR * 0.05, cx, cy - innerR * 0.1, innerR * 0.85);
-    sheen.addColorStop(0,   'rgba(255,255,255,0.22)');
-    sheen.addColorStop(0.45,'rgba(255,255,255,0.06)');
-    sheen.addColorStop(1,   'rgba(255,255,255,0)');
-    ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+    const sheen = ctx.createRadialGradient(cx - faceR*0.2, cy - faceR*0.35, faceR*0.05, cx, cy - faceR*0.1, faceR*0.9);
+    sheen.addColorStop(0, 'rgba(255,255,255,0.22)');
+    sheen.addColorStop(0.5, 'rgba(255,255,255,0.06)');
+    sheen.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.beginPath(); ctx.arc(cx, cy, faceR, 0, Math.PI*2);
     ctx.fillStyle = sheen; ctx.fill();
   }
 }
 
-// ── Bezel renderer ────────────────────────────────────────────────────────────
-function drawBezel(ctx, cx, cy, outerR, innerR, bezelW, style, baseColor) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, outerR, 0, Math.PI * 2, false);
-  ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
-  ctx.closePath();
-
-  if (style === 'flat-metallic') {
-    const g = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
-    g.addColorStop(0,    darkenHex(baseColor, 20));
-    g.addColorStop(0.25, lightenHex(baseColor, 30));
-    g.addColorStop(0.5,  baseColor);
-    g.addColorStop(0.75, darkenHex(baseColor, 15));
-    g.addColorStop(1,    lightenHex(baseColor, 20));
-    ctx.fillStyle = g;
-
-  } else if (style === 'brushed-steel') {
-    // Base radial
-    const g = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
-    g.addColorStop(0,   darkenHex(baseColor, 10));
-    g.addColorStop(0.5, lightenHex(baseColor, 20));
-    g.addColorStop(1,   darkenHex(baseColor, 10));
-    ctx.fillStyle = g;
-    ctx.fill();
-    // Brushed stripe overlay
-    ctx.save();
-    ctx.clip();
-    for (let i = -outerR * 2; i < outerR * 2; i += 3) {
-      ctx.beginPath();
-      ctx.moveTo(cx + i, cy - outerR);
-      ctx.lineTo(cx + i, cy + outerR);
-      ctx.strokeStyle = i % 6 === 0 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)';
-      ctx.lineWidth = 1.5; ctx.stroke();
-    }
-    ctx.restore();
-    // Re-clip for rim highlights
-    ctx.beginPath();
-    ctx.arc(cx, cy, outerR, 0, Math.PI * 2, false);
-    ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
-    ctx.closePath();
-
-  } else if (style === 'deep-chrome') {
-    const g = ctx.createRadialGradient(cx - outerR * 0.2, cy - outerR * 0.2, outerR * 0.1, cx, cy, outerR);
-    g.addColorStop(0,    '#ffffff');
-    g.addColorStop(0.15, lightenHex(baseColor, 50));
-    g.addColorStop(0.35, baseColor);
-    g.addColorStop(0.55, darkenHex(baseColor, 40));
-    g.addColorStop(0.75, darkenHex(baseColor, 60));
-    g.addColorStop(0.88, lightenHex(baseColor, 25));
-    g.addColorStop(1,    darkenHex(baseColor, 20));
-    ctx.fillStyle = g;
-
-  } else if (style === 'toroidal') {
-    // Simulate a torus cross-section: mid-ring is brightest, edges dark
-    const midR = (innerR + outerR) / 2;
-    const g = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
-    g.addColorStop(0,    darkenHex(baseColor, 50));
-    g.addColorStop(0.18, darkenHex(baseColor, 20));
-    g.addColorStop(0.42, lightenHex(baseColor, 45));
-    g.addColorStop(0.5,  lightenHex(baseColor, 55));
-    g.addColorStop(0.58, lightenHex(baseColor, 45));
-    g.addColorStop(0.82, darkenHex(baseColor, 20));
-    g.addColorStop(1,    darkenHex(baseColor, 50));
-    ctx.fillStyle = g;
-    ctx.fill();
-    // Specular highlight arc at top-left
-    ctx.save(); ctx.clip();
-    const spec = ctx.createRadialGradient(cx - midR * 0.6, cy - midR * 0.6, 2, cx - midR * 0.4, cy - midR * 0.4, midR * 0.55);
-    spec.addColorStop(0,   'rgba(255,255,255,0.55)');
-    spec.addColorStop(0.5, 'rgba(255,255,255,0.1)');
-    spec.addColorStop(1,   'rgba(255,255,255,0)');
-    ctx.fillStyle = spec; ctx.fillRect(cx - outerR, cy - outerR, outerR * 2, outerR * 2);
-    ctx.restore();
-    ctx.beginPath();
-    ctx.arc(cx, cy, outerR, 0, Math.PI * 2, false);
-    ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
-    ctx.closePath();
-
-  } else if (style === 'knurled') {
-    const g = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
-    g.addColorStop(0,   darkenHex(baseColor, 20));
-    g.addColorStop(0.5, baseColor);
-    g.addColorStop(1,   darkenHex(baseColor, 20));
-    ctx.fillStyle = g;
-    ctx.fill();
-    ctx.save(); ctx.clip();
-    const facets = 72;
-    const midR = (innerR + outerR) / 2;
-    for (let i = 0; i < facets; i++) {
-      const a1 = (i / facets) * Math.PI * 2;
-      const a2 = ((i + 1) / facets) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(cx + Math.cos(a1) * innerR, cy + Math.sin(a1) * innerR);
-      ctx.arc(cx, cy, innerR, a1, a2);
-      ctx.arc(cx, cy, outerR, a2, a1, true);
-      ctx.closePath();
-      ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.18)';
-      ctx.fill();
-      // Groove line
-      ctx.beginPath();
-      ctx.moveTo(cx + Math.cos(a1) * innerR, cy + Math.sin(a1) * innerR);
-      ctx.lineTo(cx + Math.cos(a1) * outerR, cy + Math.sin(a1) * outerR);
-      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.8; ctx.stroke();
-    }
-    ctx.restore();
-    ctx.beginPath();
-    ctx.arc(cx, cy, outerR, 0, Math.PI * 2, false);
-    ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
-    ctx.closePath();
-  }
-
-  ctx.fill();
-
-  // Outer edge highlight
-  ctx.beginPath(); ctx.arc(cx, cy, outerR - 1, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1.5; ctx.stroke();
-  // Inner edge shadow
-  ctx.beginPath(); ctx.arc(cx, cy, innerR + 1, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 2; ctx.stroke();
-
-  ctx.restore();
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// ── Colour helpers ────────────────────────────────────────────────────────────
-function hexToRgb(hex) {
-  hex = hex.replace('#','');
-  if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
-  return [parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16)];
-}
-function rgbToHex(r,g,b) {
-  return '#' + [r,g,b].map(v => Math.min(255,Math.max(0,Math.round(v))).toString(16).padStart(2,'0')).join('');
-}
-function lightenHex(hex, amt) {
-  const [r,g,b] = hexToRgb(hex);
-  return rgbToHex(r+amt, g+amt, b+amt);
-}
-function darkenHex(hex, amt) {
-  const [r,g,b] = hexToRgb(hex);
-  return rgbToHex(r-amt, g-amt, b-amt);
+// ── Save / Load settings ──────────────────────────────────────────────────────
+const SETTINGS_VERSION = 2;
+const SETTINGS_KEYS = [
+  'val-value','val-min','val-max','val-startAngle','val-endAngle',
+  'val-size',
+  'val-bezelStyle','val-bezelWidth','val-bezelColor',
+  'val-faceColor','val-faceOpacity','val-glassSheen','val-shadow',
+  'val-showTrack','val-trackColor','val-trackWidth',
+  'val-showProgress','val-progressColor','val-progressWidth','val-lineCap',
+  'val-needleStyle','val-needleColor','val-needleLength','val-tailLength',
+  'val-needleWidth','val-hubColor','val-hubRadius',
+  'val-tickColor',
+  'val-majorCount','val-majorLen','val-majorWidth',
+  'val-showSemi','val-semiPer','val-semiLen','val-semiWidth',
+  'val-showMinor','val-minorPer','val-minorLen','val-minorWidth',
+  'val-showLabels','val-labelColor','val-labelFont','val-labelSize','val-labelDecimals','val-labelOffset',
+  'val-title','val-titleColor','val-titleSize','val-titleY',
+  'val-showValue','val-valueColor','val-valueSize','val-valueDecimals','val-valueY','val-suffix'
+];
+
+el('save-settings-btn').addEventListener('click', () => {
+  const settings = { _version: SETTINGS_VERSION, zones: JSON.parse(JSON.stringify(zones)) };
+  SETTINGS_KEYS.forEach(id => {
+    const e = el(id);
+    if (!e) return;
+    settings[id] = e.type === 'checkbox' ? e.checked : e.value;
+  });
+  const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dial-gauge-settings.json';
+  a.click();
+});
+
+el('load-settings-btn').addEventListener('click', () => el('load-file-input').click());
+el('load-file-input').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const settings = JSON.parse(evt.target.result);
+      SETTINGS_KEYS.forEach(id => {
+        if (!(id in settings)) return; // backwards compatible: skip missing keys
+        const elem = el(id);
+        if (!elem) return;
+        if (elem.type === 'checkbox') elem.checked = settings[id];
+        else elem.value = settings[id];
+      });
+      // Sync value slider
+      el('val-value-slider').value = settings['val-value'] ?? el('val-value').value;
+      el('val-value-slider').min   = settings['val-min']   ?? el('val-min').value;
+      el('val-value-slider').max   = settings['val-max']   ?? el('val-max').value;
+      // Restore zones
+      zones = [];
+      if (Array.isArray(settings.zones)) {
+        settings.zones.forEach(z => addZone(z));
+      }
+      renderZones();
+      // Update all slider displays
+      initDisplays();
+      drawGauge();
+      showToast('Settings loaded ✓');
+    } catch(err) { showToast('Error reading file'); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+// ── Export ────────────────────────────────────────────────────────────────────
+el('copy-btn').addEventListener('click', () => {
+  canvas.toBlob(blob => {
+    navigator.clipboard.write([new ClipboardItem({'image/png': blob})])
+      .then(() => showToast('Copied to clipboard ✓'))
+      .catch(() => showToast('Copy failed — try Download'));
+  });
+});
+el('download-btn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.download = 'dial-gauge.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+});
+
+function showToast(msg) {
+  const t = el('copy-toast'); t.textContent = msg; t.style.opacity = 1;
+  setTimeout(() => { t.style.opacity = 0; }, 2500);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+initDisplays();
 syncValueControls();
-draw();
+wireAll();
+addZone({ from: 0,  to: 60,  color: '#4caf50' });
+addZone({ from: 60, to: 80,  color: '#ff9800' });
+addZone({ from: 80, to: 100, color: '#f44336' });
+drawGauge();
 </script>
 </body>
 </html>
