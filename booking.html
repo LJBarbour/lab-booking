@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Lab Booking</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+/* ── Reset & tokens ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #f0f3f9;
+  --sidebar-bg:  #1a1f35;
+  --sidebar2:    #242944;
+  --border:      #e2e6f0;
+  --border-dark: #2e3450;
+  --accent:      #4a6cf7;
+  --accent-soft: rgba(74,108,247,.1);
+  --accent-dark: #3a5ce0;
+  --green:       #22c55e;
+  --green-soft:  #dcfce7;
+  --green-dark:  #16a34a;
+  --amber:       #fbbf24;
+  --amber-soft:  #fef9c3;
+  --red:         #ef4444;
+  --red-soft:    #fee2e2;
+  --text:        #1a1f35;
+  --text-mid:    #4b5470;
+  --text-muted:  #8892b0;
+  --white:       #ffffff;
+  --shadow-sm:   0 1px 3px rgba(26,31,53,.08), 0 1px 2px rgba(26,31,53,.04);
+  --shadow-md:   0 4px 16px rgba(26,31,53,.10);
+  --shadow-lg:   0 12px 40px rgba(26,31,53,.16);
+  --radius:      10px;
+  --sans:        'DM Sans', system-ui, sans-serif;
+  --mono:        'DM Mono', monospace;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  display: grid;
+  grid-template-columns: 256px 1fr;
+  grid-template-rows: 52px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════ */
+#topbar {
+  grid-column: 1 / -1;
+  background: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border-dark);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 12px;
+}
+
+#topbar .app-logo {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#topbar .app-logo::before {
+  content: "🔬";
+  font-size: 16px;
+}
+
+#topbar .app-name {
+  color: rgba(255,255,255,.35);
+  font-weight: 300;
+  margin-left: 8px;
+  font-family: var(--sans);
+  letter-spacing: 0;
+  font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════ */
+aside {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-dark);
+  padding: 20px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+aside::-webkit-scrollbar { width: 4px; }
+aside::-webkit-scrollbar-track { background: transparent; }
+aside::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 2px; }
+
+/* Section labels */
+h3 {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: rgba(255,255,255,.3);
+  margin: 20px 8px 8px;
+}
+h3:first-child { margin-top: 4px; }
+
+/* Sidebar buttons (instrument list) */
+button {
+  width: 100%;
+  padding: 9px 12px;
+  margin-bottom: 2px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255,255,255,.6);
+  transition: background .15s, color .15s;
+}
+button:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.9); }
+
+button.active {
+  background: var(--accent-soft);
+  background: rgba(74,108,247,.18);
+  color: #a5b8ff;
+  font-weight: 600;
+  border-left: 3px solid var(--accent);
+  padding-left: 9px;
+}
+
+/* ═══════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════ */
+main {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+main::-webkit-scrollbar { width: 6px; }
+main::-webkit-scrollbar-track { background: transparent; }
+main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Instrument info bar ── */
+#instr-info-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-sm);
+  min-height: 0;
+}
+
+#instr-info-left {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+#instr-image {
+  height: 121px;
+  width: auto;
+  border-radius: 7px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: none;
+}
+
+#instr-info-text { flex: 1; min-width: 0; padding-top: 2px; }
+
+#instr-description {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+
+#instr-notes {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
+#instr-status { font-size: 12px; font-weight: 500; }
+
+#instr-curator {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+#instr-curator a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+#instr-curator a:hover { color: var(--accent); }
+
+.status-ok {
+  color: var(--green-dark);
+  background: var(--green-soft);
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid #bbf7d0;
+  display: inline-block;
+}
+.status-off {
+  color: var(--red);
+  background: var(--red-soft);
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid #fecaca;
+  display: inline-block;
+}
+
+/* ── Week nav ── */
+.week-nav {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.week-nav button {
+  width: auto;
+  padding: 7px 14px;
+  margin-bottom: 0;
+  color: var(--text-mid);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all .15s;
+}
+.week-nav button:hover {
+  background: var(--white);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   CALENDAR
+═══════════════════════════════════════════ */
+.calendar {
+  display: grid;
+  grid-template-columns: 56px repeat(7, 1fr);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.cell {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.cell:last-child { border-right: none; }
+
+/* Column headers */
+.header {
+  background: #f8f9ff;
+  flex-direction: column;
+  height: 52px;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-bottom: 2px solid var(--border);
+}
+
+.date {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.header.today-col {
+  background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 100%);
+  border-bottom: 2px solid var(--amber);
+}
+.header.today-col .date { color: #92400e; }
+
+.time {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  justify-content: flex-end;
+  padding-right: 8px;
+  background: #fafbff;
+  border-right: 2px solid var(--border);
+}
+
+/* Empty bookable cell */
+.cell.clickable:hover {
+  background: #eef2ff;
+  cursor: pointer;
+}
+.cell.needs-login:hover {
+  background: var(--amber-soft);
+  cursor: pointer;
+}
+
+/* Past cells */
+.past-cell {
+  background: #f7f8fb;
+}
+.past-cell .time { background: #f4f5f9; }
+
+/* Drag highlights */
+.cell.drag-book   { background: #c7d7fe !important; cursor: pointer; }
+.cell.drag-delete { background: #fecaca !important; cursor: pointer; }
+
+/* Booking boxes */
+.booking-box {
+  position: absolute;
+  inset: 2px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  overflow: hidden;
+  padding: 0 4px;
+  text-align: center;
+  user-select: none;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.booking-box.mine {
+  background: var(--green-soft);
+  color: var(--green-dark);
+  border: 1px solid #bbf7d0;
+  cursor: pointer;
+}
+.booking-box.past {
+  background: #f1f3f7;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.booking-box.admin-del {
+  cursor: pointer;
+  outline: 1.5px solid rgba(239,68,68,.5);
+  outline-offset: -1px;
+}
+
+/* ═══════════════════════════════════════════
+   SIDEBAR — USER AREA
+═══════════════════════════════════════════ */
+#user-badge {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+#logout-btn {
+  width: auto;
+  padding: 4px 10px;
+  font-size: 11px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 5px;
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  margin-bottom: 0;
+  font-family: var(--sans);
+  transition: all .15s;
+}
+#logout-btn:hover {
+  background: rgba(239,68,68,.2);
+  border-color: rgba(239,68,68,.4);
+  color: #fca5a5;
+}
+
+#change-pw-link {
+  display: inline-block;
+  font-size: 12px;
+  color: rgba(165,184,255,.7);
+  cursor: pointer;
+  margin-bottom: 0;
+  padding: 4px 2px;
+  background: none;
+  border: none;
+  text-align: left;
+  width: auto;
+  transition: color .15s;
+}
+#change-pw-link:hover { color: #a5b8ff; text-decoration: underline; background: none; }
+
+#login-btn-sidebar {
+  width: 100%;
+  padding: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 8px;
+  font-family: var(--sans);
+  transition: background .15s;
+  box-shadow: 0 2px 8px rgba(74,108,247,.35);
+}
+#login-btn-sidebar:hover { background: var(--accent-dark); }
+
+#readonly-notice {
+  font-size: 12px;
+  color: rgba(255,255,255,.3);
+  line-height: 1.55;
+  margin-bottom: 16px;
+  padding: 0 2px;
+}
+
+/* ── Error banner ── */
+#error-banner {
+  display: none;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.3);
+  color: #fca5a5;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+/* ── Admin badge ── */
+.badge-admin-inline {
+  font-size: 9px;
+  background: rgba(124,92,252,.25);
+  color: #c4b5fd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: 700;
+  margin-left: 6px;
+  letter-spacing: .06em;
+  vertical-align: middle;
+  border: 1px solid rgba(124,92,252,.3);
+}
+
+/* ── Power-user badge ── */
+.badge-pu-inline {
+  font-size: 9px;
+  background: rgba(251,191,36,.2);
+  color: #fbbf24;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: 700;
+  margin-left: 6px;
+  letter-spacing: .06em;
+  vertical-align: middle;
+  border: 1px solid rgba(251,191,36,.35);
+}
+
+/* ── Sidebar: instrument button with power-user access ── */
+button.pu-access {
+  border-left: 3px solid rgba(251,191,36,.55);
+  padding-left: 9px;
+  color: rgba(251,191,36,.75);
+}
+button.pu-access:hover { color: #fbbf24; background: rgba(251,191,36,.07); }
+button.pu-access.active {
+  background: rgba(251,191,36,.12);
+  border-left: 3px solid #fbbf24;
+  color: #fde68a;
+}
+
+/* ── Info-bar power-user status pill ── */
+.status-pu {
+  color: #78350f;
+  background: #fef3c7;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid #fde68a;
+  display: inline-block;
+  margin-left: 6px;
+}
+
+/* ── Info-bar administrator status pill ── */
+.status-admin {
+  color: #5b21b6;
+  background: rgba(124,92,252,.25);
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid rgba(124,92,252,.3);
+  display: inline-block;
+  margin-left: 6px;
+}
+
+/* ── Booking box: deletable by power user (amber outline) ── */
+.booking-box.pu-del {
+  cursor: pointer;
+  outline: 1.5px solid rgba(251,191,36,.7);
+  outline-offset: -1px;
+}
+
+/* ═══════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════ */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,17,30,.55);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal.visible { display: flex; }
+
+.modal-box {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 36px 40px;
+  width: 360px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+}
+.modal-box h2 {
+  margin: 0 0 24px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.02em;
+}
+.modal-box input {
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  box-sizing: border-box;
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+.modal-box input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(74,108,247,.12);
+  background: var(--white);
+}
+.modal-box input.error-field { border-color: var(--red); }
+
+.modal-submit {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  margin-bottom: 0;
+  text-align: center;
+  transition: background .15s;
+  box-shadow: 0 2px 8px rgba(74,108,247,.3);
+}
+.modal-submit:hover { background: var(--accent-dark); }
+.modal-submit:disabled { background: #a0aef7; cursor: not-allowed; box-shadow: none; }
+
+.modal-error   { color: var(--red);   font-size: 13px; margin-top: 10px; min-height: 18px; }
+.modal-success { color: var(--green-dark); font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+.modal-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none; border: none;
+  font-size: 20px; color: var(--text-muted);
+  cursor: pointer; width: auto;
+  padding: 4px; margin: 0; line-height: 1;
+  border-radius: 4px;
+  transition: color .15s, background .15s;
+}
+.modal-close:hover { color: var(--text); background: var(--bg); }
+
+/* ── Password strength ── */
+#pw-strength-wrap { margin: -4px 0 14px; }
+#pw-strength-bar-bg { height: 4px; background: var(--border); border-radius: 2px; }
+#pw-strength-bar { height: 100%; border-radius: 2px; width: 0%; transition: width .2s, background .2s; }
+#pw-strength-label { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+
+/* ── Cal-message ── */
+#cal-message {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 40px;
+}
+
+/* ═══════════════════════════════════════════
+   BOOK-AS SECTION
+═══════════════════════════════════════════ */
+#book-as-select {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px;
+  color: rgba(255,255,255,.85);
+  font-family: var(--sans);
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,.4)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  transition: border-color .15s, background-color .15s;
+  margin-bottom: 6px;
+}
+#book-as-select:hover {
+  border-color: rgba(255,255,255,.25);
+  background-color: rgba(255,255,255,.11);
+}
+#book-as-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(74,108,247,.25);
+}
+#book-as-select option {
+  background: #1a1f35;
+  color: rgba(255,255,255,.85);
+}
+
+.book-as-active-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(251,191,36,.12);
+  border: 1px solid rgba(251,191,36,.3);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #fde68a;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+.book-as-active-pill .pill-icon { font-size: 13px; flex-shrink: 0; }
+.book-as-active-pill strong { font-weight: 600; color: #fbbf24; }
+
+/* ═══════════════════════════════════════════
+   OUTLOOK INTEGRATION
+═══════════════════════════════════════════ */
+#outlook-section {
+  margin-top: 4px;
+}
+#outlook-connect-btn {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.7);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .15s;
+  margin-bottom: 0;
+}
+#outlook-connect-btn:hover {
+  background: rgba(255,255,255,.11);
+  border-color: rgba(255,255,255,.25);
+  color: rgba(255,255,255,.9);
+}
+#outlook-connect-btn.connected {
+  border-color: rgba(34,197,94,.35);
+  background: rgba(34,197,94,.1);
+  color: #86efac;
+}
+#outlook-connect-btn .outlook-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#outlook-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.25);
+  flex-shrink: 0;
+  transition: background .2s;
+}
+#outlook-status-dot.on  { background: var(--green); }
+#outlook-status-dot.off { background: rgba(255,255,255,.25); }
+#outlook-syncing-note {
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+  padding: 4px 2px 0;
+  display: none;
+  line-height: 1.45;
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div class="app-logo">
+    Lab Booking
+    <span class="app-name">Instrument Reservation System</span>
+  </div>
+</div>
+
+<!-- Login modal -->
+<div id="login-modal" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('login-modal')">✕</button>
+    <h2>🔬 Lab Booking Login</h2>
+    <input id="login-email"    type="email"    placeholder="Email address" />
+    <input id="login-password" type="password" placeholder="Password"
+           onkeydown="if(event.key==='Enter') doLogin()" />
+    <button class="modal-submit" onclick="doLogin()">Sign In</button>
+    <div class="modal-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- Change password modal -->
+<div id="pw-modal" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('pw-modal')">✕</button>
+    <h2>🔑 Change Password</h2>
+    <input id="pw-current" type="password" placeholder="Current password" />
+    <input id="pw-new"     type="password" placeholder="New password (min 8 characters)"
+           oninput="updateStrength()" />
+    <div id="pw-strength-wrap">
+      <div id="pw-strength-bar-bg"><div id="pw-strength-bar"></div></div>
+      <div id="pw-strength-label"></div>
+    </div>
+    <input id="pw-confirm" type="password" placeholder="Confirm new password"
+           onkeydown="if(event.key==='Enter') doChangePassword()" />
+    <button class="modal-submit" id="pw-submit" onclick="doChangePassword()">Update Password</button>
+    <div class="modal-error"   id="pw-error"></div>
+    <div class="modal-success" id="pw-success"></div>
+  </div>
+</div>
+
+<aside>
+  <h3>Researcher</h3>
+  <div id="user-area"></div>
+  <div id="error-banner"></div>
+  <h3>Instruments</h3>
+  <div id="instr"></div>
+  <div id="book-as-section" style="display:none">
+    <h3>Book as</h3>
+    <div id="book-as-area"></div>
+  </div>
+  <div id="outlook-section" style="display:none">
+    <h3>Calendar</h3>
+    <button id="outlook-connect-btn" onclick="toggleOutlook()">
+      <svg class="outlook-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="4" width="20" height="16" rx="2" fill="#0078d4" opacity=".85"/>
+        <rect x="2" y="4" width="11" height="16" rx="1" fill="#0078d4"/>
+        <text x="7" y="15" font-size="9" fill="white" font-family="sans-serif" font-weight="700">O</text>
+        <path d="M13 9h8M13 12h8M13 15h5" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity=".7"/>
+      </svg>
+      <span id="outlook-status-dot" class="off"></span>
+      <span id="outlook-btn-label">Connect Outlook</span>
+    </button>
+    <div id="outlook-syncing-note">Bookings will sync to your Outlook calendar automatically.</div>
+  </div>
+</aside>
+
+<main>
+  <!-- Instrument info bar: image left | description+notes+status | nav right -->
+  <div id="instr-info-bar">
+    <div id="instr-info-left">
+      <img id="instr-image" src="" alt="">
+      <div id="instr-info-text">
+        <div id="instr-description"></div>
+        <div id="instr-status"></div>
+        <div id="instr-curator"></div>
+        <div id="instr-notes"></div>
+      </div>
+    </div>
+    <div class="week-nav">
+      <button onclick="changeWeek(-1)">← Previous</button>
+      <button onclick="goToday()">Today</button>
+      <button onclick="changeWeek(1)">Next →</button>
+    </div>
+  </div>
+
+  <div id="calendar" class="calendar"></div>
+  <div id="cal-message"></div>
+</main>
+
+<script>
+const SUPABASE_URL = "https://mqpvnisphntdwhqoiqlt.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcHZuaXNwaG50ZHdocW9pcWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzM5NjIsImV4cCI6MjA5MzE0OTk2Mn0.7eAeXAh0heqiaTLclqUzAeNY2gQDcbxNRe2LrLXvpHg";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const REST = SUPABASE_URL + "/rest/v1";
+const HEADERS = {
+  "apikey": SUPABASE_KEY,
+  "Authorization": `Bearer ${SUPABASE_KEY}`,
+  "Content-Type": "application/json"
+};
+
+let instruments=[], bookings=[], permissions=[], curators=[], administrators=[], users=[];
+let currentUser=null, currentUserID=null, currentUserEmail=null;
+let currentUserIsAdmin=false;
+let curatorInstrIds=[];  // instrument IDs where this user has curator privileges
+let currentInstr=null, weekOffset=0;
+let bookAsUserID=null, bookAsUserName=null;  // null = book as self
+
+// True when the current user has curator-or-admin-level access to the given instrument
+function isCuratorFor(instrId){
+  return currentUserIsAdmin || curatorInstrIds.includes(instrId);
+}
+
+// Returns the permissions row for the current user on the given instrument, or null
+function getUserPermission(instrId){
+  return permissions.find(p => p.user_id === currentUserID && p.instrument_id === instrId) || null;
+}
+
+// ═══════════════════════════════════════════
+//  DRAG STATE
+//  Unified click+drag: mousedown starts a drag of 1+ cells,
+//  mouseup commits. A plain click is a drag of exactly one cell.
+// ═══════════════════════════════════════════
+
+let dragActive = false;
+let dragMode   = null;   // 'book' | 'delete'
+let dragSlots  = [];     // [{hour, date, booking, el}]
+let dragKeys   = new Set();
+
+function startDrag(mode, hour, date, booking, el) {
+  dragActive = true;
+  dragMode   = mode;
+  dragSlots  = [];
+  dragKeys.clear();
+  tryAddDragSlot(hour, date, booking, el);
+  document.body.style.userSelect = 'none';
+}
+
+function tryAddDragSlot(hour, date, booking, el) {
+  const key = `${hour}|${date}`;
+  if (dragKeys.has(key)) return;
+
+  if (dragMode === 'book') {
+    // Don't double-book
+    const taken = bookings.find(x => x.instrument===currentInstr.id && x.hour===hour && x.date===date);
+    if (taken) return;
+    // Don't book in the past
+    const slotTime = new Date(date + "T" + hour.toString().padStart(2,'0') + ":00");
+    if (slotTime < new Date()) return;
+    // Curators/admins bypass advancedays; regular users respect their per-permission limit
+    if (!isCuratorFor(currentInstr.id)) {
+      const perm = getUserPermission(currentInstr.id);
+      if (perm && perm.advancedays != null) {
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + perm.advancedays);
+        if (slotTime > maxDate) return;
+      }
+    }
+  }
+
+  if (dragMode === 'delete') {
+    if (!booking) return;
+    const mine = booking.user_id === currentUserID;
+    if (!mine && !isCuratorFor(currentInstr.id)) return;
+  }
+
+  dragKeys.add(key);
+  dragSlots.push({hour, date, booking, el});
+  el.classList.add(dragMode === 'book' ? 'drag-book' : 'drag-delete');
+}
+
+async function endDrag() {
+  if (!dragActive) return;
+  dragActive = false;
+  document.body.style.userSelect = '';
+
+  // Remove highlights before async work
+  dragSlots.forEach(s => s.el.classList.remove('drag-book', 'drag-delete'));
+
+  const slots = [...dragSlots];
+  dragSlots = []; dragKeys.clear();
+  if (!slots.length) return;
+
+  if (dragMode === 'book') {
+    // Curators/admins bypass maxslot; regular users respect their per-permission limit
+    if (!isCuratorFor(currentInstr.id)) {
+      const perm = getUserPermission(currentInstr.id);
+      if (perm && perm.maxslot != null) {
+        const now = new Date();
+        const existing = bookings.filter(b => {
+          const t = new Date(b.date + "T" + b.hour.toString().padStart(2,'0') + ":00");
+          return b.user_id === currentUserID && b.instrument===currentInstr.id && t>=now;
+        }).length;
+        if (existing + slots.length > perm.maxslot) {
+          alert(`Booking limit reached — you can have at most ${perm.maxslot} active bookings for this instrument.`);
+          return;
+        }
+      }
+    }
+    const base = Date.now();
+    const effectiveUserID   = bookAsUserID   || currentUserID;
+    const effectiveUserName = bookAsUserName || currentUser;
+
+    // 1. Write all bookings to Supabase first
+    await Promise.all(slots.map(({hour, date}, idx) =>
+      fetch(`${REST}/bookings`, {
+        method: "POST", headers: HEADERS,
+        body: JSON.stringify({
+          id: `${base}${idx}`,
+          instrument: currentInstr.id,
+          date, hour,
+          user_id: effectiveUserID,
+          name: effectiveUserName
+        })
+      })
+    ));
+
+    // 2. Issue a booking .ics (auto-download) and store UIDs back to Supabase
+    //    Only for the booking owner's own bookings (not "book as" by a curator)
+    //    Fire-and-forget: don't await, so the download isn't blocked by async context
+    if (!bookAsUserID) {
+      const instrName = currentInstr.description || currentInstr.name || "Instrument";
+      const icsSlots  = slots.map(({hour, date}, idx) => ({ hour, date, bookingId: `${base}${idx}` }));
+      issueBookingICS(icsSlots, instrName, effectiveUserName);
+    }
+
+  } else if (dragMode === 'delete') {
+    const instrName = currentInstr.description || currentInstr.name || "Instrument";
+
+    // 1. Collect .ics UIDs before deleting
+    const cancelSlots = slots.map(({booking: b}) => ({
+      hour: b.hour, date: b.date, uid: b.calendar_event_id || null
+    }));
+
+    // 2. Delete from Supabase
+    await Promise.all(slots.map(({booking: b}) =>
+      fetch(`${REST}/bookings?id=eq.${b.id}`, { method: "DELETE", headers: HEADERS })
+    ));
+
+    // 3. Issue a cancellation .ics for slots that have stored UIDs
+    //    (only meaningful for the booking owner, but harmless to always attempt)
+    issueCancelICS(cancelSlots, instrName, currentUser);
+  }
+
+  bookings = await fetch(`${REST}/bookings?select=*`, {headers:HEADERS}).then(r=>r.json());
+  renderCalendar();
+}
+
+// Commit drag on mouseup anywhere
+document.addEventListener('mouseup', endDrag);
+
+// ═══════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════
+
+function openModal(id){
+  document.getElementById(id).classList.add("visible");
+  if(id === "login-modal"){
+    document.getElementById("login-error").textContent = "";
+    document.getElementById("login-password").value = "";
+    setTimeout(()=>document.getElementById("login-email").focus(), 50);
+  }
+  if(id === "pw-modal"){
+    ["pw-current","pw-new","pw-confirm"].forEach(f=>{
+      document.getElementById(f).value = "";
+      document.getElementById(f).classList.remove("error-field");
+    });
+    document.getElementById("pw-error").textContent   = "";
+    document.getElementById("pw-success").textContent = "";
+    document.getElementById("pw-strength-bar").style.width = "0%";
+    document.getElementById("pw-strength-label").textContent = "";
+    setTimeout(()=>document.getElementById("pw-current").focus(), 50);
+  }
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove("visible");
+}
+
+// ═══════════════════════════════════════════
+//  PASSWORD STRENGTH
+// ═══════════════════════════════════════════
+
+function updateStrength(){
+  const val  = document.getElementById("pw-new").value;
+  const bar  = document.getElementById("pw-strength-bar");
+  const lbl  = document.getElementById("pw-strength-label");
+  let score = 0;
+  if(val.length >= 8)           score++;
+  if(val.length >= 12)          score++;
+  if(/[A-Z]/.test(val))         score++;
+  if(/[0-9]/.test(val))         score++;
+  if(/[^A-Za-z0-9]/.test(val)) score++;
+  const levels = [
+    { pct:"0%",   color:"#e0e0e0", label:"" },
+    { pct:"20%",  color:"#e53935", label:"Very weak" },
+    { pct:"40%",  color:"#fb8c00", label:"Weak" },
+    { pct:"60%",  color:"#fdd835", label:"Fair" },
+    { pct:"80%",  color:"#43a047", label:"Strong" },
+    { pct:"100%", color:"#2e7d32", label:"Very strong" },
+  ];
+  const lvl = levels[Math.min(score, 5)];
+  bar.style.width      = val.length ? lvl.pct : "0%";
+  bar.style.background = lvl.color;
+  lbl.textContent      = val.length ? lvl.label : "";
+}
+
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
+
+function showError(msg){
+  const el = document.getElementById("error-banner");
+  el.textContent   = msg;
+  el.style.display = msg ? "block" : "none";
+}
+
+async function doLogin(){
+  const email    = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+  const errEl    = document.getElementById("login-error");
+  errEl.textContent = "";
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ errEl.textContent = error.message; return; }
+
+  const res  = await fetch(`${REST}/users?id=eq.${data.user.id}&select=*`, { headers: HEADERS });
+  const rows = await res.json();
+  if(!rows.length){
+    errEl.textContent = "No researcher account linked to this login.";
+    await sb.auth.signOut();
+    return;
+  }
+
+  currentUser        = rows[0].name;
+  currentUserID      = rows[0].id;
+  currentUserEmail   = data.user.email;
+  currentUserIsAdmin = administrators.some(a => a.user_id === rows[0].id);
+  curatorInstrIds    = curators
+    .filter(c => c.user_id === rows[0].id)
+    .map(c => c.instrument_id);
+  closeModal("login-modal");
+  render();
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser        = null;
+  currentUserID      = null;
+  currentUserEmail   = null;
+  currentUserIsAdmin = false;
+  curatorInstrIds    = [];
+  bookAsUserID       = null;
+  bookAsUserName     = null;
+  currentInstr       = instruments[0] || null;
+  render();
+}
+
+async function doChangePassword(){
+  const current   = document.getElementById("pw-current").value;
+  const newPw     = document.getElementById("pw-new").value;
+  const confirm   = document.getElementById("pw-confirm").value;
+  const errEl     = document.getElementById("pw-error");
+  const okEl      = document.getElementById("pw-success");
+  const submitBtn = document.getElementById("pw-submit");
+
+  errEl.textContent = ""; okEl.textContent = "";
+  ["pw-current","pw-new","pw-confirm"].forEach(f =>
+    document.getElementById(f).classList.remove("error-field")
+  );
+  if(!current){
+    errEl.textContent = "Please enter your current password.";
+    document.getElementById("pw-current").classList.add("error-field"); return;
+  }
+  if(newPw.length < 8){
+    errEl.textContent = "New password must be at least 8 characters.";
+    document.getElementById("pw-new").classList.add("error-field"); return;
+  }
+  if(newPw !== confirm){
+    errEl.textContent = "Passwords do not match.";
+    document.getElementById("pw-confirm").classList.add("error-field"); return;
+  }
+  if(current === newPw){
+    errEl.textContent = "New password must differ from your current password.";
+    document.getElementById("pw-new").classList.add("error-field"); return;
+  }
+  submitBtn.disabled = true; submitBtn.textContent = "Updating…";
+
+  const { error: authErr } = await sb.auth.signInWithPassword({
+    email: currentUserEmail, password: current
+  });
+  if(authErr){
+    errEl.textContent = "Current password is incorrect.";
+    document.getElementById("pw-current").classList.add("error-field");
+    submitBtn.disabled = false; submitBtn.textContent = "Update Password"; return;
+  }
+  const { error: updateErr } = await sb.auth.updateUser({ password: newPw });
+  submitBtn.disabled = false; submitBtn.textContent = "Update Password";
+  if(updateErr){ errEl.textContent = updateErr.message; return; }
+
+  okEl.textContent = "✓ Password updated successfully.";
+  ["pw-current","pw-new","pw-confirm"].forEach(f => document.getElementById(f).value = "");
+  document.getElementById("pw-strength-bar").style.width   = "0%";
+  document.getElementById("pw-strength-label").textContent = "";
+  setTimeout(()=>closeModal("pw-modal"), 2000);
+}
+
+// ═══════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════
+
+async function load(){
+  showError("");
+  try {
+    const [i, b, p, cu, ad, us] = await Promise.all([
+      fetch(`${REST}/instruments?select=*`,     {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/bookings?select=*`,         {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/permissions?select=*`,      {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/curators?select=*`,         {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/administrators?select=*`,   {headers:HEADERS}).then(r=>r.json()),
+      fetch(`${REST}/users?select=*`,            {headers:HEADERS}).then(r=>r.json()),
+    ]);
+    if(i.code || b.code || p.code)
+      throw new Error(i.message || b.message || p.message || "Database error");
+    instruments    = i;
+    bookings       = b;
+    permissions    = p;
+    curators       = Array.isArray(cu) ? cu : [];
+    administrators = Array.isArray(ad) ? ad : [];
+    users          = Array.isArray(us) ? us : [];
+    currentInstr   = instruments[0] || null;
+  } catch(err){
+    showError("Could not load data: " + err.message);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+
+function render(){
+  renderUserArea();
+  renderInstr();
+  renderInstrInfo();
+  renderBookAsSection();
+  renderOutlookBtn();
+  renderCalendar();
+}
+
+function renderBookAsSection(){
+  const section = document.getElementById("book-as-section");
+  const area    = document.getElementById("book-as-area");
+
+  // Only show for curators/admins on the currently selected instrument
+  if(!currentUser || !currentInstr || !isCuratorFor(currentInstr.id)){
+    section.style.display = "none";
+    return;
+  }
+
+  // Collect users who have a permissions row for this instrument (excluding the curator themselves)
+  const instrPerms = permissions.filter(p => p.instrument_id === currentInstr.id);
+  const permUsers  = instrPerms
+    .map(p => users.find(u => u.id === p.user_id))
+    .filter(u => u && u.id !== currentUserID)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if(!permUsers.length){
+    section.style.display = "none";
+    // Reset if no users available for this instrument
+    if(bookAsUserID){ bookAsUserID = null; bookAsUserName = null; }
+    return;
+  }
+
+  section.style.display = "block";
+
+  const activePill = bookAsUserID
+    ? `<div class="book-as-active-pill">
+         <span class="pill-icon">👤</span>
+         <span>Booking as <strong>${bookAsUserName}</strong></span>
+       </div>`
+    : '';
+
+  area.innerHTML = `
+    <select id="book-as-select" onchange="setBookAs(this.value)">
+      <option value="${currentUserID}">${currentUser} (you)</option>
+      ${permUsers.map(u =>
+        `<option value="${u.id}"${u.id === bookAsUserID ? ' selected' : ''}>${u.name}</option>`
+      ).join('')}
+    </select>
+    ${activePill}
+  `;
+}
+
+function setBookAs(userId){
+  if(userId === currentUserID){
+    bookAsUserID   = null;
+    bookAsUserName = null;
+  } else {
+    const u        = users.find(u => u.id === userId);
+    bookAsUserID   = u ? u.id   : null;
+    bookAsUserName = u ? u.name : null;
+  }
+  renderBookAsSection();
+  renderCalendar();
+}
+
+function renderUserArea(){
+  const el = document.getElementById("user-area");
+  if(currentUser){
+    const badge = currentUserIsAdmin
+      ? '<span class="badge-admin-inline">ADMIN</span>'
+      : curatorInstrIds.length
+        ? '<span class="badge-pu-inline">🔧 CURATOR</span>'
+        : '';
+    el.innerHTML = `
+      <div id="user-badge" style="flex-direction:column;align-items:stretch;gap:5px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span>${currentUser}</span>
+          <button id="logout-btn" onclick="doLogout()">Logout</button>
+        </div>
+        ${badge ? `<div style="align-self:flex-start">${badge}</div>` : ''}
+      </div>
+      <button id="change-pw-link" onclick="openModal('pw-modal')">🔑 Change password</button>`;
+  } else {
+    el.innerHTML = `
+      <button id="login-btn-sidebar" onclick="openModal('login-modal')">Login</button>
+      <p id="readonly-notice">Browse the calendar without logging in, or log in to make and edit bookings.</p>`;
+  }
+}
+
+function renderInstr(){
+  const el = document.getElementById("instr");
+
+  // Build visible set:
+  //   - logged-out or admin → all instruments
+  //   - regular/power user  → instruments they have regular OR power-user access to
+  const visible = (!currentUser || currentUserIsAdmin
+    ? instruments
+    : instruments.filter(i =>
+        permissions.some(p => p.user_id===currentUserID && p.instrument_id===i.id) ||
+        curatorInstrIds.includes(i.id)
+      )
+  ).slice().sort((a, b) => {
+    const aHas = a.sortorder != null;
+    const bHas = b.sortorder != null;
+    if(aHas && bHas) return a.sortorder - b.sortorder;
+    if(aHas) return -1;
+    if(bHas) return  1;
+    return a.name.localeCompare(b.name);
+  });
+
+  if(!visible.find(i => currentInstr && i.id===currentInstr.id))
+    currentInstr = visible[0] || null;
+
+  if(!visible.length){
+    el.innerHTML = `<p style="font-size:13px;color:rgba(255,255,255,.3)">No instruments available.</p>`;
+    return;
+  }
+
+  el.innerHTML = visible.map(i => {
+    const isPU      = !currentUserIsAdmin && curatorInstrIds.includes(i.id);
+    const isActive  = currentInstr && i.id===currentInstr.id;
+    const classes   = [isActive ? 'active' : '', isPU ? 'pu-access' : ''].filter(Boolean).join(' ');
+    const puMark    = isPU ? ' 🔧' : '';
+    return `<button class="${classes}" onclick="selectInstr('${i.id}')">${i.name}${puMark}</button>`;
+  }).join("");
+}
+
+function selectInstr(id){
+  currentInstr   = instruments.find(i=>i.id===id);
+  bookAsUserID   = null;
+  bookAsUserName = null;
+  render();
+}
+
+function renderInstrInfo(){
+  const img       = document.getElementById("instr-image");
+  const descEl    = document.getElementById("instr-description");
+  const notesEl   = document.getElementById("instr-notes");
+  const statusEl  = document.getElementById("instr-status");
+  const curatorEl = document.getElementById("instr-curator");
+
+  if(currentInstr){
+//    img.src = "https://mqpvnisphntdwhqoiqlt.supabase.co/storage/v1/object/public/instrument-images/" + currentInstr.id + ".png";
+    img.src = "https://mqpvnisphntdwhqoiqlt.supabase.co/storage/v1/object/public/instrument-images/" + currentInstr.id + ".png?t=" + Date.now();
+    img.style.display = "block";
+    img.onerror = () => { img.style.display = "none"; };
+    descEl.textContent  = currentInstr.description || "";
+    notesEl.textContent = currentInstr.notes        || "";
+    const op = currentInstr.operational !== false;
+    const puPill = currentUserIsAdmin
+      ? `<span class="status-admin">⭐ Administrator Access</span>`
+      : curatorInstrIds.includes(currentInstr.id)
+        ? `<span class="status-pu">🔧 Curator Access</span>`
+        : '';
+    statusEl.innerHTML  = (op
+      ? `<span class="status-ok">● Operational</span>`
+      : `<span class="status-off">⚠ Offline / Unavailable</span>`) + puPill;
+
+    // ── Curator contact ──
+    // Find the curator for this instrument (skip if the logged-in user IS the curator or admin for it)
+    const curatorRow  = curators.find(c => c.instrument_id === currentInstr.id);
+    const curatorUser = curatorRow ? users.find(u => u.id === curatorRow.user_id) : null;
+
+    // Fall back to first administrator if no curator assigned
+    const adminRow  = !curatorUser && administrators.length
+      ? administrators[0] : null;
+    const adminUser = adminRow ? users.find(u => u.id === adminRow.user_id) : null;
+
+    const contactUser = curatorUser || adminUser;
+
+    // Hide the line if the logged-in user IS the contact person (they don't need to email themselves)
+    const isSelf = contactUser && contactUser.id === currentUserID;
+
+    if(contactUser && !isSelf){
+      const label = curatorUser ? "Curator" : "Administrator";
+      const link  = contactUser.email
+        ? `<a href="mailto:${contactUser.email}">${contactUser.name}</a>`
+        : contactUser.name;
+      curatorEl.innerHTML = `${label}: ${link}`;
+    } else {
+      curatorEl.innerHTML = "";
+    }
+  } else {
+    img.style.display    = "none";
+    descEl.textContent   = "";
+    notesEl.textContent  = "";
+    statusEl.textContent = "";
+    curatorEl.innerHTML  = "";
+  }
+}
+
+function norm(s){ return (s||"").trim().toLowerCase(); }
+function goToday(){ weekOffset=0; renderCalendar(); }
+function changeWeek(delta){ weekOffset+=delta; renderCalendar(); }
+
+function weekDates(){
+  const today=new Date();
+  const diff=(today.getDay()===0?-6:1-today.getDay());
+  const monday=new Date(today);
+  monday.setDate(today.getDate()+diff+weekOffset*7);
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(monday); d.setDate(monday.getDate()+i); return d;
+  });
+}
+
+function renderCalendar(){
+  const cal=document.getElementById("calendar");
+  const msg=document.getElementById("cal-message");
+  cal.innerHTML=""; msg.textContent="";
+
+  if(!currentInstr){
+    msg.textContent = instruments.length
+      ? "Select an instrument to view the calendar."
+      : "No instruments loaded — check your connection.";
+    return;
+  }
+
+  const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const dates=weekDates();
+  const now=new Date();
+  const todayStr=now.toISOString().split("T")[0];
+
+  // Column headers
+  cal.appendChild(document.createElement("div"));
+  days.forEach((d,i)=>{
+    const h=document.createElement("div");
+    const dateStr=dates[i].toISOString().split("T")[0];
+    h.className="cell header"+(dateStr===todayStr?" today-col":"");
+    h.innerHTML=`${d}<div class="date">${dateStr}</div>`;
+    cal.appendChild(h);
+  });
+
+  // Hour rows
+  for(let h=0;h<24;h++){
+    const t=document.createElement("div");
+    t.className="cell time";
+    t.textContent=h.toString().padStart(2,'0')+":00";
+    cal.appendChild(t);
+
+    for(let i=0;i<7;i++){
+      const dateStr=dates[i].toISOString().split("T")[0];
+      const c=document.createElement("div");
+      const slotTime=new Date(dateStr+"T"+h.toString().padStart(2,'0')+":00");
+      const isPast=slotTime<now;
+      c.className="cell"+(isPast?" past-cell":"");
+
+      const b=bookings.find(x=>x.instrument===currentInstr.id&&x.hour===h&&x.date===dateStr);
+
+      if(b){
+        // ── Booked cell ──
+        const mine       = currentUser && b.user_id === currentUserID;
+        const curLevel   = isCuratorFor(currentInstr.id);
+        const canDelete  = !isPast && (mine || curLevel);
+        const boxCls    = ["booking-box",
+                           mine ? "mine" : "",
+                           isPast ? "past" : "",
+                           canDelete && !mine ? (currentUserIsAdmin ? "admin-del" : "pu-del") : ""]
+                          .filter(Boolean).join(" ");
+        c.innerHTML = `<div class="${boxCls}">${b.name}</div>`;
+
+        if(canDelete){
+          c.addEventListener('mousedown', e=>{
+            e.preventDefault();
+            startDrag('delete', h, dateStr, b, c);
+          });
+          c.addEventListener('mouseover', ()=>{
+            if(dragActive && dragMode==='delete') tryAddDragSlot(h, dateStr, b, c);
+          });
+        }
+
+      } else if(!isPast){
+        // ── Empty future cell ──
+        if(currentUser){
+          // Curators and admins bypass advancedays on their instruments
+          let withinWindow = isCuratorFor(currentInstr.id);
+          if(!withinWindow){
+            const perm = getUserPermission(currentInstr.id);
+            withinWindow = !perm || perm.advancedays == null
+              || slotTime <= new Date(new Date().setDate(now.getDate() + perm.advancedays));
+          }
+
+          if(withinWindow){
+            c.classList.add("clickable");
+            c.addEventListener('mousedown', e=>{
+              e.preventDefault();
+              startDrag('book', h, dateStr, null, c);
+            });
+            c.addEventListener('mouseover', ()=>{
+              if(dragActive && dragMode==='book') tryAddDragSlot(h, dateStr, null, c);
+            });
+          }
+        } else {
+          c.classList.add("needs-login");
+          c.onclick=()=>openModal("login-modal");
+        }
+      }
+
+      cal.appendChild(c);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+//  CALENDAR (.ics) INTEGRATION
+//
+//  On booking:   auto-downloads a .ics file with one event per contiguous
+//                block. The UID for each block is stored in calendar_event_id
+//                so a cancellation .ics (METHOD:CANCEL) can be issued later.
+//
+//  On deletion:  auto-downloads a METHOD:CANCEL .ics that removes the event
+//                from Outlook (and any iCalendar-compatible app) when opened.
+//
+//  Prerequisites:
+//    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS calendar_event_id text;
+// ═══════════════════════════════════════════
+
+// ── Format a date/hour as iCal local time (no Z — timezone specified via TZID) ──
+function icsDateTime(date, hour) {
+  const pad = n => String(n).padStart(2, '0');
+  const [y, m, d] = date.split('-');
+  return `${y}${m}${d}T${pad(hour)}0000`;
+}
+
+// ── Generate a RFC-4122-ish UID ──
+function generateUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  }) + '@lab-booking';
+}
+
+// ── Group slots into contiguous blocks (same day, consecutive hours) ──
+// Returns [{date, startHour, endHour, bookingIds}]
+function groupIntoBlocks(slots) {
+  // Sort by date then hour
+  const sorted = [...slots].sort((a, b) =>
+    a.date === b.date ? a.hour - b.hour : a.date.localeCompare(b.date)
+  );
+  const blocks = [];
+  for (const slot of sorted) {
+    const last = blocks[blocks.length - 1];
+    if (last && last.date === slot.date && last.endHour === slot.hour) {
+      last.endHour = slot.hour + 1;
+      last.bookingIds.push(slot.bookingId);
+    } else {
+      blocks.push({ date: slot.date, startHour: slot.hour, endHour: slot.hour + 1, bookingIds: [slot.bookingId] });
+    }
+  }
+  return blocks;
+}
+
+// ── Build a VEVENT string ──
+function buildVEVENT(uid, instrName, block, bookedByName, method) {
+  const now   = new Date().toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+  const start = icsDateTime(block.date, block.startHour);
+  const end   = icsDateTime(block.date, block.endHour);
+  const dur   = block.endHour - block.startHour;
+  const timeLabel = `${String(block.startHour).padStart(2,'0')}:00–${String(block.endHour).padStart(2,'0')}:00`;
+  const lines = [
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART;TZID=Europe/London:${start}`,
+    `DTEND;TZID=Europe/London:${end}`,
+    `SUMMARY:${instrName} booking`,
+    `DESCRIPTION:Lab instrument booking for ${bookedByName}\\non ${instrName} (${timeLabel}\\, ${dur}h).`,
+    'TRANSP:OPAQUE',
+    'STATUS:CONFIRMED',
+  ];
+  if (method === 'CANCEL') {
+    lines.push('STATUS:CANCELLED');
+    lines.push('SEQUENCE:1');
+  }
+  lines.push('END:VEVENT');
+  return lines.join('\r\n');
+}
+
+// ── Wrap VEVENTs in a VCALENDAR shell and trigger download ──
+function downloadICS(vevents, method, filename) {
+  // Full VTIMEZONE definition for Europe/London (GMT/BST)
+  // BST: last Sunday in March +01:00, GMT: last Sunday in October +00:00
+  const vtimezone = [
+    'BEGIN:VTIMEZONE',
+    'TZID:Europe/London',
+    'BEGIN:STANDARD',
+    'TZNAME:GMT',
+    'DTSTART:19701025T020000',
+    'RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10',
+    'TZOFFSETFROM:+0100',
+    'TZOFFSETTO:+0000',
+    'END:STANDARD',
+    'BEGIN:DAYLIGHT',
+    'TZNAME:BST',
+    'DTSTART:19700329T010000',
+    'RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3',
+    'TZOFFSETFROM:+0000',
+    'TZOFFSETTO:+0100',
+    'END:DAYLIGHT',
+    'END:VTIMEZONE',
+  ].join('\r\n');
+
+  const cal = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Lab Booking//EN',
+    'CALSCALE:GREGORIAN',
+    `METHOD:${method}`,
+    vtimezone,
+    ...vevents,
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob = new Blob([cal], { type: 'text/calendar;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+}
+
+// ── Show a brief toast message ──
+function showToast(msg, duration = 4000) {
+  let toast = document.getElementById('ics-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'ics-toast';
+    toast.style.cssText = `
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:#1a1f35; color:rgba(255,255,255,.9); font-family:var(--sans);
+      font-size:13px; padding:10px 18px; border-radius:8px;
+      border:1px solid rgba(255,255,255,.12); box-shadow:0 4px 20px rgba(0,0,0,.35);
+      z-index:9999; pointer-events:none; opacity:0; transition:opacity .2s;
+      max-width:420px; text-align:center; line-height:1.45;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, duration);
+}
+
+// ── Write calendar_event_id (the .ics UID) back to Supabase booking rows ──
+async function patchBookingEventId(bookingId, uid) {
+  try {
+    await fetch(`${REST}/bookings?id=eq.${bookingId}`, {
+      method:  'PATCH',
+      headers: { ...HEADERS, Prefer: 'return=minimal' },
+      body:    JSON.stringify({ calendar_event_id: uid })
+    });
+  } catch(e) { console.error('Supabase patch calendar_event_id failed:', e); }
+}
+
+// ── Called after a successful booking: build blocks → download .ics → patch UIDs ──
+async function issueBookingICS(slots, instrName, bookedByName) {
+  // slots: [{hour, date, bookingId}]
+  const blocks   = groupIntoBlocks(slots);
+  const vevents  = [];
+  const patches  = [];   // [{bookingId, uid}]
+
+  for (const block of blocks) {
+    const uid = generateUID();
+    vevents.push(buildVEVENT(uid, instrName, block, bookedByName, 'REQUEST'));
+    for (const bookingId of block.bookingIds) patches.push({ bookingId, uid });
+  }
+
+  downloadICS(vevents, 'PUBLISH', 'lab-booking.ics');
+  showToast('📅 Booking confirmed — double-click the downloaded file to add it to your Outlook calendar.');
+  // Patch UIDs into Supabase in the background
+  await Promise.all(patches.map(({ bookingId, uid }) => patchBookingEventId(bookingId, uid)));
+}
+
+// ── Called after a successful cancellation: download METHOD:CANCEL .ics ──
+function issueCancelICS(slots, instrName, bookedByName) {
+  // slots: [{hour, date, uid}] — only slots that have a stored UID
+  const withUID = slots.filter(s => s.uid);
+  if (!withUID.length) return;   // no UIDs stored (old bookings) — nothing to cancel
+
+  // Group by UID (a multi-hour block shares one UID)
+  const byUID = {};
+  for (const s of withUID) {
+    if (!byUID[s.uid]) byUID[s.uid] = [];
+    byUID[s.uid].push(s);
+  }
+
+  const vevents = [];
+  for (const [uid, group] of Object.entries(byUID)) {
+    // Reconstruct the block span
+    const sorted     = group.sort((a, b) => a.hour - b.hour);
+    const fakeBlock  = { date: sorted[0].date, startHour: sorted[0].hour, endHour: sorted[sorted.length-1].hour + 1 };
+    vevents.push(buildVEVENT(uid, instrName, fakeBlock, bookedByName, 'CANCEL'));
+  }
+
+  downloadICS(vevents, 'CANCEL', 'lab-booking-cancel.ics');
+  showToast('📅 Booking cancelled — open the downloaded file to remove it from your Outlook calendar.');
+}
+
+// ── Stub: no MSAL needed for .ics approach ──
+function initMsal() {}
+function renderOutlookBtn() {
+  // Hide the old Outlook connect section — not needed for .ics
+  const section = document.getElementById('outlook-section');
+  if (section) section.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════
+
+(async()=>{
+  initMsal();
+  renderUserArea();
+  const [, sessionResult] = await Promise.all([load(), sb.auth.getSession()]);
+  const session = sessionResult?.data?.session;
+  if(session?.user){
+    const res  = await fetch(`${REST}/users?id=eq.${session.user.id}&select=*`, { headers: HEADERS });
+    const rows = await res.json();
+    if(rows.length){
+      currentUser        = rows[0].name;
+      currentUserID      = rows[0].id;
+      currentUserEmail   = session.user.email;
+      currentUserIsAdmin = administrators.some(a => a.user_id === rows[0].id);
+      curatorInstrIds    = curators
+        .filter(c => c.user_id === rows[0].id)
+        .map(c => c.instrument_id);
+    }
+  }
+  render();
+})();
+</script>
+</body>
+</html>
